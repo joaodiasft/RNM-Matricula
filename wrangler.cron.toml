@@ -1,0 +1,12 @@
+# Cloudflare Cron Worker auxiliar (opcional)
+# Dispara as rotas HTTP do app com CRON_SECRET.
+#
+# Deploy separado se quiser: wrangler deploy -c wrangler.cron.toml
+# (configure APP_URL e CRON_SECRET como secrets)
+
+name = "rnm-matricula-cron"
+main = "scripts/cron-worker.js"
+compatibility_date = "2025-03-01"
+
+[triggers]
+crons = ["*/15 * * * *", "59 2 * * *"]

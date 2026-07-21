@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f3f8f5;
+  --bg-elevated: #ffffff;
+  --fg: #14261c;
+  --muted: #5c7366;
+  --brand: #0d5c45;
+  --brand-deep: #083d2e;
+  --brand-soft: #d8efe4;
+  --accent: #c45c26;
+  --accent-soft: #f8e8de;
+  --line: #c9dbd1;
+  --danger: #b42318;
+  --success: #0d5c45;
+  --shadow: 0 12px 40px rgba(13, 92, 69, 0.1);
+  --radius: 16px;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1611;
+    --bg-elevated: #132019;
+    --fg: #e8f2ec;
+    --muted: #9bb5a6;
+    --brand: #3dba8f;
+    --brand-deep: #1f7a5c;
+    --brand-soft: #163528;
+    --accent: #e08a52;
+    --accent-soft: #3a2618;
+    --line: #24382c;
+    --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, var(--brand) 18%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--bg), color-mix(in oklab, var(--bg) 92%, var(--brand-soft)));
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+input, select, textarea, button {
+  font: inherit;
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}

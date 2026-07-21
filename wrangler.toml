@@ -1,0 +1,27 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+name = "rnm-matricula"
+main = ".open-next/worker.js"
+compatibility_date = "2025-03-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+# Cron HTTP endpoints (chame com Authorization Bearer CRON_SECRET)
+# Abandono: GET /api/cron/abandonment a cada 15 min
+# Excel: GET /api/cron/daily-excel ~23:59 America/Sao_Paulo
+# Os triggers abaixo só funcionam se o worker tiver scheduled handler;
+# preferira Cloudflare Cron Jobs / GitHub Actions batendo nas URLs.
+# [triggers]
+# crons = ["*/15 * * * *", "59 2 * * *"]
+
