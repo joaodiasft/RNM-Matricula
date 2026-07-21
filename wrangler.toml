@@ -19,7 +19,9 @@ invocation_logs = true
 
 # Variáveis públicas / não sensíveis (secrets ficam no Wrangler Secrets)
 [vars]
-COMPANY_EMAIL = "naredacaonota1000@gmail.com"
+# Destino dos avisos internos. Com Resend em sandbox, precisa ser o e-mail
+# da conta Resend; após verificar domínio, volte para o e-mail da secretaria.
+COMPANY_EMAIL = "jcsolucoes3d@gmail.com"
 RESEND_FROM = "Redação Nota Mil <onboarding@resend.dev>"
 DEFAULT_CARD_FEE_PERCENT = "3.5"
 ADMIN_EMAIL = "naredacaonota1000@gmail.com"

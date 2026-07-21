@@ -8,7 +8,7 @@ import {
   students,
 } from "@/lib/db/schema";
 import { getAdminSession } from "@/lib/auth";
-import { countEnrollmentsSince } from "@/lib/excel";
+import { countEnrollmentsSince } from "@/lib/enrollment-stats";
 
 export async function GET(req: Request) {
   const session = await getAdminSession();

@@ -20,9 +20,12 @@ export default {
       await fetch(`${base}/api/cron/abandonment`, { headers });
     }
 
-    // ~02:59 UTC ≈ 23:59 America/Sao_Paulo → Excel
+    // ~02:59 UTC ≈ 23:59 America/Sao_Paulo → Excel + obrigações
     if (hour === 2 && minute === 59) {
-      await fetch(`${base}/api/cron/daily-excel`, { headers });
+      await Promise.all([
+        fetch(`${base}/api/cron/daily-excel`, { headers }),
+        fetch(`${base}/api/cron/obligations`, { headers }),
+      ]);
     }
   },
 };

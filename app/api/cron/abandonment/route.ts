@@ -91,11 +91,16 @@ export async function GET(req: Request) {
           : "—",
       });
 
-      await sendEmail({
+      const sent = await sendEmail({
         to: companyEmail,
         subject: `⚠️ Matrícula não finalizada — ${name || "sem nome"}`,
         html,
       });
+
+      // Só marca abandono se o aviso saiu (ou e-mail desligado em dev).
+      if (sent && "error" in sent && sent.error) {
+        continue;
+      }
 
       await db
         .update(enrollments)

@@ -33,11 +33,12 @@ export async function GET(req: Request) {
     if (to) toDate = new Date(`${to}T23:59:59.999-03:00`);
   }
 
-  const { buffer, rowCount } = await buildEnrollmentsWorkbook({
-    from: fromDate,
-    to: toDate,
-    onlyCompleted: true,
-  });
+  const { buffer, rowCount, contentType, extension } =
+    await buildEnrollmentsWorkbook({
+      from: fromDate,
+      to: toDate,
+      onlyCompleted: true,
+    });
 
   const db = getDb();
   await db.insert(auditLogs).values({
@@ -47,12 +48,11 @@ export async function GET(req: Request) {
     meta: JSON.stringify({ from, to, today, rowCount }),
   });
 
-  const fileName = `matriculas-${from || "periodo"}-${to || "agora"}.xlsx`;
+  const fileName = `matriculas-${from || "periodo"}-${to || "agora"}.${extension}`;
 
   return new NextResponse(buffer, {
     headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${fileName}"`,
     },
   });

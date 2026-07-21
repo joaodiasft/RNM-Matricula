@@ -33,7 +33,9 @@ export async function sendEmail(opts: {
 
   if (error) {
     console.error("[email] falha:", error);
-    throw new Error(error.message);
+    // Não derruba o fluxo (cron/matrícula): Resend sandbox / domínio
+    // não verificado costuma falhar até haver domínio próprio.
+    return { skipped: false as const, error: error.message };
   }
 
   return { skipped: false as const };

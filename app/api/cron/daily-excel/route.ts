@@ -32,13 +32,14 @@ export async function GET(req: Request) {
 
   try {
     const { start, end, dateStr } = todayInSaoPaulo();
-    const { buffer, rowCount } = await buildEnrollmentsWorkbook({
-      from: start,
-      to: end,
-      onlyCompleted: true,
-    });
+    const { buffer, rowCount, contentType, extension } =
+      await buildEnrollmentsWorkbook({
+        from: start,
+        to: end,
+        onlyCompleted: true,
+      });
 
-    const fileName = `matriculas-${dateStr}.xlsx`;
+    const fileName = `matriculas-${dateStr}.${extension}`;
     const db = getDb();
 
     // Persistência local em base64 no registro (R2 opcional via binding)
@@ -54,8 +55,7 @@ export async function GET(req: Request) {
     // Aqui retornamos o arquivo para download imediato / uso do admin.
     return new NextResponse(buffer, {
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type": contentType,
         "Content-Disposition": `attachment; filename="${fileName}"`,
         "X-Row-Count": String(rowCount),
       },
