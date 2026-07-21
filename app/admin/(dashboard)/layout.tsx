@@ -11,9 +11,9 @@ export default async function AdminDashboardLayout({
   if (!session) redirect("/admin/login");
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[#faf9fb]">
       <AdminNav />
-      <div className="mx-auto max-w-6xl px-4 py-6">{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</div>
     </div>
   );
 }

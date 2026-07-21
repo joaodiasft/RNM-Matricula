@@ -14,6 +14,8 @@ export async function GET(req: Request) {
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
   const today = url.searchParams.get("today") === "1";
+  const enrollmentId = url.searchParams.get("id");
+  const allStatuses = url.searchParams.get("all") === "1";
 
   let fromDate: Date | undefined;
   let toDate: Date | undefined;
@@ -37,7 +39,8 @@ export async function GET(req: Request) {
     await buildEnrollmentsWorkbook({
       from: fromDate,
       to: toDate,
-      onlyCompleted: true,
+      onlyCompleted: !allStatuses && !enrollmentId,
+      enrollmentId: enrollmentId || undefined,
     });
 
   const db = getDb();
@@ -45,10 +48,13 @@ export async function GET(req: Request) {
     adminUserId: session.userId,
     action: "export_excel",
     entityType: "enrollment",
-    meta: JSON.stringify({ from, to, today, rowCount }),
+    entityId: enrollmentId || undefined,
+    meta: JSON.stringify({ from, to, today, allStatuses, enrollmentId, rowCount }),
   });
 
-  const fileName = `matriculas-${from || "periodo"}-${to || "agora"}.${extension}`;
+  const fileName = enrollmentId
+    ? `matricula-${enrollmentId.slice(0, 8)}.${extension}`
+    : `matriculas-${from || (today ? "hoje" : "periodo")}-${to || "agora"}.${extension}`;
 
   return new NextResponse(buffer, {
     headers: {

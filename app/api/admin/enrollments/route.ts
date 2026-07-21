@@ -19,6 +19,8 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const status = url.searchParams.get("status") || "";
   const course = url.searchParams.get("course") || "";
+  const turma = url.searchParams.get("turma") || "";
+  const modality = url.searchParams.get("modality") || "";
   const q = url.searchParams.get("q") || "";
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
@@ -28,6 +30,7 @@ export async function GET(req: Request) {
     const conditions = [];
 
     if (status) conditions.push(eq(enrollments.status, status));
+    if (modality) conditions.push(eq(enrollments.modality, modality));
     if (from) conditions.push(gte(enrollments.createdAt, new Date(from)));
     if (to) {
       conditions.push(
@@ -39,12 +42,13 @@ export async function GET(req: Request) {
         or(
           ilike(students.fullName, `%${q}%`),
           ilike(students.email, `%${q}%`),
-          ilike(students.phone, `%${q}%`)
+          ilike(students.phone, `%${q}%`),
+          ilike(students.cpf, `%${q}%`)
         )
       );
     }
 
-    let rows = await db
+    const rows = await db
       .select({
         enrollment: enrollments,
         student: students,
@@ -53,21 +57,7 @@ export async function GET(req: Request) {
       .leftJoin(students, eq(enrollments.studentId, students.id))
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(desc(enrollments.createdAt))
-      .limit(200);
-
-    if (course) {
-      const filtered = [];
-      for (const row of rows) {
-        const courses = await db
-          .select()
-          .from(enrollmentCourses)
-          .where(eq(enrollmentCourses.enrollmentId, row.enrollment.id));
-        if (courses.some((c) => c.subject === course || c.classCode === course)) {
-          filtered.push({ ...row, courses });
-        }
-      }
-      rows = filtered as typeof rows;
-    }
+      .limit(300);
 
     const withCourses = await Promise.all(
       rows.map(async (row) => {
@@ -79,27 +69,61 @@ export async function GET(req: Request) {
       })
     );
 
+    let filtered = withCourses;
+    if (course) {
+      filtered = filtered.filter((row) =>
+        row.courses.some(
+          (c) => c.subject === course || c.classCode === course
+        )
+      );
+    }
+    if (turma) {
+      filtered = filtered.filter((row) =>
+        row.courses.some((c) => c.classCode === turma)
+      );
+    }
+
     const now = new Date();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - 7);
 
-    const [todayCount, weekCount] = await Promise.all([
+    const [todayCount, weekCount, statusCounts] = await Promise.all([
       countEnrollmentsSince(startOfDay),
       countEnrollmentsSince(startOfWeek),
+      db
+        .select({
+          status: enrollments.status,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(enrollments)
+        .groupBy(enrollments.status),
     ]);
+
+    const byStatus: Record<string, number> = {};
+    for (const row of statusCounts) {
+      byStatus[row.status] = row.count;
+    }
 
     await db.insert(auditLogs).values({
       adminUserId: session.userId,
       action: "list_enrollments",
       entityType: "enrollment",
-      meta: JSON.stringify({ status, course, q }),
+      meta: JSON.stringify({ status, course, turma, modality, q, from, to }),
     });
 
     return NextResponse.json({
-      items: withCourses,
-      stats: { today: todayCount, week: weekCount },
+      items: filtered,
+      stats: {
+        today: todayCount,
+        week: weekCount,
+        total: filtered.length,
+        concluida: byStatus.concluida || 0,
+        em_andamento: byStatus.em_andamento || 0,
+        abandonada: byStatus.abandonada || 0,
+        alerta_duplicidade: byStatus.alerta_duplicidade || 0,
+      },
     });
   } catch (err) {
     console.error(err);

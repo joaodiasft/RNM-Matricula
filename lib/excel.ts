@@ -22,18 +22,23 @@ export async function buildEnrollmentsWorkbook(opts?: {
   from?: Date;
   to?: Date;
   onlyCompleted?: boolean;
+  enrollmentId?: string;
 }) {
   const db = getDb();
 
   const conditions = [];
-  if (opts?.onlyCompleted !== false) {
-    conditions.push(eq(enrollments.status, "concluida"));
-  }
-  if (opts?.from) {
-    conditions.push(gte(enrollments.completedAt, opts.from));
-  }
-  if (opts?.to) {
-    conditions.push(lte(enrollments.completedAt, opts.to));
+  if (opts?.enrollmentId) {
+    conditions.push(eq(enrollments.id, opts.enrollmentId));
+  } else {
+    if (opts?.onlyCompleted !== false) {
+      conditions.push(eq(enrollments.status, "concluida"));
+    }
+    if (opts?.from) {
+      conditions.push(gte(enrollments.completedAt, opts.from));
+    }
+    if (opts?.to) {
+      conditions.push(lte(enrollments.completedAt, opts.to));
+    }
   }
 
   const rows = await db

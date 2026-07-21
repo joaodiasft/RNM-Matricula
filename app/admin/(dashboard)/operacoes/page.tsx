@@ -1,6 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  StatusBadge,
+  btnGhostClass,
+  btnPrimaryClass,
+} from "@/components/admin/ui";
 
 export default function AdminOperationsPage() {
   const [tab, setTab] = useState<"obligations" | "referrals" | "duplicates">(
@@ -16,7 +22,11 @@ export default function AdminOperationsPage() {
         obligationDivulged: boolean | null;
         obligationBroughtStudent: boolean | null;
       };
-      student: { fullName: string | null; email: string | null } | null;
+      student: {
+        fullName: string | null;
+        email: string | null;
+        phone?: string | null;
+      } | null;
     }[]
   >([]);
   const [referrals, setReferrals] = useState<
@@ -56,8 +66,15 @@ export default function AdminOperationsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl">Operações</h1>
-      <div className="mt-4 flex gap-2 text-sm">
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand">
+        Filas operacionais
+      </p>
+      <h1 className="font-display mt-1 text-3xl font-extrabold">Operações</h1>
+      <p className="mt-1 text-sm text-muted">
+        Obrigações de modalidade, códigos de indicação e alertas de duplicidade.
+      </p>
+
+      <div className="mt-5 flex flex-wrap gap-2 text-sm">
         {(
           [
             ["obligations", "Obrigações"],
@@ -69,8 +86,10 @@ export default function AdminOperationsPage() {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`rounded-full px-4 py-2 font-semibold ${
-              tab === id ? "bg-brand text-white" : "bg-bg-elevated text-muted"
+            className={`rounded-full px-4 py-2 font-bold transition ${
+              tab === id
+                ? "bg-brand text-white shadow-[var(--shadow-brand)]"
+                : "border border-line bg-white text-muted hover:text-ink"
             }`}
           >
             {label}
@@ -81,12 +100,24 @@ export default function AdminOperationsPage() {
       {tab === "referrals" && (
         <ul className="mt-6 space-y-2 text-sm">
           {referrals.map((r) => (
-            <li key={r.code} className="rounded-xl bg-bg-elevated px-4 py-3">
-              <code className="font-semibold text-brand">{r.code}</code>
-              <span className="text-muted">
-                {" "}
-                · usado: {r.referredEnrollmentId ? "sim" : "não"}
-              </span>
+            <li
+              key={r.code}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-line bg-white px-4 py-3 shadow-[var(--shadow-xs)]"
+            >
+              <div>
+                <code className="font-bold text-brand">{r.code}</code>
+                <span className="ml-2 text-muted">
+                  {r.referredEnrollmentId ? "já utilizado" : "disponível"}
+                </span>
+              </div>
+              {r.referrerEnrollmentId && (
+                <Link
+                  href={`/admin/matriculas/${r.referrerEnrollmentId}`}
+                  className="text-xs font-bold text-brand hover:underline"
+                >
+                  Ver indicante →
+                </Link>
+              )}
             </li>
           ))}
           {referrals.length === 0 && (
@@ -100,22 +131,37 @@ export default function AdminOperationsPage() {
           {items.map((item) => (
             <div
               key={item.enrollment.id}
-              className="rounded-2xl bg-bg-elevated p-4 text-sm"
+              className="rounded-2xl border border-line bg-white p-4 text-sm shadow-[var(--shadow-xs)]"
             >
-              <p className="font-semibold">
-                {item.student?.fullName || "—"} · {item.student?.email}
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-bold text-ink">
+                    {item.student?.fullName || "—"}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {item.student?.email || item.student?.phone || "Sem contato"}
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/matriculas/${item.enrollment.id}`}
+                  className="text-xs font-bold text-brand hover:underline"
+                >
+                  Abrir matrícula →
+                </Link>
+              </div>
+
               {tab === "obligations" && (
                 <>
-                  <p className="mt-1 text-muted">
-                    Modalidade: {item.enrollment.modality} · Status:{" "}
-                    {item.enrollment.obligationStatus} · Prazo:{" "}
-                    {item.enrollment.obligationDeadline || "—"}
+                  <p className="mt-2 text-muted">
+                    Modalidade: <strong>{item.enrollment.modality}</strong> ·
+                    Status:{" "}
+                    <strong>{item.enrollment.obligationStatus || "—"}</strong> ·
+                    Prazo: {item.enrollment.obligationDeadline || "—"}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      className="rounded-lg border border-line px-3 py-1.5"
+                      className={btnGhostClass()}
                       onClick={() =>
                         patch({
                           enrollmentId: item.enrollment.id,
@@ -134,7 +180,7 @@ export default function AdminOperationsPage() {
                     {item.enrollment.modality === "desconto" && (
                       <button
                         type="button"
-                        className="rounded-lg border border-line px-3 py-1.5"
+                        className={btnGhostClass()}
                         onClick={() =>
                           patch({
                             enrollmentId: item.enrollment.id,
@@ -150,7 +196,7 @@ export default function AdminOperationsPage() {
                     )}
                     <button
                       type="button"
-                      className="rounded-lg border border-danger px-3 py-1.5 text-danger"
+                      className="inline-flex min-h-[44px] items-center rounded-xl border border-danger px-4 text-sm font-semibold text-danger"
                       onClick={() =>
                         patch({
                           enrollmentId: item.enrollment.id,
@@ -163,11 +209,13 @@ export default function AdminOperationsPage() {
                   </div>
                 </>
               )}
+
               {tab === "duplicates" && (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <StatusBadge status="alerta_duplicidade" />
                   <button
                     type="button"
-                    className="rounded-lg bg-brand px-3 py-1.5 text-white"
+                    className={btnPrimaryClass()}
                     onClick={() =>
                       patch({
                         enrollmentId: item.enrollment.id,
@@ -179,7 +227,7 @@ export default function AdminOperationsPage() {
                   </button>
                   <button
                     type="button"
-                    className="rounded-lg border border-line px-3 py-1.5"
+                    className={btnGhostClass()}
                     onClick={() =>
                       patch({
                         enrollmentId: item.enrollment.id,
