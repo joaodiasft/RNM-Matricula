@@ -62,9 +62,32 @@ No Cloudflare, use **Cron Triggers** apontando para essas URLs (via Worker exter
 
 ## Deploy Cloudflare
 
+Projeto Worker: **`rnm-matricula`**
+
+URL: https://rnm-matricula.jmdias2901.workers.dev
+
 ```bash
 npm run deploy
 ```
+
+Secrets já usados no Worker (via Wrangler):
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `CRON_SECRET`
+
+Para CI no GitHub Actions (`.github/workflows/deploy.yml`), configure no repositório:
+- Secret `CLOUDFLARE_API_TOKEN` (Workers Edit)
+- Secret `CLOUDFLARE_ACCOUNT_ID` = `57c57dff6db69f67c5e96e88c5e28fa1`
+- Secrets `DATABASE_URL`, `SESSION_SECRET`, `CRON_SECRET`
+- Variable `NEXT_PUBLIC_APP_URL` = `https://rnm-matricula.jmdias2901.workers.dev`
+
+Para conectar o Git direto no Cloudflare (Workers Builds):
+1. Abra [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages)
+2. Selecione **rnm-matricula** → Settings → Builds → Connect
+3. Escolha o repo `joaodiasft/RNM-Matricula`, branch `main`
+4. Build command: `npx opennextjs-cloudflare build`
+5. Deploy command: `npx opennextjs-cloudflare deploy`
+6. Em Build variables, inclua os mesmos secrets do `.env`
 
 Configure secrets no Wrangler/Dashboard: `DATABASE_URL`, `SESSION_SECRET`, `RESEND_API_KEY`, `CRON_SECRET`, `TURNSTILE_SECRET_KEY`, etc.
 

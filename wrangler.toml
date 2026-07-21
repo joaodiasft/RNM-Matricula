@@ -17,11 +17,10 @@ head_sampling_rate = 1
 enabled = true
 invocation_logs = true
 
-# Cron HTTP endpoints (chame com Authorization Bearer CRON_SECRET)
-# Abandono: GET /api/cron/abandonment a cada 15 min
-# Excel: GET /api/cron/daily-excel ~23:59 America/Sao_Paulo
-# Os triggers abaixo só funcionam se o worker tiver scheduled handler;
-# preferira Cloudflare Cron Jobs / GitHub Actions batendo nas URLs.
-# [triggers]
-# crons = ["*/15 * * * *", "59 2 * * *"]
-
+# Variáveis públicas / não sensíveis (secrets ficam no Wrangler Secrets)
+[vars]
+COMPANY_EMAIL = "naredacaonota1000@gmail.com"
+RESEND_FROM = "Redação Nota Mil <onboarding@resend.dev>"
+DEFAULT_CARD_FEE_PERCENT = "3.5"
+ADMIN_EMAIL = "naredacaonota1000@gmail.com"
+NEXT_PUBLIC_APP_URL = "https://rnm-matricula.jmdias2901.workers.dev"
