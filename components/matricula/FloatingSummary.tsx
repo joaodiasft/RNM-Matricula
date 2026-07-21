@@ -42,8 +42,20 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Abrir resumo da matrícula"
-        className="fixed bottom-5 right-4 z-40 min-h-[48px] rounded-full bg-brand px-5 py-3 text-sm font-bold text-white shadow-[0_10px_28px_color-mix(in_oklab,#e91e8c_40%,transparent)] transition hover:bg-brand-deep active:scale-[0.97] sm:right-6"
+        className="brand-gradient fixed bottom-5 right-4 z-40 inline-flex min-h-[48px] items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-105 active:scale-[0.97] sm:right-6"
       >
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M9 5h6M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM9 9h6M9 13h6M9 17h3" />
+        </svg>
         Resumo
         {pricing ? ` · ${formatBRL(pricing.planTotal)}` : ""}
       </button>

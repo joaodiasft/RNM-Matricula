@@ -1,70 +1,95 @@
 @import "tailwindcss";
 
 /*
-  Brand: Redação Nota Mil (logo)
-  Magenta #E91E8C · Preto #0A0A0A · Carvão #1F1F21 · Cinza #6B6B6F
+  ─────────────────────────────────────────────────────────────
+  Design System · Redação Nota Mil — Matrícula
+  Base: logo oficial (magenta #E91E8C sobre preto)
+  Tema: claro / fundo branco. Acentos da marca em magenta.
+  ─────────────────────────────────────────────────────────────
 */
 
 :root {
+  color-scheme: light;
+
+  /* Marca */
   --brand: #e91e8c;
-  --brand-deep: #b01268;
+  --brand-strong: #cc1478;
+  --brand-deep: #a80f61;
   --brand-soft: #fce4f1;
-  --brand-glow: color-mix(in oklab, #e91e8c 22%, transparent);
+  --brand-tint: #fdf1f8;
+  --brand-glow: color-mix(in oklab, #e91e8c 26%, transparent);
 
-  --ink: #1f1f21;
-  --ink-soft: #4a4a4e;
-  --muted: #6b6b6f;
-  --line: #e6e6ea;
-  --bg: #f7f7f9;
+  /* Tinta / texto */
+  --ink: #15151a;
+  --ink-soft: #3c3c45;
+  --muted: #71717a;
+  --muted-2: #9a9aa4;
+
+  /* Superfícies — página branca; "bg" é o cinza sutil dos tiles/inputs internos */
+  --bg: #f5f5f9;
+  --bg-subtle: #fafafc;
   --bg-elevated: #ffffff;
-  --danger: #c62828;
-  --success: #1b7a4a;
-  --accent: #e91e8c;
-  --accent-soft: #fce4f1;
+  --hero-a: #141417;
+  --hero-b: #26141d;
 
+  /* Linhas e estados */
+  --line: #ececf1;
+  --line-strong: #dedee6;
+  --danger: #d32350;
+  --danger-soft: #fdecef;
+  --success: #12855a;
+  --success-soft: #e7f6ee;
+  --warning: #b7791f;
+  --warning-soft: #fdf4e3;
+
+  --accent: var(--brand);
+  --accent-soft: var(--brand-soft);
   --fg: var(--ink);
-  --shadow: 0 10px 40px rgba(15, 15, 20, 0.08);
+
+  /* Elevação — sombras em camadas (mais suaves e modernas) */
+  --shadow-xs: 0 1px 2px rgba(20, 20, 30, 0.05);
+  --shadow-sm: 0 1px 3px rgba(20, 20, 30, 0.06), 0 1px 2px rgba(20, 20, 30, 0.04);
+  --shadow: 0 4px 16px rgba(20, 20, 30, 0.06), 0 1px 3px rgba(20, 20, 30, 0.05);
+  --shadow-lg: 0 18px 50px -12px rgba(20, 20, 30, 0.16), 0 6px 18px rgba(20, 20, 30, 0.06);
+  --shadow-brand: 0 12px 28px -8px color-mix(in oklab, var(--brand) 45%, transparent);
+
+  /* Raios e alvos de toque */
+  --radius-sm: 10px;
   --radius: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
   --touch: 48px;
 
-  --font-display: var(--font-montserrat), system-ui, sans-serif;
-  --font-body: var(--font-plus-jakarta), system-ui, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --brand: #ff4db0;
-    --brand-deep: #e91e8c;
-    --brand-soft: #3a1028;
-    --brand-glow: color-mix(in oklab, #e91e8c 35%, transparent);
-    --ink: #f4f4f6;
-    --ink-soft: #c8c8ce;
-    --muted: #a0a0a8;
-    --line: #2c2c32;
-    --bg: #0a0a0a;
-    --bg-elevated: #16161a;
-    --accent: #ff4db0;
-    --accent-soft: #3a1028;
-    --fg: var(--ink);
-    --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-  }
+  --font-display: var(--font-montserrat), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: var(--font-plus-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
   --color-bg-elevated: var(--bg-elevated);
   --color-fg: var(--fg);
+  --color-ink-soft: var(--ink-soft);
   --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
   --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
   --color-brand-deep: var(--brand-deep);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-tint: var(--brand-tint);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
+  --radius-xl: var(--radius-xl);
 }
 
 * {
@@ -73,6 +98,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -96,19 +122,32 @@ body {
   font-size: 16px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(900px 420px at 0% -5%, var(--brand-glow), transparent 55%),
-    radial-gradient(700px 380px at 100% 0%, color-mix(in oklab, #1f1f21 8%, transparent), transparent 50%),
-    linear-gradient(180deg, var(--bg), color-mix(in oklab, var(--bg) 92%, var(--brand-soft)));
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(720px 340px at 100% -10%, var(--brand-tint), transparent 60%),
+    radial-gradient(560px 300px at -10% 0%, color-mix(in oklab, var(--brand) 6%, transparent), transparent 55%);
+  background-attachment: fixed;
 }
 
 h1,
 h2,
 h3,
+h4,
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1.15;
+  color: var(--ink);
+}
+
+h1 {
+  letter-spacing: -0.03em;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 input,
@@ -117,11 +156,18 @@ textarea,
 button {
   font: inherit;
   min-height: var(--touch);
+  color: var(--ink);
+}
+
+::placeholder {
+  color: var(--muted-2);
 }
 
 button,
 [role="button"],
-a {
+a,
+label,
+summary {
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -130,12 +176,60 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid color-mix(in oklab, var(--brand) 55%, white);
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--brand) 40%, white);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: var(--brand-soft);
-  color: var(--brand-deep);
+  background: var(--brand);
+  color: #fff;
+}
+
+/* Scrollbar discreta (WebKit) */
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--muted) 35%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--muted) 55%, transparent);
+  background-clip: content-box;
+}
+
+/* Utilitários de composição */
+.brand-gradient {
+  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+}
+.hero-gradient {
+  background:
+    radial-gradient(120% 140% at 88% -20%, color-mix(in oklab, var(--brand) 34%, transparent), transparent 55%),
+    linear-gradient(150deg, var(--hero-a), var(--hero-b));
+}
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+/* Anima entrada suave de blocos */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

@@ -198,24 +198,26 @@ export function EnrollmentWizard() {
 
   if (loading) {
     return (
-      <div className="rounded-[var(--radius)] bg-bg-elevated p-8 text-center shadow-[var(--shadow)]">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-        <p className="mt-4 text-sm text-muted">Preparando sua matrícula…</p>
+      <div className="card p-10 text-center">
+        <div className="mx-auto h-9 w-9 animate-spin rounded-full border-[3px] border-brand-soft border-t-brand" />
+        <p className="mt-4 text-sm font-medium text-muted">
+          Preparando sua matrícula…
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-[var(--radius)] border border-danger/30 bg-bg-elevated p-6 text-center">
-        <p className="text-danger">{error}</p>
+      <div className="card border-danger/30 bg-danger-soft/40 p-7 text-center">
+        <p className="font-medium text-danger">{error}</p>
         <button
           type="button"
           onClick={() => {
             setError(null);
             void bootstrap();
           }}
-          className="mt-4 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white"
+          className="brand-gradient mt-5 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-105 active:scale-[0.98]"
         >
           Tentar novamente
         </button>
@@ -281,7 +283,7 @@ export function EnrollmentWizard() {
 
       <FloatingSummary draft={session.draft} />
 
-      <div className="relative mt-4 overflow-hidden rounded-[20px] border border-line/60 bg-bg-elevated p-5 shadow-[var(--shadow)] sm:p-7">
+      <div className="card relative mt-4 overflow-hidden p-5 sm:p-7">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}

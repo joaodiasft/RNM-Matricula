@@ -5,7 +5,8 @@ import { buildEnrollmentsWorkbook } from "@/lib/excel";
 
 function authorize(req: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  // Fail-closed em produção: sem secret configurado, nega. Em dev, libera.
+  if (!secret) return process.env.NODE_ENV !== "production";
   const header = req.headers.get("authorization");
   return header === `Bearer ${secret}`;
 }

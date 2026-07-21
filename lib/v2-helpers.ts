@@ -39,6 +39,9 @@ export function generateReferralCode(fullName: string): string {
   return `${first}-RNM-${num}`;
 }
 
+/** Código OTP de 6 dígitos usando CSPRNG (imprevisível — não usa Math.random). */
 export function generateOtpCode(): string {
-  return String(Math.floor(1000 + Math.random() * 9000));
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(100000 + (buf[0] % 900000));
 }

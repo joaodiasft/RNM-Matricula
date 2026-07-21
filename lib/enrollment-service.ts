@@ -26,6 +26,7 @@ import type { Subject } from "./courses";
 import { getClassByCode, SUBJECT_LABELS } from "./courses";
 import {
   confirmationEmailHtml,
+  duplicateAlertHtml,
   otpEmailHtml,
 } from "./email/templates";
 import { sendEmail } from "./email/send";
@@ -393,7 +394,12 @@ export async function completeEnrollment(
     await sendEmail({
       to: companyEmail,
       subject: `⚠️ Alerta de duplicidade — ${draft.fullName}`,
-      html: `<p>Possível matrícula duplicada para <strong>${draft.fullName}</strong> (${draft.email} / ${draft.phone}) nas turmas: ${classCodes.join(", ")}. Revise no painel admin.</p>`,
+      html: duplicateAlertHtml({
+        fullName: draft.fullName ?? "",
+        email: draft.email ?? "",
+        phone: draft.phone ?? "",
+        classCodes,
+      }),
     });
 
     throw new Error("DUPLICIDADE");

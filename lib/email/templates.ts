@@ -1,12 +1,13 @@
 import { COMPANY } from "../company";
 import { formatBRL } from "../pricing";
 
-function escapeHtml(s: string) {
+export function escapeHtml(s: string) {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function layout(title: string, body: string) {
@@ -69,6 +70,24 @@ export function confirmationEmailHtml(data: {
     <p>Bem-vindo(a) à ${escapeHtml(COMPANY.name)}! 🎉</p>
   `;
   return layout("Matrícula confirmada", body);
+}
+
+export function duplicateAlertHtml(data: {
+  fullName: string;
+  email: string;
+  phone: string;
+  classCodes: string[];
+}) {
+  const body = `
+    <p>Possível matrícula <strong>duplicada</strong> detectada. Revise no painel admin antes de confirmar:</p>
+    <ul style="padding-left:18px;">
+      <li><strong>Aluno:</strong> ${escapeHtml(data.fullName)}</li>
+      <li><strong>E-mail:</strong> ${escapeHtml(data.email)}</li>
+      <li><strong>Telefone:</strong> ${escapeHtml(data.phone)}</li>
+      <li><strong>Turmas:</strong> ${escapeHtml(data.classCodes.join(", "))}</li>
+    </ul>
+  `;
+  return layout("Alerta de duplicidade", body);
 }
 
 export function otpEmailHtml(code: string) {

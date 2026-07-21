@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { ClientGuards } from "@/components/ClientGuards";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -32,10 +33,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f7f9" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  colorScheme: "light",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -44,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${montserrat.variable} ${plusJakarta.variable} antialiased`}>
+        <ClientGuards />
         {children}
       </body>
     </html>

@@ -209,10 +209,26 @@ export function StepReview({
         subtitle="Confirme o e-mail com o código enviado e revise os dados antes de concluir."
       />
 
-      <div className="mb-5 rounded-xl border border-line bg-bg p-4">
-        <p className="text-sm font-semibold text-fg">Verificação de e-mail</p>
+      <div className="mb-5 rounded-xl border border-line bg-bg-subtle p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <svg
+            className="h-4 w-4 text-brand"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m3 7 9 6 9-6" />
+          </svg>
+          Verificação de e-mail
+        </p>
         <p className="mt-1 text-xs text-muted">
-          Enviaremos um código de 4 dígitos para {draft.email}
+          Enviaremos um código de 6 dígitos para{" "}
+          <span className="font-medium text-ink-soft">{draft.email}</span>
         </p>
         {!emailVerified ? (
           <div className="mt-3 space-y-3">
@@ -220,26 +236,28 @@ export function StepReview({
               type="button"
               onClick={sendOtp}
               disabled={otpLoading}
-              className="rounded-xl border border-brand px-4 py-2 text-sm font-semibold text-brand disabled:opacity-50"
+              className="rounded-xl border border-brand px-4 py-2.5 text-sm font-semibold text-brand transition hover:bg-brand-soft/50 disabled:opacity-50"
             >
               {otpSent ? "Reenviar código" : "Enviar código"}
             </button>
             {otpSent && (
               <div className="flex gap-2">
                 <input
-                  className={inputClass()}
+                  className={`${inputClass()} text-center text-lg font-bold tracking-[0.4em]`}
                   value={otpCode}
                   onChange={(e) =>
-                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 4))
+                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  placeholder="0000"
+                  placeholder="000000"
                   inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
                 />
                 <button
                   type="button"
                   onClick={verifyOtp}
-                  disabled={otpLoading || otpCode.length !== 4}
-                  className="shrink-0 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  disabled={otpLoading || otpCode.length !== 6}
+                  className="brand-gradient shrink-0 rounded-xl px-4 py-2 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-105 disabled:opacity-50 disabled:shadow-none"
                 >
                   Verificar
                 </button>
@@ -247,8 +265,20 @@ export function StepReview({
             )}
           </div>
         ) : (
-          <p className="mt-2 text-sm font-semibold text-brand">
-            ✓ E-mail verificado
+          <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-success">
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            E-mail verificado
           </p>
         )}
       </div>

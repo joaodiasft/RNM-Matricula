@@ -7,7 +7,8 @@ import { COMPANY } from "@/lib/company";
 
 function authorize(req: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  // Fail-closed em produção: sem secret configurado, nega. Em dev, libera.
+  if (!secret) return process.env.NODE_ENV !== "production";
   return req.headers.get("authorization") === `Bearer ${secret}`;
 }
 

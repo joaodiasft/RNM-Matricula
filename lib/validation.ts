@@ -172,6 +172,62 @@ export type StudentStepData = z.infer<typeof studentStepSchema>;
 export type GuardiansStepData = z.infer<typeof guardiansStepSchema>;
 export type CoursesStepData = z.infer<typeof coursesStepSchema>;
 
+/**
+ * Schema de saneamento do rascunho no SERVIDOR ("nunca confie no front").
+ * Aplica limites de tamanho, tipos e enums, e descarta chaves desconhecidas
+ * (comportamento padrão do zod) — impede mass-assignment e payloads gigantes.
+ * É deliberadamente tolerante com formato (autosave envia dados incompletos);
+ * a validação estrita de formato acontece por passo no cliente e novamente ao
+ * concluir a matrícula no servidor.
+ */
+const str = (max: number) => z.string().trim().max(max);
+
+export const draftServerSchema = z
+  .object({
+    lgpdConsent: z.boolean(),
+    fullName: str(120),
+    birthDateBr: str(10),
+    email: str(254),
+    phone: str(20),
+    grade: str(40),
+    school: str(120),
+    cpf: str(18),
+    rg: str(20),
+    address: str(200),
+    referralSource: str(40),
+    referralCodeInput: str(40),
+    fatherName: str(120),
+    fatherPhone: str(20),
+    motherName: str(120),
+    motherPhone: str(20),
+    courses: z
+      .array(
+        z.object({
+          subject: z.enum(["redacao", "exatas", "matematica"]),
+          classCode: str(24),
+        })
+      )
+      .max(6),
+    waitlistCodes: z.array(str(24)).max(12),
+    courseInfoAck: z.boolean(),
+    modality: z.enum(["desconto", "desconto_parcial", "normal"]),
+    plan: z.enum(["mensal", "trimestral", "total"]),
+    paymentMethod: z.enum(["dinheiro", "cartao", "pix"]),
+    autoRenew: z.boolean(),
+    noticePayment: z.boolean(),
+    noticeAbsence: z.boolean(),
+    noticeModality: z.boolean(),
+    confirmEmail: str(254),
+    confirmPhone: str(20),
+    declarationName: str(120),
+  })
+  .partial();
+
+export const patchBodySchema = z.object({
+  currentStep: z.number().int().min(1).max(10).optional(),
+  draft: draftServerSchema.optional(),
+});
+
 export type EnrollmentDraft = {
   lgpdConsent?: boolean;
   fullName?: string;

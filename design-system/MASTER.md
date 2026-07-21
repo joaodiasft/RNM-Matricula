@@ -11,11 +11,14 @@ Fonte: logo oficial + guidelines ui-ux-pro-max
 | brand-soft | `#FCE4F1` | fundos suaves |
 | ink / fg | `#1F1F21` | texto principal (light) |
 | muted | `#6B6B6F` | texto secundário |
-| bg | `#F7F7F9` | fundo página |
+| bg (página) | `#FFFFFF` | fundo da página (branco) |
+| bg (tiles/inputs) | `#F5F5F9` | superfícies internas sutis dentro dos cards |
 | bg-elevated | `#FFFFFF` | cards/forms |
-| hero | `#0A0A0A` | faixa da marca / confirmação |
+| hero | gradiente `#141417 → #26141D` | faixa da marca (fundo do logo) / confirmação |
 
-Dark mode: fundo `#0A0A0A`, brand `#FF4DB0`, surfaces `#16161A`.
+Tema: **claro (fundo branco) fixo** — `color-scheme: light`. Sem dark mode, para
+garantir contraste consistente e o fundo branco pedido. O logo (PNG com fundo
+preto) fica sempre dentro de uma faixa escura (`.hero-gradient`).
 
 ## Tipografia
 

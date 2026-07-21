@@ -36,53 +36,77 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4">
-      <div className="overflow-hidden rounded-2xl border border-line/60 bg-bg-elevated shadow-[var(--shadow)]">
-        <div className="bg-[#0a0a0a] px-6 py-5">
-          <Image
-            src="/logo-rnm.png"
-            alt="Redação Nota Mil"
-            width={180}
-            height={80}
-            className="h-auto w-[160px]"
-            priority
-          />
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#e91e8c]">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">
+      <div className="card animate-rise overflow-hidden p-0">
+        <div className="hero-gradient px-7 py-7">
+          <div className="inline-block rounded-xl bg-black/30 p-1.5 ring-1 ring-white/10">
+            <Image
+              src="/logo-rnm.png"
+              alt="Redação Nota Mil"
+              width={180}
+              height={80}
+              className="h-auto w-[150px]"
+              priority
+            />
+          </div>
+          <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-[#ff7ac1]">
             Painel da secretaria
           </p>
+          <h1 className="font-display mt-1 text-xl font-extrabold text-white">
+            Acesso restrito
+          </h1>
         </div>
-        <form onSubmit={submit} className="space-y-4 p-6">
+        <form onSubmit={submit} className="space-y-4 p-7">
           <label className="block text-sm">
-            <span className="mb-1.5 block font-semibold">E-mail</span>
+            <span className="mb-1.5 block font-semibold text-ink-soft">
+              E-mail
+            </span>
             <input
               type="email"
               required
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-h-[48px] w-full rounded-xl border border-line bg-bg px-3.5 py-3 outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
+              className="min-h-[48px] w-full rounded-xl border border-line bg-white px-3.5 py-3 shadow-[var(--shadow-xs)] outline-none transition hover:border-line-strong focus:border-brand focus:ring-4 focus:ring-brand/12"
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1.5 block font-semibold">Senha</span>
+            <span className="mb-1.5 block font-semibold text-ink-soft">
+              Senha
+            </span>
             <input
               type="password"
               required
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="min-h-[48px] w-full rounded-xl border border-line bg-bg px-3.5 py-3 outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
+              className="min-h-[48px] w-full rounded-xl border border-line bg-white px-3.5 py-3 shadow-[var(--shadow-xs)] outline-none transition hover:border-line-strong focus:border-brand focus:ring-4 focus:ring-brand/12"
             />
           </label>
           {error && (
-            <p role="alert" className="text-sm font-medium text-danger">
+            <p
+              role="alert"
+              className="flex items-center gap-1.5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger"
+            >
+              <svg
+                className="h-4 w-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                aria-hidden
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 8v5M12 16.5v.5" />
+              </svg>
               {error}
             </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="min-h-[48px] w-full rounded-xl bg-brand py-3 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
+            className="brand-gradient min-h-[48px] w-full rounded-xl py-3 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? "Entrando…" : "Entrar"}
           </button>

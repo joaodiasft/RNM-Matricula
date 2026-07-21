@@ -12,13 +12,13 @@ export function ProgressBar({ current, total, label, saving, saved }: Props) {
   const pct = Math.round((current / total) * 100);
 
   return (
-    <div className="rounded-[var(--radius)] border border-line/70 bg-bg-elevated/90 p-4 shadow-sm backdrop-blur">
+    <div className="sticky top-2 z-20 rounded-[var(--radius)] border border-line bg-white/85 p-4 shadow-[var(--shadow-sm)] backdrop-blur-md">
       <div className="flex items-center justify-between gap-3 text-sm">
-        <p className="font-medium text-fg">
+        <p className="font-semibold text-ink">
           Passo {current} de {total}
-          <span className="text-muted"> — {label}</span>
+          <span className="font-normal text-muted"> · {label}</span>
         </p>
-        <div className="flex items-center gap-2 text-xs text-muted">
+        <div className="flex items-center gap-2.5 text-xs text-muted">
           {saving ? (
             <span className="inline-flex items-center gap-1.5 text-brand">
               <CloudIcon className="animate-pulse" />
@@ -26,18 +26,18 @@ export function ProgressBar({ current, total, label, saving, saved }: Props) {
             </span>
           ) : saved ? (
             <span
-              className="inline-flex items-center gap-1.5 font-semibold text-brand"
+              className="inline-flex items-center gap-1.5 font-semibold text-success"
               title="Progresso salvo"
             >
               <CloudCheckIcon />
               salvo
             </span>
           ) : null}
-          <span className="font-bold tabular-nums text-brand">{pct}%</span>
+          <span className="font-extrabold tabular-nums text-brand">{pct}%</span>
         </div>
       </div>
       <div
-        className="mt-3 h-2.5 overflow-hidden rounded-full bg-brand-soft"
+        className="mt-3 h-2 overflow-hidden rounded-full bg-brand-soft"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
@@ -45,7 +45,7 @@ export function ProgressBar({ current, total, label, saving, saved }: Props) {
         aria-label={`Progresso da matrícula: ${pct}%`}
       >
         <div
-          className="h-full rounded-full bg-brand transition-all duration-500 ease-out"
+          className="brand-gradient h-full rounded-full shadow-[0_0_10px_var(--brand-glow)] transition-all duration-500 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
