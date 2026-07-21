@@ -14,27 +14,27 @@
   /* Marca */
   --brand: #e91e8c;
   --brand-strong: #cc1478;
-  --brand-deep: #a80f61;
+  --brand-deep: #b01268;
   --brand-soft: #fce4f1;
-  --brand-tint: #fdf1f8;
-  --brand-glow: color-mix(in oklab, #e91e8c 26%, transparent);
+  --brand-tint: #fdf2f8;
+  --brand-glow: color-mix(in oklab, #e91e8c 28%, transparent);
 
   /* Tinta / texto */
-  --ink: #15151a;
-  --ink-soft: #3c3c45;
-  --muted: #71717a;
-  --muted-2: #9a9aa4;
+  --ink: #141418;
+  --ink-soft: #3a3a44;
+  --muted: #6b6b76;
+  --muted-2: #9898a3;
 
-  /* Superfícies — página branca; "bg" é o cinza sutil dos tiles/inputs internos */
-  --bg: #f5f5f9;
-  --bg-subtle: #fafafc;
+  /* Superfícies */
+  --bg: #f6f5f8;
+  --bg-subtle: #faf9fb;
   --bg-elevated: #ffffff;
-  --hero-a: #141417;
-  --hero-b: #26141d;
+  --hero-a: #121214;
+  --hero-b: #2a1420;
 
   /* Linhas e estados */
-  --line: #ececf1;
-  --line-strong: #dedee6;
+  --line: #ebeaf0;
+  --line-strong: #dddce4;
   --danger: #d32350;
   --danger-soft: #fdecef;
   --success: #12855a;
@@ -217,6 +217,12 @@ textarea:focus-visible,
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+}
+
+.card-quiet {
+  background: var(--bg-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
 /* Anima entrada suave de blocos */

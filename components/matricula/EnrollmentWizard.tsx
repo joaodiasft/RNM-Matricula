@@ -184,15 +184,29 @@ export function EnrollmentWizard() {
     [persist]
   );
 
+  // Sessões antigas: se caiu no passo 8 sem plano mensal, avança
+  useEffect(() => {
+    if (!session) return;
+    if (session.currentStep === 8 && session.draft.plan !== "mensal") {
+      goTo(9, 1);
+    }
+  }, [session, goTo]);
+
   const goNext = () => {
     if (!session) return;
-    const n = nextStep(session.currentStep, age);
+    const n = nextStep(session.currentStep, {
+      age,
+      plan: session.draft.plan,
+    });
     if (n) goTo(n, 1);
   };
 
   const goPrev = () => {
     if (!session) return;
-    const p = prevStep(session.currentStep, age);
+    const p = prevStep(session.currentStep, {
+      age,
+      plan: session.draft.plan,
+    });
     if (p) goTo(p, -1);
   };
 
@@ -238,7 +252,10 @@ export function EnrollmentWizard() {
 
   if (!session) return null;
 
-  const progress = stepDisplayIndex(session.currentStep, age);
+  const progress = stepDisplayIndex(session.currentStep, {
+    age,
+    plan: session.draft.plan,
+  });
   const step = session.currentStep;
 
   return (
@@ -283,7 +300,7 @@ export function EnrollmentWizard() {
 
       <FloatingSummary draft={session.draft} />
 
-      <div className="card relative mt-4 overflow-hidden p-5 sm:p-7">
+      <div className="card relative mt-3 overflow-hidden p-5 sm:mt-4 sm:p-7">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
@@ -349,7 +366,7 @@ export function EnrollmentWizard() {
                 onBack={goPrev}
               />
             )}
-            {step === 8 && (
+            {step === 8 && session.draft.plan === "mensal" && (
               <StepAutoRenew
                 draft={session.draft}
                 onChange={updateDraft}

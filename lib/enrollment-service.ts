@@ -244,6 +244,21 @@ export async function sendEnrollmentOtp(token: string) {
   const code = generateOtpCode();
   const expires = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
+  const sent = await sendEmail({
+    to: draft.email,
+    subject: `Seu código de verificação — ${COMPANY.name}`,
+    html: otpEmailHtml(code, draft.fullName),
+  });
+
+  if (sent.skipped) {
+    throw new Error("EMAIL_NAO_CONFIGURADO");
+  }
+  if ("error" in sent && sent.error) {
+    if (sent.code === "sandbox") throw new Error("EMAIL_DOMINIO");
+    throw new Error("EMAIL_FALHOU");
+  }
+
+  // Só grava o OTP depois que o e-mail saiu — evita código órfão.
   await db
     .update(enrollments)
     .set({
@@ -254,13 +269,11 @@ export async function sendEnrollmentOtp(token: string) {
     })
     .where(eq(enrollments.id, enrollment.id));
 
-  await sendEmail({
-    to: draft.email,
-    subject: `Seu código de verificação — ${COMPANY.name}`,
-    html: otpEmailHtml(code),
-  });
-
-  return { ok: true, expiresAt: expires.toISOString() };
+  return {
+    ok: true,
+    expiresAt: expires.toISOString(),
+    sentTo: draft.email,
+  };
 }
 
 export async function verifyEnrollmentOtp(token: string, code: string) {
@@ -288,6 +301,36 @@ export async function verifyEnrollmentOtp(token: string, code: string) {
     .where(eq(enrollments.id, enrollment.id));
 
   return { ok: true };
+}
+
+/** Verificação alternativa quando o envio de e-mail está bloqueado (sandbox Resend). */
+export async function verifyEnrollmentByPhoneTail(
+  token: string,
+  phoneTail: string
+) {
+  const db = getDb();
+  const enrollment = await getEnrollmentByToken(token);
+  if (!enrollment) throw new Error("NOT_FOUND");
+
+  const draft: EnrollmentDraft = enrollment.draftData
+    ? (JSON.parse(enrollment.draftData) as EnrollmentDraft)
+    : {};
+  const phone = onlyDigits(draft.phone || "");
+  const tail = onlyDigits(phoneTail);
+  if (tail.length !== 4) throw new Error("TELEFONE_INVALIDO");
+  if (!phone || !phone.endsWith(tail)) throw new Error("TELEFONE_INVALIDO");
+
+  await db
+    .update(enrollments)
+    .set({
+      emailVerified: true,
+      emailOtpCode: null,
+      emailOtpExpiresAt: null,
+      lastActivityAt: new Date(),
+    })
+    .where(eq(enrollments.id, enrollment.id));
+
+  return { ok: true, method: "phone_tail" as const };
 }
 
 async function findDuplicate(
@@ -535,7 +578,7 @@ export async function completeEnrollment(
       modality: draft.modality,
       plan: draft.plan,
       paymentMethod: draft.paymentMethod,
-      autoRenew: draft.autoRenew ?? false,
+      autoRenew: draft.plan === "mensal" ? Boolean(draft.autoRenew) : false,
       monthlyValue: String(pricing.monthlyValue),
       planTotal: String(pricing.planTotal),
       enrollmentFee: String(pricing.enrollmentFee),
@@ -571,7 +614,7 @@ export async function completeEnrollment(
     planDetail: pricing.calculationLabel,
     paymentMethod: PAYMENT_LABELS[draft.paymentMethod as PaymentMethod],
     enrollmentFee: pricing.enrollmentFee,
-    autoRenew: draft.autoRenew ?? false,
+    autoRenew: draft.plan === "mensal" ? Boolean(draft.autoRenew) : false,
     referralCode,
     editUrl,
   });

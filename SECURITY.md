@@ -55,6 +55,17 @@ Defina como _secrets_ (nunca commitados — `.env.local` está no `.gitignore`):
 | `CRON_SECRET` | Sem ele, os crons ficam bloqueados em produção. |
 | `TURNSTILE_SECRET_KEY` + `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Ativa o anti-robô no envio da matrícula. |
 | `DATABASE_URL` | Conexão Neon com `sslmode=require`. |
+| `EMAIL_WEBHOOK_URL` (opcional) | Webhook Google Apps Script / Gmail para enviar OTP a qualquer aluno enquanto o domínio Resend não estiver verificado. Ver `scripts/gmail-mail-webhook.gs`. |
+
+### E-mail OTP em produção
+
+O Resend em modo sandbox **só envia** para o e-mail da conta Resend. Para OTP
+chegar a qualquer aluno:
+
+1. **Recomendado:** verifique um domínio em [resend.com/domains](https://resend.com/domains) e atualize `RESEND_FROM` (ex.: `Redação Nota Mil <matricula@seudominio.com>`).
+2. **Alternativa rápida:** implante `scripts/gmail-mail-webhook.gs` e configure o secret `EMAIL_WEBHOOK_URL`.
+
+Enquanto o envio falhar, a tela de revisão oferece verificação pelos **4 últimos dígitos do WhatsApp** cadastrado.
 
 ## Sobre "bloquear o F12"
 

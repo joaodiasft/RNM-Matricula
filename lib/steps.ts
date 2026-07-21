@@ -11,21 +11,46 @@ export const STEP_NAMES = [
   "Revisão",
 ] as const;
 
-/** Índices lógicos 1–10 (passo 2 pode ser pulado) */
-export function getVisibleSteps(age: number | null): number[] {
-  const all = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+type StepOpts = {
+  age?: number | null;
+  plan?: string | null;
+};
+
+/** Índices lógicos 1–10 (passo 2 e 8 podem ser pulados) */
+export function getVisibleSteps(
+  ageOrOpts: number | null | StepOpts,
+  planArg?: string | null
+): number[] {
+  const age =
+    typeof ageOrOpts === "object" && ageOrOpts !== null
+      ? (ageOrOpts.age ?? null)
+      : ageOrOpts;
+  const plan =
+    typeof ageOrOpts === "object" && ageOrOpts !== null
+      ? (ageOrOpts.plan ?? null)
+      : (planArg ?? null);
+
+  let all = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   if (age !== null && age >= 18) {
-    return all.filter((s) => s !== 2);
+    all = all.filter((s) => s !== 2);
+  }
+  // Rematrícula automática só faz sentido no plano mensal
+  if (plan !== "mensal") {
+    all = all.filter((s) => s !== 8);
   }
   return all;
 }
 
-export function stepDisplayIndex(step: number, age: number | null): {
+export function stepDisplayIndex(
+  step: number,
+  ageOrOpts: number | null | StepOpts,
+  planArg?: string | null
+): {
   current: number;
   total: number;
   label: string;
 } {
-  const visible = getVisibleSteps(age);
+  const visible = getVisibleSteps(ageOrOpts, planArg);
   const idx = Math.max(0, visible.indexOf(step));
   const nameIdx = step - 1;
   return {
@@ -35,15 +60,23 @@ export function stepDisplayIndex(step: number, age: number | null): {
   };
 }
 
-export function nextStep(current: number, age: number | null): number | null {
-  const visible = getVisibleSteps(age);
+export function nextStep(
+  current: number,
+  ageOrOpts: number | null | StepOpts,
+  planArg?: string | null
+): number | null {
+  const visible = getVisibleSteps(ageOrOpts, planArg);
   const i = visible.indexOf(current);
   if (i < 0 || i >= visible.length - 1) return null;
   return visible[i + 1];
 }
 
-export function prevStep(current: number, age: number | null): number | null {
-  const visible = getVisibleSteps(age);
+export function prevStep(
+  current: number,
+  ageOrOpts: number | null | StepOpts,
+  planArg?: string | null
+): number | null {
+  const visible = getVisibleSteps(ageOrOpts, planArg);
   const i = visible.indexOf(current);
   if (i <= 0) return null;
   return visible[i - 1];

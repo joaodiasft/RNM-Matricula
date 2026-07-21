@@ -26,39 +26,39 @@ const TRUST = [
 
 export default function MatriculaPage() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 pb-28 pt-5 sm:px-6">
-      <header className="animate-rise hero-gradient mb-5 overflow-hidden rounded-[var(--radius-xl)] px-5 py-6 shadow-[var(--shadow-lg)] ring-1 ring-white/10 sm:px-8 sm:py-8">
-        <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7">
-          <div className="shrink-0 rounded-2xl bg-black/30 p-2 ring-1 ring-white/10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 pb-32 pt-4 sm:px-6 sm:pt-6">
+      <header className="animate-rise hero-gradient mb-4 overflow-hidden rounded-[var(--radius-xl)] px-5 py-6 shadow-[var(--shadow-lg)] ring-1 ring-white/10 sm:mb-5 sm:px-7 sm:py-7">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <div className="shrink-0 rounded-2xl bg-black/35 p-2 ring-1 ring-white/10">
             <Image
               src="/logo-rnm.png"
               alt="Redação Nota Mil — Curso Preparatório"
               width={220}
               height={100}
               priority
-              className="h-auto w-[150px] sm:w-[180px]"
+              className="h-auto w-[140px] sm:w-[168px]"
             />
           </div>
           <div className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#ff7ac1] ring-1 ring-brand/30">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#ff9fd0] ring-1 ring-brand/35">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" />
               Matrícula online
             </span>
-            <h1 className="font-display mt-3 text-[1.9rem] font-extrabold leading-[1.05] text-white sm:text-4xl">
+            <h1 className="font-display mt-3 text-[1.85rem] font-extrabold leading-[1.08] text-white sm:text-[2.15rem]">
               Faça sua matrícula
             </h1>
-            <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-white/70">
-              Preencha em poucos passos. Seu progresso é salvo automaticamente —
-              você pode fechar e continuar depois.
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/68">
+              Poucos passos, progresso salvo automaticamente. Feche e continue
+              quando quiser.
             </p>
           </div>
         </div>
 
-        <dl className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+        <dl className="mt-5 grid grid-cols-3 gap-2">
           {TRUST.map((t) => (
             <div
               key={t.label}
-              className="rounded-xl bg-white/[0.06] px-3 py-2.5 ring-1 ring-white/10"
+              className="rounded-xl bg-white/[0.07] px-2.5 py-2.5 ring-1 ring-white/10 sm:px-3"
             >
               <svg
                 className="h-4 w-4 text-brand"
@@ -72,8 +72,10 @@ export default function MatriculaPage() {
               >
                 {t.icon}
               </svg>
-              <dt className="mt-1.5 text-xs font-bold text-white">{t.label}</dt>
-              <dd className="text-[11px] leading-tight text-white/55">
+              <dt className="mt-1.5 text-[11px] font-bold leading-tight text-white sm:text-xs">
+                {t.label}
+              </dt>
+              <dd className="mt-0.5 hidden text-[10px] leading-tight text-white/50 sm:block">
                 {t.desc}
               </dd>
             </div>
@@ -83,24 +85,24 @@ export default function MatriculaPage() {
 
       <EnrollmentWizard />
 
-      <footer className="mt-12 border-t border-line pt-8 text-center text-xs leading-relaxed text-muted">
+      <footer className="mt-14 border-t border-line pt-8 text-center text-xs leading-relaxed text-muted">
         <Image
           src="/logo-rnm.png"
           alt=""
           width={120}
           height={54}
-          className="mx-auto mb-4 h-auto w-[96px] rounded-lg bg-[#141417] p-1.5 opacity-90"
+          className="mx-auto mb-4 h-auto w-[88px] rounded-xl bg-[#141417] p-1.5 opacity-90"
         />
         <p className="font-semibold text-ink-soft">{COMPANY.name}</p>
-        <p>CNPJ {COMPANY.cnpj}</p>
+        <p className="mt-1">CNPJ {COMPANY.cnpj}</p>
         <p>{COMPANY.address}</p>
-        <p className="mt-1">
+        <p className="mt-1.5">
           {COMPANY.phone} · urgência {COMPANY.urgencyPhone}
         </p>
         <p>{COMPANY.email}</p>
-        <p className="mt-4 text-[11px] text-muted-2">
-          Seus dados trafegam por conexão segura e são usados apenas para a
-          matrícula, conforme a LGPD.
+        <p className="mt-5 text-[11px] text-muted-2">
+          Dados protegidos com conexão segura, usados apenas para a matrícula
+          (LGPD).
         </p>
       </footer>
     </main>

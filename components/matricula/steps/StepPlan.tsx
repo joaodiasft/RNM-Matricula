@@ -63,7 +63,12 @@ export function StepPlan({ draft, onChange, onNext, onBack }: Props) {
             <button
               key={plan}
               type="button"
-              onClick={() => onChange({ plan })}
+              onClick={() =>
+                onChange({
+                  plan,
+                  ...(plan !== "mensal" ? { autoRenew: false } : {}),
+                })
+              }
               className={[
                 "w-full rounded-xl border px-4 py-4 text-left transition",
                 selected
