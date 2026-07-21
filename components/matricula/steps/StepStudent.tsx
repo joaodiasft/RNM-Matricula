@@ -167,6 +167,34 @@ export function StepStudent({ draft, age, onChange, onNext }: Props) {
             onChange={(e) => onChange({ address: e.target.value })}
           />
         </Field>
+
+        <Field label="Como conheceu a Redação Nota Mil? (opcional)">
+          <select
+            className={inputClass()}
+            value={draft.referralSource ?? ""}
+            onChange={(e) => onChange({ referralSource: e.target.value })}
+          >
+            <option value="">Selecione…</option>
+            <option value="indicacao">Indicação de amigo/aluno</option>
+            <option value="instagram">Instagram</option>
+            <option value="google">Google</option>
+            <option value="outro">Outro</option>
+          </select>
+        </Field>
+
+        <Field
+          label="Código de indicação (opcional)"
+          hint="Tem um código de quem te indicou?"
+        >
+          <input
+            className={inputClass()}
+            value={draft.referralCodeInput ?? ""}
+            onChange={(e) =>
+              onChange({ referralCodeInput: e.target.value.toUpperCase() })
+            }
+            placeholder="EX: JOAO-RNM-482"
+          />
+        </Field>
       </div>
 
       <NavButtons onNext={submit} />

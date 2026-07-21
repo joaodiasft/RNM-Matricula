@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import { coursesStepSchema } from "@/lib/validation";
 import {
@@ -9,6 +9,12 @@ import {
   type Subject,
 } from "@/lib/courses";
 import { NavButtons, StepTitle } from "../ui";
+
+type ClassAvail = {
+  code: string;
+  seatsLeft: number;
+  full: boolean;
+};
 
 type Props = {
   draft: EnrollmentDraft;
@@ -19,23 +25,61 @@ type Props = {
 
 export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<Record<string, ClassAvail>>(
+    {}
+  );
+
+  useEffect(() => {
+    fetch("/api/classes")
+      .then((r) => r.json())
+      .then((d) => {
+        const map: Record<string, ClassAvail> = {};
+        for (const c of d.classes || []) {
+          map[c.code] = {
+            code: c.code,
+            seatsLeft: c.seatsLeft,
+            full: c.full,
+          };
+        }
+        setAvailability(map);
+      })
+      .catch(() => {});
+  }, []);
+
   const available = useMemo(
     () => getAvailableClasses(draft.grade || ""),
     [draft.grade]
   );
 
   const selected = draft.courses ?? [];
+  const waitlistCodes = draft.waitlistCodes ?? [];
 
   const toggle = (subject: Subject, classCode: string) => {
     const withoutSubject = selected.filter((c) => c.subject !== subject);
     const already = selected.find(
       (c) => c.subject === subject && c.classCode === classCode
     );
+    const full = availability[classCode]?.full;
+
     if (already) {
-      onChange({ courses: withoutSubject, courseInfoAck: false });
+      onChange({
+        courses: withoutSubject,
+        waitlistCodes: waitlistCodes.filter((c) => c !== classCode),
+        courseInfoAck: false,
+      });
     } else {
+      const nextWaitlist = full
+        ? [...waitlistCodes.filter((c) => {
+            const prev = selected.find((s) => s.subject === subject);
+            return prev ? c !== prev.classCode : true;
+          }), classCode]
+        : waitlistCodes.filter((c) => {
+            const prev = selected.find((s) => s.subject === subject);
+            return prev ? c !== prev.classCode : true;
+          });
       onChange({
         courses: [...withoutSubject, { subject, classCode }],
+        waitlistCodes: nextWaitlist,
         courseInfoAck: false,
       });
     }
@@ -62,7 +106,7 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
     <div>
       <StepTitle
         title="Turma e horário"
-        subtitle="Escolha uma turma por matéria. Só aparecem turmas compatíveis com a série informada."
+        subtitle="Turmas filtradas pela sua série. Veja as vagas restantes — se lotar, entre na lista de espera."
       />
 
       {!draft.grade && (
@@ -80,6 +124,16 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
             <div className="grid gap-3">
               {bySubject(subject).map((c) => {
                 const isOn = selected.some((s) => s.classCode === c.code);
+                const avail = availability[c.code];
+                const full = avail?.full ?? false;
+                const seatsLeft = avail?.seatsLeft;
+                const suggested =
+                  c.grades?.includes(draft.grade || "") ||
+                  (c.level === "medio" &&
+                    ["1ª série EM", "2ª série EM", "3ª série EM"].includes(
+                      draft.grade || ""
+                    ));
+
                 return (
                   <button
                     key={c.code}
@@ -89,19 +143,34 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
                       "rounded-xl border px-4 py-3 text-left transition",
                       isOn
                         ? "border-brand bg-brand-soft ring-2 ring-brand/30"
-                        : "border-line bg-bg hover:border-brand/40",
+                        : suggested
+                          ? "border-brand/50 bg-bg"
+                          : "border-line bg-bg hover:border-brand/40",
                     ].join(" ")}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-fg">
                           Turma {c.code}
+                          {suggested && (
+                            <span className="ml-2 text-xs font-medium text-brand">
+                              sugerida pra você
+                            </span>
+                          )}
                         </p>
                         <p className="text-sm text-muted">{c.label}</p>
                         <p className="mt-1 text-sm text-fg">
                           {c.day} · {c.schedule}
                         </p>
-                        <p className="text-xs text-muted">Duração: {c.duration}</p>
+                        {seatsLeft != null && (
+                          <p
+                            className={`mt-1 text-xs font-semibold ${full ? "text-danger" : "text-brand"}`}
+                          >
+                            {full
+                              ? "Lotada — Entrar na lista de espera"
+                              : `Restam ${seatsLeft} vaga${seatsLeft === 1 ? "" : "s"}`}
+                          </p>
+                        )}
                       </div>
                       <span
                         className={[

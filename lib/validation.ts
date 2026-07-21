@@ -183,11 +183,17 @@ export type EnrollmentDraft = {
   cpf?: string;
   rg?: string;
   address?: string;
+  referralSource?: string;
+  referralCodeInput?: string;
   fatherName?: string;
   fatherPhone?: string;
   motherName?: string;
   motherPhone?: string;
-  courses?: { subject: "redacao" | "exatas" | "matematica"; classCode: string }[];
+  courses?: {
+    subject: "redacao" | "exatas" | "matematica";
+    classCode: string;
+  }[];
+  waitlistCodes?: string[];
   courseInfoAck?: boolean;
   modality?: "desconto" | "desconto_parcial" | "normal";
   plan?: "mensal" | "trimestral" | "total";

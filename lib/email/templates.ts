@@ -41,8 +41,16 @@ export function confirmationEmailHtml(data: {
   paymentMethod: string;
   enrollmentFee: number;
   autoRenew: boolean;
+  referralCode?: string | null;
+  editUrl?: string;
 }) {
   const ageText = data.age != null ? `${data.age} anos` : "—";
+  const referralBlock = data.referralCode
+    ? `<li><strong>Seu código de indicação:</strong> <code>${escapeHtml(data.referralCode)}</code> — compartilhe com quem você for indicar!</li>`
+    : "";
+  const editBlock = data.editUrl
+    ? `<p>Quer atualizar seu telefone ou e-mail depois? <a href="${escapeHtml(data.editUrl)}">Editar dados básicos</a></p>`
+    : "";
   const body = `
     <p>Olá, <strong>${escapeHtml(data.studentName)}</strong>!</p>
     <p>Sua matrícula na <strong>${escapeHtml(COMPANY.name)}</strong> foi recebida com sucesso. Aqui está o resumo:</p>
@@ -54,11 +62,22 @@ export function confirmationEmailHtml(data: {
       <li><strong>Forma de pagamento:</strong> ${escapeHtml(data.paymentMethod)}</li>
       <li><strong>Taxa de matrícula:</strong> ${escapeHtml(formatBRL(data.enrollmentFee))}</li>
       <li><strong>Rematrícula automática:</strong> ${data.autoRenew ? "Sim" : "Não"}</li>
+      ${referralBlock}
     </ul>
     <p>Próximo passo: envie o resumo da sua matrícula pelo WhatsApp da nossa equipe para confirmarmos tudo certinho.</p>
+    ${editBlock}
     <p>Bem-vindo(a) à ${escapeHtml(COMPANY.name)}! 🎉</p>
   `;
   return layout("Matrícula confirmada", body);
+}
+
+export function otpEmailHtml(code: string) {
+  const body = `
+    <p>Olá! Seu código para confirmar a matrícula é:</p>
+    <p style="font-size:32px;letter-spacing:0.25em;font-weight:700;text-align:center;margin:24px 0;">${escapeHtml(code)}</p>
+    <p>Ele expira em alguns minutos. Se você não pediu esse código, pode ignorar este e-mail.</p>
+  `;
+  return layout("Código de verificação", body);
 }
 
 export function abandonmentEmailHtml(data: {
@@ -68,6 +87,7 @@ export function abandonmentEmailHtml(data: {
   phone?: string | null;
   grade?: string | null;
   school?: string | null;
+  referralSource?: string | null;
   coursesText?: string;
   currentStep: number;
   lastActivityAt: string;
@@ -82,6 +102,7 @@ export function abandonmentEmailHtml(data: {
       <li><strong>Telefone/WhatsApp:</strong> ${escapeHtml(data.phone || "—")}</li>
       <li><strong>Série:</strong> ${escapeHtml(data.grade || "—")}</li>
       <li><strong>Onde estuda:</strong> ${escapeHtml(data.school || "—")}</li>
+      <li><strong>Como conheceu:</strong> ${escapeHtml(data.referralSource || "—")}</li>
       <li><strong>Curso(s) em andamento:</strong> ${escapeHtml(data.coursesText || "—")}</li>
       <li><strong>Último passo preenchido:</strong> Passo ${data.currentStep} de 9</li>
       <li><strong>Parou às:</strong> ${escapeHtml(data.lastActivityAt)}</li>

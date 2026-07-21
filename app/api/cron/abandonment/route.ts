@@ -80,6 +80,7 @@ export async function GET(req: Request) {
         phone: s?.phone || draft.phone,
         grade: s?.grade || draft.grade,
         school: s?.school || draft.school,
+        referralSource: s?.referralSource || draft.referralSource,
         coursesText,
         currentStep: e.currentStep,
         lastActivityAt: e.lastActivityAt

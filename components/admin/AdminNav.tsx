@@ -17,6 +17,12 @@ export function AdminNav() {
           <Link href="/admin/dashboard" className="text-muted hover:text-fg">
             Matrículas
           </Link>
+          <Link href="/admin/turmas" className="text-muted hover:text-fg">
+            Turmas
+          </Link>
+          <Link href="/admin/operacoes" className="text-muted hover:text-fg">
+            Operações
+          </Link>
           <Link href="/admin/settings" className="text-muted hover:text-fg">
             Config
           </Link>

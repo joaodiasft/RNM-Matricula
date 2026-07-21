@@ -5,9 +5,10 @@ type Props = {
   total: number;
   label: string;
   saving?: boolean;
+  saved?: boolean;
 };
 
-export function ProgressBar({ current, total, label, saving }: Props) {
+export function ProgressBar({ current, total, label, saving, saved }: Props) {
   const pct = Math.round((current / total) * 100);
 
   return (
@@ -18,7 +19,13 @@ export function ProgressBar({ current, total, label, saving }: Props) {
           <span className="text-muted"> — {label}</span>
         </p>
         <div className="flex items-center gap-2 text-xs text-muted">
-          {saving && <span className="animate-pulse">Salvando…</span>}
+          {saving ? (
+            <span className="animate-pulse">☁️ salvando…</span>
+          ) : saved ? (
+            <span className="text-brand" title="Progresso salvo">
+              ☁️✓ salvo
+            </span>
+          ) : null}
           <span className="font-semibold text-brand">{pct}%</span>
         </div>
       </div>

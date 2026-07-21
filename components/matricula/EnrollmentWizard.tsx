@@ -42,12 +42,14 @@ export function EnrollmentWizard() {
   const [session, setSession] = useState<SessionState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResume, setShowResume] = useState(false);
   const [pendingResume, setPendingResume] = useState<SessionState | null>(null);
   const [completed, setCompleted] = useState<{
     whatsappUrl: string;
     studentName: string;
+    referralCode?: string | null;
   } | null>(null);
   const [direction, setDirection] = useState(1);
   const [, startTransition] = useTransition();
@@ -122,6 +124,7 @@ export function EnrollmentWizard() {
     async (next: SessionState, immediate = false) => {
       const run = async () => {
         setSaving(true);
+        setSaved(false);
         try {
           await fetch(`/api/enrollment/${next.token}`, {
             method: "PATCH",
@@ -135,6 +138,7 @@ export function EnrollmentWizard() {
             LOCAL_STORAGE_KEY,
             JSON.stringify({ token: next.token })
           );
+          setSaved(true);
         } catch (e) {
           console.error(e);
         } finally {
@@ -225,6 +229,7 @@ export function EnrollmentWizard() {
         studentName={completed.studentName}
         whatsappUrl={completed.whatsappUrl}
         draft={session?.draft ?? {}}
+        referralCode={completed.referralCode}
       />
     );
   }
@@ -271,6 +276,7 @@ export function EnrollmentWizard() {
         total={progress.total}
         label={progress.label}
         saving={saving}
+        saved={saved}
       />
 
       <FloatingSummary draft={session.draft} />

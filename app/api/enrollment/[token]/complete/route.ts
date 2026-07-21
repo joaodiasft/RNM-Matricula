@@ -59,6 +59,9 @@ export async function POST(req: Request, { params }: Params) {
       pricing: result.pricing,
       whatsappUrl,
       studentName: result.draft!.fullName,
+      referralCode: result.referralCode ?? null,
+      editUrl: result.editUrl ?? null,
+      waitlistCodes: result.waitlistCodes ?? [],
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "ERRO";
@@ -68,6 +71,9 @@ export async function POST(req: Request, { params }: Params) {
       AVISOS_PENDENTES: "Aceite todos os avisos antes de concluir",
       CONFIRMACAO_INVALIDA: "Confirme e-mail e telefone corretamente",
       RESPONSAVEIS_PENDENTES: "Preencha pelo menos um responsável",
+      EMAIL_NAO_VERIFICADO: "Verifique seu e-mail com o código enviado",
+      DUPLICIDADE:
+        "Já existe matrícula com estes dados na mesma turma. A secretaria foi avisada.",
     };
     console.error(err);
     return NextResponse.json(

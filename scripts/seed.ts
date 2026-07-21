@@ -4,8 +4,9 @@ config();
 
 import { eq } from "drizzle-orm";
 import { getDb } from "../lib/db";
-import { adminSettings, adminUsers } from "../lib/db/schema";
+import { adminSettings, adminUsers, classes } from "../lib/db/schema";
 import { hashPassword } from "../lib/auth";
+import { seedClassRows } from "../lib/v2-helpers";
 
 async function main() {
   const email = process.env.ADMIN_EMAIL || "naredacaonota1000@gmail.com";
@@ -43,6 +44,14 @@ async function main() {
       value: cardFee,
     });
     console.log(`Taxa maquininha definida: ${cardFee}%`);
+  }
+
+  const classCount = await db.select().from(classes).limit(1);
+  if (classCount.length === 0) {
+    await db.insert(classes).values(seedClassRows());
+    console.log("Turmas seedadas com 15 vagas cada.");
+  } else {
+    console.log("Turmas já existem.");
   }
 
   console.log("Seed concluído.");

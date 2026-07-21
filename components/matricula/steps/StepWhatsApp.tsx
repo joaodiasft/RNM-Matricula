@@ -17,9 +17,15 @@ type Props = {
   studentName: string;
   whatsappUrl: string;
   draft: EnrollmentDraft;
+  referralCode?: string | null;
 };
 
-export function StepWhatsApp({ studentName, whatsappUrl, draft }: Props) {
+export function StepWhatsApp({
+  studentName,
+  whatsappUrl,
+  draft,
+  referralCode,
+}: Props) {
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
   const pricing =
     draft.modality && draft.plan && draft.paymentMethod
@@ -58,6 +64,11 @@ export function StepWhatsApp({ studentName, whatsappUrl, draft }: Props) {
           )}
           {draft.plan && <p>Plano: {PLAN_LABELS[draft.plan as Plan]}</p>}
           {pricing && <p>Valor: {formatBRL(pricing.planTotal)}</p>}
+          {referralCode && (
+            <p className="mt-2 rounded-lg bg-white/15 px-3 py-2 text-sm">
+              Código de indicação: <strong>{referralCode}</strong>
+            </p>
+          )}
         </div>
       </div>
 
