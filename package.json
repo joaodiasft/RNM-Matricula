@@ -17,7 +17,9 @@
     "pages:build": "opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "email:test": "python scripts/send_email.py --test",
+    "email:send": "python scripts/send_email.py"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

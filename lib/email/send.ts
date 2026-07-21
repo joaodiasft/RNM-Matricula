@@ -1,8 +1,9 @@
 import { Resend } from "resend";
 import { COMPANY } from "../company";
+import { getEnv } from "../db";
 
 function getResend() {
-  const key = process.env.RESEND_API_KEY;
+  const key = getEnv("RESEND_API_KEY") || process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
 }
@@ -13,7 +14,10 @@ export async function sendEmail(opts: {
   html: string;
 }) {
   const resend = getResend();
-  const from = process.env.RESEND_FROM || `${COMPANY.name} <onboarding@resend.dev>`;
+  const from =
+    getEnv("RESEND_FROM") ||
+    process.env.RESEND_FROM ||
+    `${COMPANY.name} <onboarding@resend.dev>`;
 
   if (!resend) {
     console.warn("[email] RESEND_API_KEY ausente — e-mail não enviado:", opts.subject);

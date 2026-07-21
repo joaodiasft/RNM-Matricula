@@ -574,10 +574,13 @@ export async function completeEnrollment(
     whatsapp: {
       fullName: draft.fullName,
       phone: draft.phone,
+      email: draft.email,
       courses: draft.courses,
       modality: draft.modality as Modality,
       plan: draft.plan as Plan,
+      paymentMethod: draft.paymentMethod as PaymentMethod,
       planTotal: pricing.planTotal,
+      enrollmentFee: pricing.enrollmentFee,
     },
   };
 }
