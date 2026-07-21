@@ -40,9 +40,24 @@ import {
 
 export async function ensureClassesSeeded() {
   const db = getDb();
-  const existing = await db.select({ code: classes.code }).from(classes).limit(1);
+  const existing = await db.select().from(classes);
   if (existing.length === 0) {
     await db.insert(classes).values(seedClassRows());
+    return;
+  }
+
+  // Mantém horários do catálogo sincronizados (ex.: R1/R2)
+  for (const row of seedClassRows()) {
+    await db
+      .update(classes)
+      .set({
+        weekday: row.weekday,
+        schedule: row.schedule,
+        subject: row.subject,
+        gradeRange: row.gradeRange,
+        updatedAt: new Date(),
+      })
+      .where(eq(classes.code, row.code));
   }
 }
 
