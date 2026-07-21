@@ -38,18 +38,19 @@ export function StepWhatsApp({
       : null;
 
   return (
-    <div className="rounded-[var(--radius)] bg-bg-elevated p-6 shadow-[var(--shadow)] sm:p-8">
+    <div className="rounded-[20px] border border-line/60 bg-bg-elevated p-6 shadow-[var(--shadow)] sm:p-8">
       <StepTitle
         title="Matrícula recebida!"
         subtitle={`Obrigado, ${studentName}. Agora envie o registro oficial pelo WhatsApp da equipe.`}
       />
 
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-deep to-brand p-6 text-white">
-        <p className="text-xs uppercase tracking-[0.2em] opacity-80">
+      <div className="relative overflow-hidden rounded-2xl bg-[#0a0a0a] p-6 text-white">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-[#e91e8c]" />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#e91e8c]">
           {COMPANY.name}
         </p>
-        <h3 className="font-display mt-2 text-2xl">{studentName}</h3>
-        <div className="mt-4 space-y-2 text-sm opacity-95">
+        <h3 className="font-display mt-2 text-2xl font-bold">{studentName}</h3>
+        <div className="mt-4 space-y-2 text-sm text-[#d8d8de]">
           {(draft.courses ?? []).map((c) => {
             const info = getClassByCode(c.classCode);
             return (
@@ -65,7 +66,7 @@ export function StepWhatsApp({
           {draft.plan && <p>Plano: {PLAN_LABELS[draft.plan as Plan]}</p>}
           {pricing && <p>Valor: {formatBRL(pricing.planTotal)}</p>}
           {referralCode && (
-            <p className="mt-2 rounded-lg bg-white/15 px-3 py-2 text-sm">
+            <p className="mt-2 rounded-lg bg-[#e91e8c]/20 px-3 py-2 text-sm text-white">
               Código de indicação: <strong>{referralCode}</strong>
             </p>
           )}
@@ -76,7 +77,7 @@ export function StepWhatsApp({
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-6 flex w-full items-center justify-center rounded-xl bg-[#25D366] px-5 py-4 text-center text-sm font-bold text-white"
+        className="mt-6 flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#25D366] px-5 py-4 text-center text-sm font-bold text-white transition hover:brightness-95 active:scale-[0.99]"
       >
         Enviar registro no WhatsApp
       </a>

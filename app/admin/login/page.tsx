@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { COMPANY } from "@/lib/company";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -37,39 +37,52 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4">
-      <div className="rounded-2xl bg-bg-elevated p-6 shadow-[var(--shadow)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-          Painel
-        </p>
-        <h1 className="font-display mt-2 text-3xl">{COMPANY.name}</h1>
-        <p className="mt-2 text-sm text-muted">Acesso da secretaria</p>
-
-        <form onSubmit={submit} className="mt-6 space-y-4">
+      <div className="overflow-hidden rounded-2xl border border-line/60 bg-bg-elevated shadow-[var(--shadow)]">
+        <div className="bg-[#0a0a0a] px-6 py-5">
+          <Image
+            src="/logo-rnm.png"
+            alt="Redação Nota Mil"
+            width={180}
+            height={80}
+            className="h-auto w-[160px]"
+            priority
+          />
+          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#e91e8c]">
+            Painel da secretaria
+          </p>
+        </div>
+        <form onSubmit={submit} className="space-y-4 p-6">
           <label className="block text-sm">
-            <span className="mb-1.5 block font-medium">E-mail</span>
+            <span className="mb-1.5 block font-semibold">E-mail</span>
             <input
               type="email"
               required
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-line bg-bg px-3.5 py-3 outline-none focus:border-brand"
+              className="min-h-[48px] w-full rounded-xl border border-line bg-bg px-3.5 py-3 outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1.5 block font-medium">Senha</span>
+            <span className="mb-1.5 block font-semibold">Senha</span>
             <input
               type="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-line bg-bg px-3.5 py-3 outline-none focus:border-brand"
+              className="min-h-[48px] w-full rounded-xl border border-line bg-bg px-3.5 py-3 outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
             />
           </label>
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm font-medium text-danger">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-brand py-3 text-sm font-semibold text-white disabled:opacity-50"
+            className="min-h-[48px] w-full rounded-xl bg-brand py-3 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-50"
           >
             {loading ? "Entrando…" : "Entrar"}
           </button>

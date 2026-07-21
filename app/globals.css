@@ -1,37 +1,52 @@
 @import "tailwindcss";
 
+/*
+  Brand: Redação Nota Mil (logo)
+  Magenta #E91E8C · Preto #0A0A0A · Carvão #1F1F21 · Cinza #6B6B6F
+*/
+
 :root {
-  --bg: #f3f8f5;
+  --brand: #e91e8c;
+  --brand-deep: #b01268;
+  --brand-soft: #fce4f1;
+  --brand-glow: color-mix(in oklab, #e91e8c 22%, transparent);
+
+  --ink: #1f1f21;
+  --ink-soft: #4a4a4e;
+  --muted: #6b6b6f;
+  --line: #e6e6ea;
+  --bg: #f7f7f9;
   --bg-elevated: #ffffff;
-  --fg: #14261c;
-  --muted: #5c7366;
-  --brand: #0d5c45;
-  --brand-deep: #083d2e;
-  --brand-soft: #d8efe4;
-  --accent: #c45c26;
-  --accent-soft: #f8e8de;
-  --line: #c9dbd1;
-  --danger: #b42318;
-  --success: #0d5c45;
-  --shadow: 0 12px 40px rgba(13, 92, 69, 0.1);
-  --radius: 16px;
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --danger: #c62828;
+  --success: #1b7a4a;
+  --accent: #e91e8c;
+  --accent-soft: #fce4f1;
+
+  --fg: var(--ink);
+  --shadow: 0 10px 40px rgba(15, 15, 20, 0.08);
+  --radius: 14px;
+  --touch: 48px;
+
+  --font-display: var(--font-montserrat), system-ui, sans-serif;
+  --font-body: var(--font-plus-jakarta), system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b1611;
-    --bg-elevated: #132019;
-    --fg: #e8f2ec;
-    --muted: #9bb5a6;
-    --brand: #3dba8f;
-    --brand-deep: #1f7a5c;
-    --brand-soft: #163528;
-    --accent: #e08a52;
-    --accent-soft: #3a2618;
-    --line: #24382c;
-    --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    --brand: #ff4db0;
+    --brand-deep: #e91e8c;
+    --brand-soft: #3a1028;
+    --brand-glow: color-mix(in oklab, #e91e8c 35%, transparent);
+    --ink: #f4f4f6;
+    --ink-soft: #c8c8ce;
+    --muted: #a0a0a8;
+    --line: #2c2c32;
+    --bg: #0a0a0a;
+    --bg-elevated: #16161a;
+    --accent: #ff4db0;
+    --accent-soft: #3a1028;
+    --fg: var(--ink);
+    --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -47,6 +62,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-line: var(--line);
   --color-danger: var(--danger);
+  --color-success: var(--success);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
 }
@@ -59,25 +75,64 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, var(--brand) 18%, transparent), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 55%),
-    linear-gradient(180deg, var(--bg), color-mix(in oklab, var(--bg) 92%, var(--brand-soft)));
   color: var(--fg);
   font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(900px 420px at 0% -5%, var(--brand-glow), transparent 55%),
+    radial-gradient(700px 380px at 100% 0%, color-mix(in oklab, #1f1f21 8%, transparent), transparent 50%),
+    linear-gradient(180deg, var(--bg), color-mix(in oklab, var(--bg) 92%, var(--brand-soft)));
 }
 
-h1, h2, h3, .font-display {
+h1,
+h2,
+h3,
+.font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
-input, select, textarea, button {
+input,
+select,
+textarea,
+button {
   font: inherit;
+  min-height: var(--touch);
+}
+
+button,
+[role="button"],
+a {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--brand) 55%, white);
+  outline-offset: 2px;
 }
 
 ::selection {

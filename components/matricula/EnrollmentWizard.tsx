@@ -281,7 +281,7 @@ export function EnrollmentWizard() {
 
       <FloatingSummary draft={session.draft} />
 
-      <div className="relative mt-4 overflow-hidden rounded-[var(--radius)] bg-bg-elevated p-5 shadow-[var(--shadow)] sm:p-7">
+      <div className="relative mt-4 overflow-hidden rounded-[20px] border border-line/60 bg-bg-elevated p-5 shadow-[var(--shadow)] sm:p-7">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
