@@ -3,72 +3,105 @@
 /*
   ─────────────────────────────────────────────────────────────
   Design System · Redação Nota Mil — Matrícula
-  Base: logo oficial (magenta #E91E8C sobre preto)
-  Tema: claro / fundo branco. Acentos da marca em magenta.
+  Primária = magenta da logo (#FF008E). Texto em tinta escura.
+  Avisos usam cores semânticas padrão (danger/warning/success/info).
   ─────────────────────────────────────────────────────────────
 */
 
 :root {
   color-scheme: light;
 
-  /* Marca */
-  --brand: #e91e8c;
-  --brand-strong: #cc1478;
-  --brand-deep: #b01268;
-  --brand-soft: #fce4f1;
-  --brand-tint: #fdf2f8;
-  --brand-glow: color-mix(in oklab, #e91e8c 28%, transparent);
+  /* Texto */
+  --ink: #1a1520;
+  --ink-soft: #3d3545;
+  --muted: #6b6472;
+  --muted-2: #9a93a0;
 
-  /* Tinta / texto */
-  --ink: #141418;
-  --ink-soft: #3a3a44;
-  --muted: #6b6b76;
-  --muted-2: #9898a3;
+  /* Marca = magenta da logo */
+  --brand: #ff008e;
+  --brand-strong: #e0007c;
+  --brand-deep: #b80066;
+  --brand-soft: #ffe5f4;
+  --brand-tint: #fff5fa;
+  --brand-glow: color-mix(in oklab, #ff008e 28%, transparent);
+
+  /* Destaque claro (substitui ouro — alinhado à marca) */
+  --gold: #ff008e;
+  --gold-strong: #e0007c;
+  --gold-deep: #b80066;
+  --gold-soft: #ffe5f4;
+  --gold-tint: #fff5fa;
+  --gold-glow: color-mix(in oklab, #ff008e 45%, transparent);
+
+  /* Idade */
+  --menor: #ff008e;
+  --menor-soft: #ffe5f4;
+  --maior: #16a34a;
+  --maior-soft: #dcfce7;
 
   /* Superfícies */
-  --bg: #f6f5f8;
-  --bg-subtle: #faf9fb;
+  --paper: #faf7f9;
+  --bg: #faf7f9;
+  --bg-subtle: #fffbfd;
   --bg-elevated: #ffffff;
-  --hero-a: #121214;
-  --hero-b: #2a1420;
+  --hero-a: #1a0a14;
+  --hero-b: #2a1020;
+  --gold-on-dark: #ff7ac4;
+  --gold-on-dark-soft: color-mix(in oklab, #ff7ac4 75%, white);
 
   /* Linhas e estados */
-  --line: #ebeaf0;
-  --line-strong: #dddce4;
-  --danger: #d32350;
-  --danger-soft: #fdecef;
-  --success: #12855a;
-  --success-soft: #e7f6ee;
-  --warning: #b7791f;
-  --warning-soft: #fdf4e3;
+  --line: #e4e7ec; /* tinta-100 */
+  --line-strong: #cdd3de;
+  --danger: #dc2626; /* erro-600 */
+  --danger-soft: #fee2e2;
+  --success: #16a34a; /* sucesso-600 */
+  --success-soft: #dcfce7;
+  --warning: #f59e0b; /* alerta-500 */
+  --warning-soft: #fef3c7;
+  --alert: #f59e0b;
+  --alert-soft: #fef3c7;
+  --info: #6366f1; /* info-500 */
+  --info-soft: #e8e9fd;
 
   --accent: var(--brand);
   --accent-soft: var(--brand-soft);
   --fg: var(--ink);
 
-  /* Elevação — sombras em camadas (mais suaves e modernas) */
-  --shadow-xs: 0 1px 2px rgba(20, 20, 30, 0.05);
-  --shadow-sm: 0 1px 3px rgba(20, 20, 30, 0.06), 0 1px 2px rgba(20, 20, 30, 0.04);
-  --shadow: 0 4px 16px rgba(20, 20, 30, 0.06), 0 1px 3px rgba(20, 20, 30, 0.05);
-  --shadow-lg: 0 18px 50px -12px rgba(20, 20, 30, 0.16), 0 6px 18px rgba(20, 20, 30, 0.06);
-  --shadow-brand: 0 12px 28px -8px color-mix(in oklab, var(--brand) 45%, transparent);
+  /* Elevação — sombras em camadas suaves */
+  --shadow-xs: 0 1px 2px rgba(20, 33, 61, 0.05);
+  --shadow-sm: 0 1px 3px rgba(20, 33, 61, 0.06), 0 1px 2px rgba(20, 33, 61, 0.04);
+  --shadow: 0 4px 16px rgba(20, 33, 61, 0.07), 0 1px 3px rgba(20, 33, 61, 0.05);
+  --shadow-lg: 0 18px 50px -12px rgba(20, 33, 61, 0.18), 0 6px 18px rgba(20, 33, 61, 0.07);
+  --shadow-brand: 0 12px 26px -10px color-mix(in oklab, var(--brand) 55%, transparent);
+  --shadow-gold: 0 12px 26px -10px color-mix(in oklab, var(--gold) 70%, transparent);
 
   /* Raios e alvos de toque */
   --radius-sm: 10px;
   --radius: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 26px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --touch: 48px;
+}
 
-  --font-display: var(--font-montserrat), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: var(--font-plus-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
+/*
+  As variáveis do next/font (--font-fraunces / --font-inter / --font-ibm-plex-mono)
+  são aplicadas no elemento com a className. Definimos os aliases de fonte no
+  <body> (não no :root) para que resolvam quer a className esteja no <html> quer
+  no <body> — o body sempre herda ou possui essas variáveis.
+*/
+body {
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, "SFMono-Regular", "Menlo", monospace;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-subtle: var(--bg-subtle);
   --color-bg-elevated: var(--bg-elevated);
+  --color-paper: var(--paper);
   --color-fg: var(--fg);
+  --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-muted: var(--muted);
   --color-muted-2: var(--muted-2);
@@ -77,6 +110,15 @@
   --color-brand-deep: var(--brand-deep);
   --color-brand-soft: var(--brand-soft);
   --color-brand-tint: var(--brand-tint);
+  --color-gold: var(--gold);
+  --color-gold-strong: var(--gold-strong);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-tint: var(--gold-tint);
+  --color-menor: var(--menor);
+  --color-menor-soft: var(--menor-soft);
+  --color-maior: var(--maior);
+  --color-maior-soft: var(--maior-soft);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-line: var(--line);
@@ -87,8 +129,13 @@
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
   --radius-xl: var(--radius-xl);
 }
 
@@ -124,10 +171,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background-color: #ffffff;
+  background-color: var(--paper);
   background-image:
-    radial-gradient(720px 340px at 100% -10%, var(--brand-tint), transparent 60%),
-    radial-gradient(560px 300px at -10% 0%, color-mix(in oklab, var(--brand) 6%, transparent), transparent 55%);
+    radial-gradient(680px 320px at 100% -8%, var(--gold-tint), transparent 60%),
+    radial-gradient(560px 300px at -10% 0%, color-mix(in oklab, var(--brand) 5%, transparent), transparent 55%);
   background-attachment: fixed;
 }
 
@@ -137,13 +184,13 @@ h3,
 h4,
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  color: var(--ink);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
 }
 
 h1 {
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 p {
@@ -178,7 +225,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible {
-  outline: 3px solid color-mix(in oklab, var(--brand) 40%, white);
+  outline: 3px solid color-mix(in oklab, var(--brand) 45%, white);
   outline-offset: 2px;
 }
 
@@ -203,14 +250,192 @@ textarea:focus-visible,
   background-clip: content-box;
 }
 
+/* Números / códigos / valores — ar "carimbado" */
+.font-mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+.data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
 /* Utilitários de composição */
 .brand-gradient {
-  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
 }
+/* CTA principal — dourado marca-texto, texto em tinta */
+.cta-gold {
+  background: linear-gradient(135deg, #f7c948, var(--gold));
+  color: var(--ink);
+}
+.gold-gradient {
+  background: linear-gradient(135deg, #f7c948, var(--gold));
+}
+.hero-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(52px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.hero-blob--rosa {
+  width: 10rem;
+  height: 10rem;
+  left: -1rem;
+  top: 28%;
+  background: color-mix(in oklab, #e84a8a 42%, transparent);
+}
+
+.hero-blob--gold {
+  width: 12rem;
+  height: 9rem;
+  right: -1.5rem;
+  top: 8%;
+  background: color-mix(in oklab, var(--gold-on-dark) 36%, transparent);
+}
+
+.hero-blob--ink {
+  width: 8rem;
+  height: 8rem;
+  right: 22%;
+  bottom: -18%;
+  background: color-mix(in oklab, var(--brand) 30%, transparent);
+}
+
+.hero-glass {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, #152038 58%, transparent),
+    color-mix(in oklab, #0a101c 78%, transparent)
+  );
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  border: 1px solid color-mix(in oklab, #fff 18%, transparent);
+  box-shadow:
+    0 20px 48px -16px rgba(20, 33, 61, 0.3),
+    0 4px 14px rgba(20, 33, 61, 0.08),
+    inset 0 1px 0 color-mix(in oklab, #fff 18%, transparent);
+  color: #fff;
+}
+
+.hero-glass h1 {
+  color: #fff;
+}
+
+/* Faixa escura sólida — usada em login, resumo, WhatsApp, etc. */
 .hero-gradient {
   background:
-    radial-gradient(120% 140% at 88% -20%, color-mix(in oklab, var(--brand) 34%, transparent), transparent 55%),
-    linear-gradient(150deg, var(--hero-a), var(--hero-b));
+    radial-gradient(75% 50% at 100% 0%, color-mix(in oklab, var(--gold-on-dark) 14%, transparent), transparent 55%),
+    linear-gradient(168deg, #070b16 0%, var(--hero-a) 40%, var(--hero-b) 100%);
+  color: #fff;
+}
+
+.hero-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1rem 1.25rem 0.85rem;
+}
+
+/* Placa clara: a logo oficial tem texto cinza-escuro e precisa de fundo claro */
+.hero-logo-plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f7f8fa 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.hero-logo-img {
+  display: block;
+  width: min(280px, 78vw);
+  height: auto;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hero-glass {
+    background: linear-gradient(168deg, #0a101c 0%, #15233f 100%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .hero-blob {
+    display: none;
+  }
+  .hero-glass {
+    background: linear-gradient(168deg, var(--hero-a) 0%, var(--hero-b) 100%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.hero-label {
+  color: var(--gold-on-dark-soft);
+}
+
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1.15rem;
+  border-top: 1px solid color-mix(in oklab, #fff 12%, transparent);
+  padding-top: 1rem;
+  margin-top: 1.25rem;
+}
+
+.hero-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: color-mix(in oklab, #fff 74%, transparent);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.hero-trust li svg {
+  color: var(--gold-on-dark);
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+@media (min-width: 400px) {
+  .hero-trust li + li {
+    position: relative;
+    padding-left: 1.15rem;
+  }
+  .hero-trust li + li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: color-mix(in oklab, #fff 28%, transparent);
+    transform: translateY(-50%);
+  }
 }
 .card {
   background: var(--bg-elevated);
@@ -238,4 +463,23 @@ textarea:focus-visible,
 }
 .animate-rise {
   animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Selo Nota Mil — carimbo dourado (aparece em momentos-chave) */
+@keyframes selo-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) rotate(-14deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(-9deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+.animate-selo {
+  animation: selo-stamp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }

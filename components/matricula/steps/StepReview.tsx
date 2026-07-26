@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
-import { maskPhone } from "@/lib/validation";
+import { calcAgeFromBr, maskPhone } from "@/lib/validation";
+import { AgeBadge } from "../AgeBadge";
 import {
   calculatePricing,
   formatBRL,
@@ -22,6 +23,7 @@ type Props = {
   token: string;
   onChange: (p: Partial<EnrollmentDraft>) => void;
   onBack: () => void;
+  onEdit: (step: number) => void;
   onCompleted: (payload: {
     whatsappUrl: string;
     studentName: string;
@@ -50,6 +52,7 @@ export function StepReview({
   token,
   onChange,
   onBack,
+  onEdit,
   onCompleted,
 }: Props) {
   const [loading, setLoading] = useState(false);
@@ -67,6 +70,7 @@ export function StepReview({
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
+  const reviewAge = draft.birthDateBr ? calcAgeFromBr(draft.birthDateBr) : null;
   const pricing =
     draft.modality && draft.plan && draft.paymentMethod
       ? calculatePricing({
@@ -74,6 +78,8 @@ export function StepReview({
           plan: draft.plan as Plan,
           paymentMethod: draft.paymentMethod as PaymentMethod,
           subjects,
+          waivedFee: draft.waivedFee,
+          scholarship: draft.scholarshipValid === true,
         })
       : null;
 
@@ -245,7 +251,7 @@ export function StepReview({
     <div>
       <StepTitle
         title="Verificação e revisão"
-        subtitle="Confirme sua identidade e revise o resumo completo antes de concluir."
+        subtitle="Confirme o e-mail, revise turmas, valores e declaração. Só conclua se estiver tudo certo — depois a secretaria recebe o pedido."
       />
 
       {/* OTP */}
@@ -380,14 +386,19 @@ export function StepReview({
       {/* Resumo completo */}
       <div className="overflow-hidden rounded-2xl border border-line shadow-[var(--shadow-xs)]">
         <div className="hero-gradient px-4 py-4 text-white">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ff7ac1]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold">
             Conferência final
           </p>
           <h3 className="font-display mt-1 text-xl font-extrabold">
             {draft.fullName || "Aluno"}
           </h3>
+          {reviewAge != null && (
+            <span className="mt-2 inline-flex">
+              <AgeBadge age={reviewAge} size="sm" />
+            </span>
+          )}
           {(draft.email || draft.phone) && (
-            <p className="mt-1 text-sm text-white/65">
+            <p className="mt-2 text-sm text-white/65">
               {[draft.email, draft.phone].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -395,9 +406,12 @@ export function StepReview({
 
         <div className="space-y-4 bg-white p-4">
           <div>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
-              Turmas
-            </p>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
+                Turmas
+              </p>
+              <EditLink onClick={() => onEdit(3)} />
+            </div>
             <ul className="space-y-2">
               {(draft.courses ?? []).map((c) => {
                 const info = getClassByCode(c.classCode);
@@ -406,7 +420,7 @@ export function StepReview({
                     key={c.classCode}
                     className="flex gap-3 rounded-xl bg-brand-tint px-3 py-2.5 text-sm"
                   >
-                    <span className="font-bold text-brand">{c.classCode}</span>
+                    <span className="data font-bold text-brand">{c.classCode}</span>
                     <span>
                       <strong>{SUBJECT_LABELS[c.subject]}</strong>
                       {info ? (
@@ -426,6 +440,7 @@ export function StepReview({
               <SummaryTile
                 label="Modalidade"
                 value={MODALITY_LABELS[draft.modality as Modality]}
+                onEdit={() => onEdit(5)}
               />
             )}
             {draft.plan && (
@@ -435,12 +450,14 @@ export function StepReview({
                   PLAN_LABELS[draft.plan as Plan] +
                   (pricing ? ` — ${pricing.calculationLabel}` : "")
                 }
+                onEdit={() => onEdit(6)}
               />
             )}
             {draft.paymentMethod && (
               <SummaryTile
                 label="Pagamento"
                 value={PAYMENT_LABELS[draft.paymentMethod as PaymentMethod]}
+                onEdit={() => onEdit(7)}
               />
             )}
             {draft.plan === "mensal" && (
@@ -453,6 +470,7 @@ export function StepReview({
                       ? "Manual"
                       : "—"
                 }
+                onEdit={() => onEdit(8)}
               />
             )}
           </dl>
@@ -465,17 +483,33 @@ export function StepReview({
                     Investimento
                   </p>
                   <p className="mt-1 text-xs text-muted">{pricing.calculationLabel}</p>
+                  {draft.scholarshipValid && (
+                    <p className="mt-1 text-xs font-semibold text-success">
+                      Condição especial aplicada
+                    </p>
+                  )}
+                  {pricing.cashDiscount > 0 && (
+                    <p className="mt-1 text-xs font-semibold text-success">
+                      Inclui 5% à vista (Modalidade 2): −
+                      {formatBRL(pricing.cashDiscount)}
+                    </p>
+                  )}
                 </div>
-                <p className="font-display text-2xl font-extrabold tabular-nums text-brand">
+                <p className="data text-2xl font-extrabold text-brand">
                   {formatBRL(pricing.planTotal)}
                 </p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink-soft ring-1 ring-line">
-                  Mensal {formatBRL(pricing.monthlyValue)}
+                  Mensal <span className="data">{formatBRL(pricing.monthlyValue)}</span>
                 </span>
                 <span className="rounded-full bg-white px-3 py-1 font-semibold text-ink-soft ring-1 ring-line">
-                  Taxa {formatBRL(pricing.enrollmentFee)}
+                  Taxa{" "}
+                  {pricing.feeWaived ? (
+                    <span className="font-bold text-success">isenta</span>
+                  ) : (
+                    <span className="data">{formatBRL(pricing.enrollmentFee)}</span>
+                  )}
                 </span>
               </div>
             </div>
@@ -532,13 +566,40 @@ export function StepReview({
   );
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  label,
+  value,
+  onEdit,
+}: {
+  label: string;
+  value: string;
+  onEdit?: () => void;
+}) {
   return (
     <div className="rounded-xl border border-line bg-bg-subtle px-3.5 py-3">
-      <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </dt>
+      <div className="flex items-center justify-between gap-2">
+        <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+          {label}
+        </dt>
+        {onEdit && <EditLink onClick={onEdit} />}
+      </div>
       <dd className="mt-1 font-semibold leading-snug text-ink">{value}</dd>
     </div>
+  );
+}
+
+function EditLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold text-brand transition hover:bg-brand-soft"
+    >
+      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+      Editar
+    </button>
   );
 }

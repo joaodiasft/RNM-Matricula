@@ -38,7 +38,7 @@ export function ClientGuards() {
     try {
       console.log(
         "%cAtenção!",
-        "color:#e91e8c;font-size:34px;font-weight:800;font-family:sans-serif;"
+        "color:#14213d;font-size:34px;font-weight:800;font-family:sans-serif;"
       );
       console.log(
         "%cEsta é uma área para desenvolvedores. Não digite nem cole nada aqui. Golpistas podem usar isto para roubar seus dados e sua matrícula.",

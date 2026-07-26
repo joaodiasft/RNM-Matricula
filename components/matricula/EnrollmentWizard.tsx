@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -52,7 +51,6 @@ export function EnrollmentWizard() {
     referralCode?: string | null;
   } | null>(null);
   const [direction, setDirection] = useState(1);
-  const [, startTransition] = useTransition();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const age = useMemo(
@@ -160,15 +158,18 @@ export function EnrollmentWizard() {
     (partial: Partial<EnrollmentDraft>) => {
       setSession((prev) => {
         if (!prev) return prev;
-        const next = { ...prev, draft: { ...prev.draft, ...partial } };
-        startTransition(() => {
-          void persist(next);
-        });
-        return next;
+        return { ...prev, draft: { ...prev.draft, ...partial } };
       });
     },
-    [persist]
+    []
   );
+
+  // Persiste (autosave com debounce) sempre que o rascunho muda — fora do
+  // updater de estado, para não chamar efeitos durante a renderização.
+  useEffect(() => {
+    if (session) void persist(session);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.draft]);
 
   const goTo = useCallback(
     (step: number, dir = 1) => {
@@ -250,29 +251,24 @@ export function EnrollmentWizard() {
     );
   }
 
-  if (!session) return null;
-
-  const progress = stepDisplayIndex(session.currentStep, {
-    age,
-    plan: session.draft.plan,
-  });
-  const step = session.currentStep;
-
-  return (
-    <>
-      {showResume && pendingResume && (
-        <ResumeModal
-          onContinue={() => {
-            setSession(pendingResume);
-            setShowResume(false);
-            setPendingResume(null);
-          }}
-          onRestart={async () => {
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-            setShowResume(false);
-            setPendingResume(null);
-            setLoading(true);
+  // Modal de retomar DEVE renderizar mesmo sem session ainda
+  // (antes o `if (!session) return null` engolia a tela inteira).
+  if (showResume && pendingResume) {
+    return (
+      <ResumeModal
+        onContinue={() => {
+          setSession(pendingResume);
+          setShowResume(false);
+          setPendingResume(null);
+        }}
+        onRestart={async () => {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+          setShowResume(false);
+          setPendingResume(null);
+          setLoading(true);
+          try {
             const res = await fetch("/api/enrollment", { method: "POST" });
+            if (!res.ok) throw new Error("Falha ao reiniciar");
             const data = await res.json();
             const fresh: SessionState = {
               token: data.token,
@@ -285,11 +281,47 @@ export function EnrollmentWizard() {
               JSON.stringify({ token: data.token })
             );
             setSession(fresh);
+          } catch (e) {
+            console.error(e);
+            setError(
+              "Não foi possível iniciar a matrícula. Verifique a conexão e tente de novo."
+            );
+          } finally {
             setLoading(false);
-          }}
-        />
-      )}
+          }
+        }}
+      />
+    );
+  }
 
+  if (!session) {
+    return (
+      <div className="card border-danger/30 bg-danger-soft/40 p-7 text-center">
+        <p className="font-medium text-danger">
+          Não foi possível carregar a matrícula.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            void bootstrap();
+          }}
+          className="brand-gradient mt-5 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-105 active:scale-[0.98]"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  const progress = stepDisplayIndex(session.currentStep, {
+    age,
+    plan: session.draft.plan,
+  });
+  const step = session.currentStep;
+
+  return (
+    <>
       <ProgressBar
         current={progress.current}
         total={progress.total}
@@ -314,6 +346,7 @@ export function EnrollmentWizard() {
               <StepStudent
                 draft={session.draft}
                 age={age}
+                token={session.token}
                 onChange={updateDraft}
                 onNext={goNext}
               />
@@ -388,6 +421,7 @@ export function EnrollmentWizard() {
                 token={session.token}
                 onChange={updateDraft}
                 onBack={goPrev}
+                onEdit={(s) => goTo(s, -1)}
                 onCompleted={(payload) => {
                   localStorage.removeItem(LOCAL_STORAGE_KEY);
                   setCompleted(payload);

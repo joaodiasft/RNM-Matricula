@@ -593,15 +593,29 @@ export default function EnrollmentDetailPage() {
         </Section>
 
         {draft && Object.keys(draft).length > 0 && (
-          <Section title="Rascunho do formulário" className="lg:col-span-2">
-            <p className="mb-3 text-xs text-muted">
-              Dados salvos automaticamente enquanto o aluno preenchia (útil para
-              matrículas em andamento ou abandonadas).
+          <Section title="Todos os dados preenchidos" className="lg:col-span-2">
+            <p className="mb-4 text-sm text-muted">
+              Tudo que o aluno informou no formulário (incluindo campos
+              opcionais, avisos e códigos).
             </p>
-            <div className="max-h-72 overflow-auto rounded-xl bg-bg-subtle p-3 font-mono text-[11px] leading-relaxed text-ink-soft">
-              <pre className="whitespace-pre-wrap break-words">
-                {JSON.stringify(draft, null, 2)}
-              </pre>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {Object.entries(draft).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="rounded-xl border border-line bg-bg-subtle px-3.5 py-3"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted">
+                    {key}
+                  </p>
+                  <p className="mt-1 break-words text-sm font-medium text-ink">
+                    {value === null || value === undefined || value === ""
+                      ? "—"
+                      : typeof value === "object"
+                        ? JSON.stringify(value)
+                        : String(value)}
+                  </p>
+                </div>
+              ))}
             </div>
           </Section>
         )}

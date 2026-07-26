@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" fill="none">
+  <path d="M152 128 L248 48 L268 72 L172 152 Z" fill="#D0D3DA"/>
+  <path d="M168 118 L272 36 L290 58 L186 140 Z" fill="#B8BBC4"/>
+  <path d="M170 138 C210 112 270 108 320 130 C365 150 390 195 392 250 C394 310 368 365 318 395 C285 412 248 418 210 418 L155 418 C150 350 148 280 155 220 C160 180 162 155 170 138 Z" fill="#FF008E"/>
+  <path d="M188 155 h88 c46 0 76 27 76 70 0 33-19 57-52 66 l58 102 h-55 L250 300 h-28 v93 h-34 V155 Z M222 190 v68 h44 c20 0 34-11 34-34 0-22-14-34-34-34 h-44 Z" fill="#F5F6F8"/>
+  <text x="430" y="168" fill="#E8EAEE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="38" font-weight="600" letter-spacing="0.34em">REDA&#xC7;&#xC3;O</text>
+  <text x="420" y="348" fill="#F5F6F8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="195" font-weight="800" letter-spacing="-0.05em">1000</text>
+  <path d="M132 405 C175 382 230 378 280 390 H830 C862 390 882 408 882 432 C882 456 862 474 830 474 H250 C185 474 145 450 125 420 C118 410 120 402 132 405 Z" fill="#FF008E"/>
+  <text x="490" y="450" fill="#111111" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="0.26em" text-anchor="middle">CURSO PREPARAT&#xD3;RIO</text>
+</svg>

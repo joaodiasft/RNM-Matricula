@@ -17,11 +17,17 @@ head_sampling_rate = 1
 enabled = true
 invocation_logs = true
 
-# Variáveis públicas / não sensíveis (secrets ficam no Wrangler Secrets)
+# Variáveis públicas / não sensíveis (secrets ficam no Wrangler Secrets).
+# O SECRET do e-mail (BREVO_API_KEY) NÃO fica aqui — use:
+#   npx wrangler secret put BREVO_API_KEY
 [vars]
-# Destino dos avisos internos. Com Resend em sandbox, precisa ser o e-mail
-# da conta Resend; após verificar domínio, volte para o e-mail da secretaria.
-COMPANY_EMAIL = "jcsolucoes3d@gmail.com"
+# Destino dos avisos internos (Brevo não é sandbox — pode ser a secretaria).
+COMPANY_EMAIL = "naredacaonota1000@gmail.com"
+# E-mail (Brevo, remetente único verificado — sem domínio).
+BREVO_SENDER = "naredacaonota1000@gmail.com"
+BREVO_SENDER_NAME = "Redação Nota Mil"
+RESEND_REPLY_TO = "naredacaonota1000@gmail.com"
+# Fallback Resend (só entrega ao dono da conta enquanto não houver domínio).
 RESEND_FROM = "Redação Nota Mil <onboarding@resend.dev>"
 DEFAULT_CARD_FEE_PERCENT = "3.5"
 ADMIN_EMAIL = "naredacaonota1000@gmail.com"

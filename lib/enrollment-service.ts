@@ -8,6 +8,7 @@ import {
   enrollments,
   guardians,
   referrals,
+  scholarshipCodes,
   students,
   waitlist,
 } from "./db/schema";
@@ -478,6 +479,8 @@ export async function completeEnrollment(
     plan: draft.plan as Plan,
     paymentMethod: draft.paymentMethod as PaymentMethod,
     subjects: pricingSubjects,
+    waivedFee: draft.waivedFee,
+    scholarship: draft.scholarshipValid === true,
   });
 
   const editToken = nanoid(40);
@@ -553,6 +556,26 @@ export async function completeEnrollment(
         .update(referrals)
         .set({ referredEnrollmentId: enrollment.id })
         .where(eq(referrals.id, ref.id));
+    }
+  }
+
+  // Código de bolsa (uso único)
+  if (draft.scholarshipValid && draft.scholarshipCode?.trim()) {
+    const bolsa = draft.scholarshipCode.trim().toUpperCase();
+    const [row] = await db
+      .select()
+      .from(scholarshipCodes)
+      .where(eq(scholarshipCodes.code, bolsa))
+      .limit(1);
+    if (row && !row.usedAt) {
+      await db
+        .update(scholarshipCodes)
+        .set({
+          usedAt: new Date(),
+          usedByEnrollmentId: enrollment.id,
+          usedByStudentName: draft.fullName,
+        })
+        .where(eq(scholarshipCodes.id, row.id));
     }
   }
 

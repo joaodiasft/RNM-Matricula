@@ -4,10 +4,31 @@ import {
   enrollmentCourses,
   enrollments,
   guardians,
+  referrals,
   students,
 } from "./db/schema";
 import { getClassByCode, SUBJECT_LABELS } from "./courses";
-import { calcAge, isoToBrDate } from "./validation";
+import { calcAge, isoToBrDate, type EnrollmentDraft } from "./validation";
+
+const REFERRAL_SOURCE_LABELS: Record<string, string> = {
+  indicacao: "Indicação de amigo/aluno",
+  instagram: "Instagram",
+  google: "Google",
+  outro: "Outro",
+};
+
+const OBLIGATION_LABELS: Record<string, string> = {
+  pendente: "Pendente",
+  cumprida: "Cumprida",
+  nao_cumprida: "Não cumprida",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  concluida: "Concluída",
+  abandonada: "Abandonada",
+  em_andamento: "Em andamento",
+  alerta_duplicidade: "Alerta de duplicidade",
+};
 import {
   MODALITY_LABELS,
   PAYMENT_LABELS,
@@ -57,6 +78,7 @@ export async function buildEnrollmentsWorkbook(opts?: {
     "Nome completo do aluno",
     "Data de nascimento",
     "Idade",
+    "Faixa etária",
     "E-mail",
     "Telefone/WhatsApp",
     "Série atual",
@@ -64,13 +86,20 @@ export async function buildEnrollmentsWorkbook(opts?: {
     "CPF",
     "RG",
     "Endereço",
+    "Como conheceu",
+    "Observações",
+    "Contrato já assinado",
     "Nome do pai / telefone",
     "Nome da mãe / telefone",
     "Curso(s) e turma(s)",
     "Modalidade",
+    "Status da obrigação",
+    "Código de indicação gerado",
+    "Código de indicação usado",
     "Plano de pagamento",
     "Valor mensal",
     "Valor total do plano",
+    "Taxa de matrícula",
     "Forma de pagamento",
     "Rematrícula automática",
     "Status",
@@ -97,13 +126,22 @@ export async function buildEnrollmentsWorkbook(opts?: {
       })
       .join("; ");
 
+    const draft: EnrollmentDraft = e.draftData
+      ? (JSON.parse(e.draftData) as EnrollmentDraft)
+      : {};
+
+    const [generatedRef] = await db
+      .select({ code: referrals.code })
+      .from(referrals)
+      .where(eq(referrals.referrerEnrollmentId, e.id))
+      .limit(1);
+
     const age = s?.birthDate ? calcAge(s.birthDate) : null;
-    const statusLabel =
-      e.status === "concluida"
-        ? "Concluída"
-        : e.status === "abandonada"
-          ? "Abandonada"
-          : "Em andamento";
+    const ageBand = age == null ? "" : age < 18 ? "Menor de idade" : "Maior de idade";
+    const statusLabel = STATUS_LABELS[e.status] ?? e.status;
+    const feeNumber = e.enrollmentFee != null ? Number(e.enrollmentFee) : null;
+    const feeText =
+      feeNumber == null ? "" : feeNumber > 0 ? String(e.enrollmentFee) : "isenta";
 
     const cells = [
       e.completedAt
@@ -114,6 +152,7 @@ export async function buildEnrollmentsWorkbook(opts?: {
       s?.fullName ?? "",
       s?.birthDate ? isoToBrDate(s.birthDate) : "",
       age ?? "",
+      ageBand,
       s?.email ?? "",
       s?.phone ?? "",
       s?.grade ?? "",
@@ -121,15 +160,26 @@ export async function buildEnrollmentsWorkbook(opts?: {
       s?.cpf ?? "",
       s?.rg ?? "",
       s?.address ?? "",
+      s?.referralSource
+        ? (REFERRAL_SOURCE_LABELS[s.referralSource] ?? s.referralSource)
+        : "",
+      draft.observations ?? "",
+      draft.contractSigned ? "Sim" : "Não",
       [g?.fatherName, g?.fatherPhone].filter(Boolean).join(" / "),
       [g?.motherName, g?.motherPhone].filter(Boolean).join(" / "),
       coursesText,
       e.modality
         ? (MODALITY_LABELS[e.modality as Modality] ?? e.modality)
         : "",
+      e.obligationStatus
+        ? (OBLIGATION_LABELS[e.obligationStatus] ?? e.obligationStatus)
+        : "",
+      generatedRef?.code ?? "",
+      e.referralCodeUsed ?? "",
       e.plan ? (PLAN_LABELS[e.plan as Plan] ?? e.plan) : "",
       e.monthlyValue ?? "",
       e.planTotal ?? "",
+      feeText,
       e.paymentMethod
         ? (PAYMENT_LABELS[e.paymentMethod as PaymentMethod] ?? e.paymentMethod)
         : "",

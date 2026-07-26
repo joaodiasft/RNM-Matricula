@@ -13,6 +13,8 @@ import {
 } from "@/lib/pricing";
 import { getClassByCode, SUBJECT_LABELS, type Subject } from "@/lib/courses";
 import { COMPANY } from "@/lib/company";
+import { SeloNotaMil } from "../SeloNotaMil";
+import { ClassGroupsPanel } from "../ClassGroupsPanel";
 
 type Props = {
   studentName: string;
@@ -35,17 +37,15 @@ export function StepWhatsApp({
           plan: draft.plan as Plan,
           paymentMethod: draft.paymentMethod as PaymentMethod,
           subjects,
+          waivedFee: draft.waivedFee,
+          scholarship: draft.scholarshipValid === true,
         })
       : null;
 
   return (
     <div className="card animate-rise overflow-hidden p-0">
       <div className="px-6 pb-2 pt-8 text-center sm:px-8">
-        <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-success ring-8 ring-success-soft/50">
-          <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </span>
+        <SeloNotaMil size={80} className="mx-auto mb-4" />
         <h2 className="font-display text-2xl font-extrabold text-ink sm:text-[1.75rem]">
           Matrícula recebida!
         </h2>
@@ -57,8 +57,8 @@ export function StepWhatsApp({
 
       <div className="mx-5 mb-5 mt-5 overflow-hidden rounded-2xl sm:mx-7">
         <div className="hero-gradient relative px-5 py-5 text-white">
-          <div className="brand-gradient absolute inset-x-0 top-0 h-1.5" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#ff7ac1]">
+          <div className="gold-gradient absolute inset-x-0 top-0 h-1.5" />
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold">
             {COMPANY.name}
           </p>
           <h3 className="font-display mt-2 text-2xl font-bold">{studentName}</h3>
@@ -68,7 +68,7 @@ export function StepWhatsApp({
               const info = getClassByCode(c.classCode);
               return (
                 <li key={c.classCode} className="flex gap-2">
-                  <span className="mt-0.5 font-bold text-[#ff7ac1]">{c.classCode}</span>
+                  <span className="data mt-0.5 font-bold text-gold">{c.classCode}</span>
                   <span>
                     {SUBJECT_LABELS[c.subject]}
                     {info ? ` · ${info.day} ${info.schedule}` : ""}
@@ -112,15 +112,23 @@ export function StepWhatsApp({
           </div>
 
           {referralCode && (
-            <p className="mt-4 rounded-xl bg-brand/25 px-3.5 py-2.5 text-sm ring-1 ring-brand/40">
+            <p className="mt-4 rounded-xl bg-gold/15 px-3.5 py-2.5 text-sm ring-1 ring-gold/40">
               Seu código de indicação:{" "}
-              <strong className="tracking-wide">{referralCode}</strong>
+              <strong className="data tracking-wide text-gold">{referralCode}</strong>
             </p>
           )}
         </div>
       </div>
 
       <div className="px-6 pb-8 sm:px-8">
+        <div className="mb-6">
+          <ClassGroupsPanel
+            classCodes={(draft.courses ?? []).map((c) => c.classCode)}
+            compact
+            showInviteAction
+          />
+        </div>
+
         <a
           href={whatsappUrl}
           target="_blank"

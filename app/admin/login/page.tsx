@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/brand/Logo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -39,17 +39,10 @@ export default function AdminLoginPage() {
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-10">
       <div className="card animate-rise overflow-hidden p-0">
         <div className="hero-gradient px-7 py-7">
-          <div className="inline-block rounded-xl bg-black/30 p-1.5 ring-1 ring-white/10">
-            <Image
-              src="/logo-rnm.png"
-              alt="Redação Nota Mil"
-              width={180}
-              height={80}
-              className="h-auto w-[150px]"
-              priority
-            />
+          <div className="hero-logo-plate">
+            <Logo variant="onLight" priority className="h-auto w-[180px]" />
           </div>
-          <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-[#ff7ac1]">
+          <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-gold">
             Painel da secretaria
           </p>
           <h1 className="font-display mt-1 text-xl font-extrabold text-white">

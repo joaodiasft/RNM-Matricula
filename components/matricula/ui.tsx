@@ -101,11 +101,11 @@ export function NavButtons({
           type="button"
           onClick={onNext}
           disabled={nextDisabled || loading}
-          className="brand-gradient ml-auto inline-flex min-h-[48px] items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-[1.06] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none disabled:brightness-100"
+          className="cta-gold ml-auto inline-flex min-h-[48px] items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold text-ink shadow-[var(--shadow-gold)] transition hover:brightness-[1.04] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none disabled:brightness-100"
         >
           {loading ? (
             <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink/40 border-t-transparent" />
               Aguarde…
             </>
           ) : (

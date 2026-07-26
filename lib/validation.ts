@@ -194,8 +194,12 @@ export const draftServerSchema = z
     cpf: str(18),
     rg: str(20),
     address: str(200),
+    observations: str(500),
+    contractSigned: z.boolean(),
     referralSource: str(40),
     referralCodeInput: str(40),
+    scholarshipCode: str(40),
+    scholarshipValid: z.boolean(),
     fatherName: str(120),
     fatherPhone: str(20),
     motherName: str(120),
@@ -211,12 +215,17 @@ export const draftServerSchema = z
     waitlistCodes: z.array(str(24)).max(12),
     courseInfoAck: z.boolean(),
     modality: z.enum(["desconto", "desconto_parcial", "normal"]),
+    waivedFee: z.boolean(),
     plan: z.enum(["mensal", "trimestral", "total"]),
     paymentMethod: z.enum(["dinheiro", "cartao", "pix"]),
     autoRenew: z.boolean(),
     noticePayment: z.boolean(),
     noticeAbsence: z.boolean(),
     noticeModality: z.boolean(),
+    noticeGroups: z.boolean(),
+    noticePunctuality: z.boolean(),
+    noticeMaterials: z.boolean(),
+    noticeContractWhatsApp: z.boolean(),
     confirmEmail: str(254),
     confirmPhone: str(20),
     declarationName: str(120),
@@ -239,8 +248,12 @@ export type EnrollmentDraft = {
   cpf?: string;
   rg?: string;
   address?: string;
+  observations?: string;
+  contractSigned?: boolean;
   referralSource?: string;
   referralCodeInput?: string;
+  scholarshipCode?: string;
+  scholarshipValid?: boolean;
   fatherName?: string;
   fatherPhone?: string;
   motherName?: string;
@@ -252,12 +265,17 @@ export type EnrollmentDraft = {
   waitlistCodes?: string[];
   courseInfoAck?: boolean;
   modality?: "desconto" | "desconto_parcial" | "normal";
+  waivedFee?: boolean;
   plan?: "mensal" | "trimestral" | "total";
   paymentMethod?: "dinheiro" | "cartao" | "pix";
   autoRenew?: boolean;
   noticePayment?: boolean;
   noticeAbsence?: boolean;
   noticeModality?: boolean;
+  noticeGroups?: boolean;
+  noticePunctuality?: boolean;
+  noticeMaterials?: boolean;
+  noticeContractWhatsApp?: boolean;
   confirmEmail?: string;
   confirmPhone?: string;
   declarationName?: string;

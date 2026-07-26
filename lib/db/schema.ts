@@ -149,6 +149,23 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
+/** Códigos de bolsa (uso único) */
+export const scholarshipCodes = pgTable("scholarship_codes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: text("code").notNull().unique(),
+  label: text("label"),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  usedByEnrollmentId: uuid("used_by_enrollment_id").references(
+    () => enrollments.id,
+    { onDelete: "set null" }
+  ),
+  usedByStudentName: text("used_by_student_name"),
+  createdByAdminId: uuid("created_by_admin_id").references(() => adminUsers.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 export const adminSettings = pgTable("admin_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
   key: text("key").notNull().unique(),

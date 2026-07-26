@@ -14,14 +14,14 @@ function layout(title: string, body: string) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="utf-8"/><title>${escapeHtml(title)}</title></head>
-<body style="margin:0;background:#faf7f9;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#15151a;">
-  <div style="max-width:560px;margin:28px auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(20,20,30,.08);border:1px solid #f0e4ec;">
-    <div style="background:linear-gradient(135deg,#e91e8c,#a80f61);padding:28px 32px;">
-      <p style="margin:0;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#ffc2e3;font-weight:700;">${escapeHtml(COMPANY.name)}</p>
+<body style="margin:0;background:#f7f8fa;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#14213d;">
+  <div style="max-width:560px;margin:28px auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(20,33,61,.10);border:1px solid #e4e7ec;">
+    <div style="background:linear-gradient(135deg,#14213d,#0d1730);padding:28px 32px;">
+      <p style="margin:0;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#f2b705;font-weight:700;">${escapeHtml(COMPANY.name)}</p>
       <h1 style="margin:10px 0 0;font-size:22px;color:#fff;font-weight:800;letter-spacing:-0.02em;">${escapeHtml(title)}</h1>
     </div>
-    <div style="padding:28px 32px;font-size:15px;line-height:1.65;color:#3c3c45;">${body}</div>
-    <div style="padding:18px 32px 24px;background:#fdf1f8;font-size:12px;color:#71717a;line-height:1.55;border-top:1px solid #fce4f1;">
+    <div style="padding:28px 32px;font-size:15px;line-height:1.65;color:#35415c;">${body}</div>
+    <div style="padding:18px 32px 24px;background:#f2f5fb;font-size:12px;color:#6b7385;line-height:1.55;border-top:1px solid #e4e7ec;">
       ${escapeHtml(COMPANY.phone)} · urgência ${escapeHtml(COMPANY.urgencyPhone)}<br/>
       ${escapeHtml(COMPANY.email)}<br/>
       ${escapeHtml(COMPANY.address)} · CNPJ ${escapeHtml(COMPANY.cnpj)}
@@ -46,16 +46,17 @@ export function confirmationEmailHtml(data: {
 }) {
   const ageText = data.age != null ? `${data.age} anos` : "—";
   const referralBlock = data.referralCode
-    ? `<li><strong>Seu código de indicação:</strong> <code style="background:#fce4f1;padding:2px 8px;border-radius:6px;color:#a80f61;">${escapeHtml(data.referralCode)}</code></li>`
+    ? `<li><strong>Seu código de indicação:</strong> <code style="background:#fef3cd;padding:2px 8px;border-radius:6px;color:#b8890a;font-weight:700;">${escapeHtml(data.referralCode)}</code> — compartilhe com quem você for indicar!</li>`
     : "";
   const editBlock = data.editUrl
-    ? `<p style="margin-top:18px;">Quer atualizar telefone ou e-mail? <a href="${escapeHtml(data.editUrl)}" style="color:#e91e8c;font-weight:700;">Editar dados básicos</a></p>`
+    ? `<p style="margin-top:18px;">Quer atualizar telefone ou e-mail? <a href="${escapeHtml(data.editUrl)}" style="color:#14213d;font-weight:700;">Editar dados básicos</a></p>`
     : "";
   const renewLine = data.autoRenew
     ? `<li><strong>Rematrícula automática:</strong> Sim</li>`
     : "";
+  const feeText = data.enrollmentFee > 0 ? formatBRL(data.enrollmentFee) : "isenta";
   const body = `
-    <p>Olá, <strong style="color:#15151a;">${escapeHtml(data.studentName)}</strong>!</p>
+    <p>Olá, <strong style="color:#14213d;">${escapeHtml(data.studentName)}</strong>!</p>
     <p>Sua matrícula na <strong>${escapeHtml(COMPANY.name)}</strong> foi recebida. Resumo:</p>
     <ul style="padding-left:18px;margin:16px 0;">
       <li><strong>Aluno:</strong> ${escapeHtml(data.studentName)} · ${escapeHtml(ageText)}</li>
@@ -63,7 +64,7 @@ export function confirmationEmailHtml(data: {
       <li><strong>Modalidade:</strong> ${escapeHtml(data.modality)}</li>
       <li><strong>Plano:</strong> ${escapeHtml(data.plan)} — ${escapeHtml(data.planDetail)}</li>
       <li><strong>Pagamento:</strong> ${escapeHtml(data.paymentMethod)}</li>
-      <li><strong>Taxa de matrícula:</strong> ${escapeHtml(formatBRL(data.enrollmentFee))}</li>
+      <li><strong>Taxa de matrícula:</strong> ${escapeHtml(feeText)}</li>
       ${renewLine}
       ${referralBlock}
     </ul>
@@ -94,14 +95,14 @@ export function duplicateAlertHtml(data: {
 
 export function otpEmailHtml(code: string, studentName?: string | null) {
   const greet = studentName?.trim()
-    ? `Olá, <strong style="color:#15151a;">${escapeHtml(studentName.trim())}</strong>!`
+    ? `Olá, <strong style="color:#14213d;">${escapeHtml(studentName.trim())}</strong>!`
     : "Olá!";
   const body = `
     <p>${greet}</p>
     <p>Use o código abaixo para confirmar seu e-mail na matrícula da <strong>${escapeHtml(COMPANY.name)}</strong>:</p>
-    <div style="margin:28px 0;padding:22px;border-radius:16px;background:linear-gradient(180deg,#fdf1f8,#fce4f1);text-align:center;border:1px solid #f5cfe3;">
-      <p style="margin:0 0 8px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a80f61;font-weight:700;">Código</p>
-      <p style="margin:0;font-size:36px;letter-spacing:0.35em;font-weight:800;color:#e91e8c;font-family:ui-monospace,Menlo,Consolas,monospace;">${escapeHtml(code)}</p>
+    <div style="margin:28px 0;padding:22px;border-radius:16px;background:linear-gradient(180deg,#fffbef,#fef3cd);text-align:center;border:1px solid #f6dd8f;">
+      <p style="margin:0 0 8px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#b8890a;font-weight:700;">Código</p>
+      <p style="margin:0;font-size:36px;letter-spacing:0.35em;font-weight:800;color:#14213d;font-family:ui-monospace,Menlo,Consolas,monospace;">${escapeHtml(code)}</p>
     </div>
     <p style="font-size:13px;color:#71717a;">Válido por 10 minutos. Se você não pediu este código, ignore este e-mail.</p>
   `;

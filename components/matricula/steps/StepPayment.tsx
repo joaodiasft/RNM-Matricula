@@ -12,6 +12,7 @@ import {
 } from "@/lib/pricing";
 import type { Subject } from "@/lib/courses";
 import { NavButtons, StepTitle } from "../ui";
+import { useToast } from "@/components/ui/Toast";
 
 type Props = {
   draft: EnrollmentDraft;
@@ -22,10 +23,19 @@ type Props = {
 
 const METHODS: PaymentMethod[] = ["dinheiro", "cartao", "pix"];
 
+const HINTS: Record<PaymentMethod, string> = {
+  dinheiro: "Pagamento presencial em dinheiro.",
+  cartao: "Crédito ou débito na maquininha da escola.",
+  pix: "Chave Pix enviada pela secretaria após a matrícula.",
+};
+
 export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [cardFee, setCardFee] = useState(3.5);
+  const toast = useToast();
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
+  const isBolsa = draft.scholarshipValid === true;
+  const cashDiscountApplies = draft.modality === "desconto_parcial" && !isBolsa;
 
   useEffect(() => {
     fetch("/api/settings/card-fee")
@@ -39,6 +49,11 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   const submit = () => {
     if (!draft.paymentMethod) {
       setError("Escolha a forma de pagamento");
+      toast.push({
+        title: "Forma de pagamento",
+        message: "Selecione dinheiro, cartão ou Pix.",
+        tone: "warning",
+      });
       return;
     }
     setError(null);
@@ -49,7 +64,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
     <div>
       <StepTitle
         title="Forma de pagamento"
-        subtitle="Apenas informativo — não há cobrança online neste momento."
+        subtitle="Só para organização — a cobrança não é feita neste site."
       />
 
       <div className="space-y-3">
@@ -63,6 +78,8 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                   paymentMethod: method,
                   subjects,
                   cardFeePercent: cardFee,
+                  waivedFee: draft.waivedFee,
+                  scholarship: isBolsa,
                 })
               : null;
 
@@ -72,31 +89,51 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
               type="button"
               onClick={() => onChange({ paymentMethod: method })}
               className={[
-                "w-full rounded-xl border px-4 py-4 text-left transition",
+                "w-full rounded-2xl border px-4 py-4 text-left transition",
                 selected
-                  ? "border-brand bg-brand-soft ring-2 ring-brand/30"
-                  : "border-line bg-bg",
+                  ? "border-brand bg-brand-soft/80 ring-2 ring-brand/25"
+                  : "border-line bg-white hover:border-brand/35",
               ].join(" ")}
             >
-              <p className="font-semibold text-fg">{PAYMENT_LABELS[method]}</p>
+              <p className="font-display text-lg font-bold text-ink">
+                {PAYMENT_LABELS[method]}
+              </p>
+              <p className="mt-1 text-sm text-muted">{HINTS[method]}</p>
+
               {method === "dinheiro" && (
-                <p className="mt-1 text-sm text-muted">
-                  5% de desconto adicional sobre o valor do plano
-                  {pricing && selected
-                    ? ` → ${formatBRL(pricing.planTotal)}`
-                    : ""}
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  {cashDiscountApplies ? (
+                    <>
+                      <strong className="text-success">5% de desconto</strong>{" "}
+                      no valor do plano (válido só na Modalidade 2 — desconto
+                      parcial)
+                      {pricing && selected
+                        ? ` → ${formatBRL(pricing.planTotal)}`
+                        : ""}
+                      .
+                    </>
+                  ) : (
+                    <>
+                      Sem desconto extra em dinheiro nesta modalidade
+                      {draft.modality === "normal"
+                        ? " (Modalidade 3)"
+                        : draft.modality === "desconto"
+                          ? " (Modalidade 1)"
+                          : ""}
+                      . O valor do plano permanece o calculado.
+                    </>
+                  )}
                 </p>
               )}
               {method === "cartao" && (
-                <p className="mt-1 text-sm text-muted">
-                  Sujeito à taxa da maquininha (~{cardFee}%) no momento do
+                <p className="mt-2 text-sm text-muted">
+                  Taxa da maquininha (~{cardFee}%) pode ser cobrada no ato do
                   pagamento.
                 </p>
               )}
-              {method === "pix" && (
-                <p className="mt-1 text-sm text-muted">
-                  Dados enviados pelo WhatsApp da empresa após receber o pedido
-                  de matrícula.
+              {method === "pix" && pricing && selected && !isBolsa && (
+                <p className="mt-2 text-sm font-semibold text-ink">
+                  Total do plano: {formatBRL(pricing.planTotal)}
                 </p>
               )}
             </button>

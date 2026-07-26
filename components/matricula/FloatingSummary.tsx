@@ -19,26 +19,30 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
 
   const courses = draft.courses ?? [];
   const hasContent = courses.length > 0 || Boolean(draft.modality);
+  const isBolsa = draft.scholarshipValid === true;
+
   const pricing = useMemo(() => {
     const subjects = (draft.courses ?? []).map((c) => c.subject);
     if (!draft.modality) return null;
-    if (draft.plan && draft.paymentMethod) {
-      return calculatePricing({
-        modality: draft.modality as Modality,
-        plan: draft.plan as Plan,
-        paymentMethod: draft.paymentMethod as PaymentMethod,
-        subjects,
-      });
-    }
     return calculatePricing({
       modality: draft.modality as Modality,
       plan: (draft.plan as Plan) || "mensal",
       paymentMethod: (draft.paymentMethod as PaymentMethod) || "pix",
       subjects,
+      waivedFee: draft.waivedFee,
+      scholarship: isBolsa,
     });
-  }, [draft.modality, draft.plan, draft.paymentMethod, draft.courses]);
+  }, [
+    draft.modality,
+    draft.plan,
+    draft.paymentMethod,
+    draft.courses,
+    draft.waivedFee,
+    isBolsa,
+  ]);
 
-  const provisional = Boolean(draft.modality) && !(draft.plan && draft.paymentMethod);
+  const provisional =
+    Boolean(draft.modality) && !(draft.plan && draft.paymentMethod);
   const filledBits = [
     draft.fullName,
     courses.length,
@@ -77,18 +81,22 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
           )}
         </span>
         <span className="text-left leading-tight">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-white/75">
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-white/80">
             Resumo
           </span>
           <span className="block">
-            {pricing ? formatBRL(pricing.planTotal) : "Em andamento"}
+            {isBolsa
+                      ? "Especial"
+                      : pricing
+                        ? formatBRL(pricing.planTotal)
+                        : "Em andamento"}
           </span>
         </span>
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-[#15151a]/55 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-[#1a0a14]/55 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="resumo-title"
@@ -97,11 +105,11 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
           }}
         >
           <div className="animate-rise max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[24px] bg-white shadow-[var(--shadow-lg)] sm:rounded-[24px]">
-            <div className="hero-gradient relative overflow-hidden px-5 pb-5 pt-5 text-white">
-              <div className="brand-gradient absolute inset-x-0 top-0 h-1" />
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#1a0a14] to-[#2a1020] px-5 pb-5 pt-5 text-white">
+              <div className="absolute inset-x-0 top-0 h-1 bg-brand" />
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ff7ac1]">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ff7ac4]">
                     Sua matrícula
                   </p>
                   <h3
@@ -120,7 +128,14 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                   className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20"
                   aria-label="Fechar resumo"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    aria-hidden
+                  >
                     <path d="M6 6l12 12M18 6 6 18" />
                   </svg>
                 </button>
@@ -130,16 +145,20 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="rounded-2xl bg-white/10 px-3.5 py-3 ring-1 ring-white/10">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">
-                      {draft.plan === "mensal" || !draft.plan
-                        ? "Mensalidade"
-                        : "Valor do plano"}
+                      {isBolsa
+                        ? "Especial"
+                        : draft.plan === "mensal" || !draft.plan
+                          ? "Mensalidade"
+                          : "Valor do plano"}
                     </p>
                     <p className="mt-0.5 font-display text-xl font-bold tabular-nums">
-                      {formatBRL(
-                        draft.plan && draft.plan !== "mensal"
-                          ? pricing.planTotal
-                          : pricing.monthlyValue
-                      )}
+                      {isBolsa
+                        ? "Isento"
+                        : formatBRL(
+                            draft.plan && draft.plan !== "mensal"
+                              ? pricing.planTotal
+                              : pricing.monthlyValue
+                          )}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white/10 px-3.5 py-3 ring-1 ring-white/10">
@@ -147,7 +166,9 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                       Taxa matrícula
                     </p>
                     <p className="mt-0.5 font-display text-xl font-bold tabular-nums">
-                      {formatBRL(pricing.enrollmentFee)}
+                      {pricing.feeWaived || isBolsa
+                        ? "Isenta"
+                        : formatBRL(pricing.enrollmentFee)}
                     </p>
                   </div>
                 </div>
@@ -155,6 +176,12 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
             </div>
 
             <div className="space-y-5 px-5 py-5">
+              {isBolsa && (
+                <p className="rounded-2xl border border-success/25 bg-success-soft px-3.5 py-3 text-sm font-medium text-ink">
+                  Condição especial aplicada nesta matrícula.
+                </p>
+              )}
+
               {courses.length > 0 && (
                 <section>
                   <h4 className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
@@ -166,7 +193,7 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                       return (
                         <li
                           key={c.classCode}
-                          className="flex gap-3 rounded-2xl border border-line bg-brand-tint/80 px-3.5 py-3"
+                          className="flex gap-3 rounded-2xl border border-line bg-brand-tint px-3.5 py-3"
                         >
                           <span className="brand-gradient mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white">
                             {c.classCode}
@@ -213,7 +240,7 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
               </section>
 
               {pricing && (
-                <section className="rounded-2xl border border-brand/15 bg-brand-soft/50 p-4">
+                <section className="rounded-2xl border border-brand/15 bg-brand-soft/40 p-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-deep">
                     Valores
                   </h4>
@@ -221,7 +248,7 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                     {pricing.calculationLabel}
                   </p>
                   {provisional && (
-                    <p className="mt-2 rounded-xl bg-warning-soft px-3 py-2 text-xs font-medium text-warning">
+                    <p className="mt-2 rounded-xl bg-warning-soft px-3 py-2 text-xs font-medium text-ink">
                       Valores provisórios — finalize plano e pagamento para o
                       total definitivo.
                     </p>
@@ -233,6 +260,14 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                         {formatBRL(pricing.monthlyValue)}
                       </dd>
                     </div>
+                    {pricing.cashDiscount > 0 && (
+                      <div className="flex justify-between gap-3 text-success">
+                        <dt>Desconto à vista (5%)</dt>
+                        <dd className="font-semibold tabular-nums">
+                          −{formatBRL(pricing.cashDiscount)}
+                        </dd>
+                      </div>
+                    )}
                     <div className="flex justify-between gap-3">
                       <dt className="text-muted">Taxa de matrícula</dt>
                       <dd className="font-semibold tabular-nums">

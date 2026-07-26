@@ -9,6 +9,7 @@ import {
   type Subject,
 } from "@/lib/courses";
 import { NavButtons, StepTitle } from "../ui";
+import { useToast } from "@/components/ui/Toast";
 
 type ClassAvail = {
   code: string;
@@ -28,6 +29,7 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
   const [availability, setAvailability] = useState<Record<string, ClassAvail>>(
     {}
   );
+  const toast = useToast();
 
   useEffect(() => {
     fetch("/api/classes")
@@ -69,10 +71,13 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
       });
     } else {
       const nextWaitlist = full
-        ? [...waitlistCodes.filter((c) => {
-            const prev = selected.find((s) => s.subject === subject);
-            return prev ? c !== prev.classCode : true;
-          }), classCode]
+        ? [
+            ...waitlistCodes.filter((c) => {
+              const prev = selected.find((s) => s.subject === subject);
+              return prev ? c !== prev.classCode : true;
+            }),
+            classCode,
+          ]
         : waitlistCodes.filter((c) => {
             const prev = selected.find((s) => s.subject === subject);
             return prev ? c !== prev.classCode : true;
@@ -89,6 +94,11 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
     const result = coursesStepSchema.safeParse({ courses: selected });
     if (!result.success) {
       setError(result.error.issues[0]?.message || "Selecione uma turma");
+      toast.push({
+        title: "Selecione a turma",
+        message: "Escolha pelo menos uma turma para continuar.",
+        tone: "warning",
+      });
       return;
     }
     setError(null);
@@ -106,21 +116,32 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
     <div>
       <StepTitle
         title="Turma e horário"
-        subtitle="Turmas filtradas pela sua série. Veja as vagas restantes — se lotar, entre na lista de espera."
+        subtitle="Turmas filtradas pela sua série. Uma turma por matéria — se lotar, entre na lista de espera."
       />
 
       {!draft.grade && (
-        <p className="text-sm text-danger">
-          Volte e informe a série do aluno para ver as turmas.
+        <p className="mb-3 rounded-2xl border border-danger/25 bg-danger-soft px-4 py-3 text-sm text-danger">
+          Volte e informe a série do aluno para ver as turmas disponíveis.
         </p>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-7">
         {subjects.map((subject) => (
           <section key={subject}>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-brand">
-              {SUBJECT_LABELS[subject]}
-            </h3>
+            <div className="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">
+                  Matéria
+                </p>
+                <h3 className="font-display text-xl font-bold text-ink">
+                  {SUBJECT_LABELS[subject]}
+                </h3>
+              </div>
+              <p className="text-xs text-muted">
+                {bySubject(subject).length} horário
+                {bySubject(subject).length === 1 ? "" : "s"}
+              </p>
+            </div>
             <div className="grid gap-3">
               {bySubject(subject).map((c) => {
                 const isOn = selected.some((s) => s.classCode === c.code);
@@ -140,46 +161,62 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
                     type="button"
                     onClick={() => toggle(subject, c.code)}
                     className={[
-                      "rounded-xl border px-4 py-3 text-left transition",
+                      "rounded-2xl border px-4 py-4 text-left transition",
                       isOn
-                        ? "border-brand bg-brand-soft ring-2 ring-brand/30"
+                        ? "border-brand bg-brand-soft/80 ring-2 ring-brand/25"
                         : suggested
-                          ? "border-brand/50 bg-bg"
-                          : "border-line bg-bg hover:border-brand/40",
+                          ? "border-brand/40 bg-white hover:border-brand/60"
+                          : "border-line bg-white hover:border-brand/35",
                     ].join(" ")}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-fg">
-                          Turma {c.code}
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex h-8 items-center rounded-xl bg-ink px-2.5 text-xs font-extrabold text-white">
+                            {c.code}
+                          </span>
                           {suggested && (
-                            <span className="ml-2 text-xs font-medium text-brand">
-                              sugerida pra você
+                            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand">
+                              sugerida
                             </span>
                           )}
+                          {full && (
+                            <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-danger">
+                              lotada
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2.5 font-display text-lg font-bold text-ink">
+                          {c.day}
                         </p>
-                        <p className="text-sm text-muted">{c.label}</p>
-                        <p className="mt-1 text-sm text-fg">
-                          {c.day} · {c.schedule}
+                        <p className="mt-0.5 text-sm font-semibold text-ink-soft">
+                          {c.schedule}
                         </p>
+                        {c.label && (
+                          <p className="mt-1 text-sm text-muted">{c.label}</p>
+                        )}
                         {seatsLeft != null && (
                           <p
-                            className={`mt-1 text-xs font-semibold ${full ? "text-danger" : "text-brand"}`}
+                            className={`mt-2 text-xs font-bold ${full ? "text-danger" : "text-brand"}`}
                           >
                             {full
-                              ? "Lotada — Entrar na lista de espera"
-                              : `Restam ${seatsLeft} vaga${seatsLeft === 1 ? "" : "s"}`}
+                              ? "Entrar na lista de espera"
+                              : `${seatsLeft} vaga${seatsLeft === 1 ? "" : "s"} restante${seatsLeft === 1 ? "" : "s"}`}
                           </p>
                         )}
                       </div>
                       <span
                         className={[
-                          "mt-1 h-5 w-5 shrink-0 rounded-full border-2",
+                          "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2",
                           isOn
                             ? "border-brand bg-brand"
                             : "border-line bg-transparent",
                         ].join(" ")}
-                      />
+                      >
+                        {isOn && (
+                          <span className="h-2 w-2 rounded-full bg-white" />
+                        )}
+                      </span>
                     </div>
                   </button>
                 );

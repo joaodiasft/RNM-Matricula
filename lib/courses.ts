@@ -101,12 +101,24 @@ export const GRADES = [
 
 export type Grade = (typeof GRADES)[number];
 
+/** Valor especial para quem já saiu da escola e faz cursinho. */
+export const CONCLUDED_GRADE = "Já concluí o Ensino Médio";
+export const CONCLUDED_SCHOOL = "Ensino já concluído";
+
+export function isConcludedGrade(grade: string): boolean {
+  return grade === CONCLUDED_GRADE;
+}
+
 export function isFundamentalGrade(grade: string): boolean {
   return ["6º ano", "7º ano", "8º ano", "9º ano"].includes(grade);
 }
 
 export function isMedioGrade(grade: string): boolean {
-  return ["1ª série EM", "2ª série EM", "3ª série EM"].includes(grade);
+  // Quem concluiu o EM faz cursinho → turmas de Ensino Médio.
+  return (
+    ["1ª série EM", "2ª série EM", "3ª série EM"].includes(grade) ||
+    isConcludedGrade(grade)
+  );
 }
 
 export function getAvailableClasses(grade: string): ClassInfo[] {
@@ -133,11 +145,23 @@ export const SUBJECT_LABELS: Record<Subject, string> = {
   matematica: "Matemática",
 };
 
-export const SUBJECT_INFO: Record<Subject, string> = {
-  redacao:
-    "Cada aula tem 1h30 de duração. Se for faltar, avise com 3 horas de antecedência para reagendarmos a reposição. Avisos são publicados no grupo — fique bem atento.",
-  exatas:
-    "Cada aula tem 1h de duração. Este curso não tem reposição, a não ser que os professores marquem uma. Avisos são publicados no grupo — fique bem atento.",
-  matematica:
-    "Cada aula tem 1h de duração. Avisos são publicados no grupo — fique bem atento.",
+export const SUBJECT_INFO: Record<Subject, string[]> = {
+  redacao: [
+    "Cada aula tem 1h30 de duração, com foco em estrutura, repertório e correção.",
+    "Se for faltar, avise a secretaria com pelo menos 3 horas de antecedência para agendar a reposição.",
+    "Avisos, materiais e links saem no grupo oficial da turma — a entrada só é aprovada após o pagamento.",
+    "Leve caderno ou tablet; a produção escrita faz parte de quase toda aula.",
+  ],
+  exatas: [
+    "Cada aula tem 1h de duração, com resolução guiada e prática.",
+    "Este curso não tem reposição automática — só quando os professores marcarem.",
+    "Avisos e materiais são publicados no grupo oficial.",
+    "Traga calculadora (se a turma indicar) e material para anotações.",
+  ],
+  matematica: [
+    "Cada aula tem 1h de duração, com teoria objetiva e exercícios.",
+    "Avisos, listas e links saem no grupo oficial — acompanhe sempre.",
+    "Traga caderno e material de apoio indicado pelo professor.",
+    "Em caso de dúvida sobre conteúdo, use o canal do grupo ou a secretaria.",
+  ],
 };

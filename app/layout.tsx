@@ -1,20 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat, Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientGuards } from "@/components/ClientGuards";
+import { ToastProvider } from "@/components/ui/Toast";
 
-const montserrat = Montserrat({
+const fraunces = Fraunces({
   subsets: ["latin"],
-  variable: "--font-montserrat",
+  variable: "--font-fraunces",
   display: "swap",
-  weight: ["600", "700", "800"],
+  weight: ["600", "700", "900"],
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-plus-jakarta",
+  variable: "--font-inter",
   display: "swap",
   weight: ["400", "500", "600", "700"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-ibm-plex-mono",
+  display: "swap",
+  weight: ["500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -34,17 +42,21 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   colorScheme: "light",
-  themeColor: "#ffffff",
+  themeColor: "#ff008e",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${montserrat.variable} ${plusJakarta.variable} antialiased`}>
+    <html
+      lang="pt-BR"
+      className={`${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
         <ClientGuards />
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );
