@@ -21,9 +21,13 @@ type Props = {
   onBack: () => void;
 };
 
-const METHODS: PaymentMethod[] = ["dinheiro", "cartao", "pix"];
+const METHODS: Exclude<PaymentMethod, "isento">[] = [
+  "dinheiro",
+  "cartao",
+  "pix",
+];
 
-const HINTS: Record<PaymentMethod, string> = {
+const HINTS: Record<Exclude<PaymentMethod, "isento">, string> = {
   dinheiro: "Pagamento presencial em dinheiro.",
   cartao: "Crédito ou débito na maquininha da escola.",
   pix: "Chave Pix enviada pela secretaria após a matrícula.",
