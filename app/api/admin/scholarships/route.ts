@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   const created: string[] = [];
 
   for (let i = 0; i < count; i++) {
-    let code =
+    const code =
       i === 0 && body.code?.trim() && count === 1
         ? body.code.trim().toUpperCase()
         : genCode();

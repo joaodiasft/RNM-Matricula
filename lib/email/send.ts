@@ -49,13 +49,6 @@ function extractAddress(value: string): string {
   return (m ? m[1] : value).trim();
 }
 
-/** Extrai nome e e-mail de "Nome <email>" ou "email". */
-function parseSender(value: string): { name: string; email: string } {
-  const m = value.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
-  if (m) return { name: m[1] || COMPANY.name, email: m[2].trim() };
-  return { name: COMPANY.name, email: value.trim() };
-}
-
 function validRecipient(to: string | string[]): boolean {
   const list = Array.isArray(to) ? to : [to];
   if (list.length === 0) return false;
