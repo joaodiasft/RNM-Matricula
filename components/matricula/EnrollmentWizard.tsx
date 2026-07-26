@@ -185,21 +185,55 @@ export function EnrollmentWizard() {
     [persist]
   );
 
-  // Sessões antigas: se caiu no passo 8 sem plano mensal, avança
+  // Sessões antigas: pula passos ocultos (rematrícula / pagamento com bolsa)
   useEffect(() => {
     if (!session) return;
+    const scholarship = session.draft.scholarshipValid === true;
     if (session.currentStep === 8 && session.draft.plan !== "mensal") {
       goTo(9, 1);
+      return;
     }
-  }, [session, goTo]);
+    if (session.currentStep === 7 && scholarship) {
+      const n = nextStep(7, {
+        age,
+        plan: session.draft.plan,
+        scholarship: true,
+      });
+      if (n) goTo(n, 1);
+    }
+  }, [session, goTo, age]);
 
   const goNext = () => {
     if (!session) return;
+    const scholarship = session.draft.scholarshipValid === true;
     const n = nextStep(session.currentStep, {
       age,
       plan: session.draft.plan,
+      scholarship,
     });
-    if (n) goTo(n, 1);
+    if (!n) return;
+
+    if (session.currentStep === 6 && scholarship) {
+      setDirection(1);
+      setSession((prev) => {
+        if (!prev) return prev;
+        const next = {
+          ...prev,
+          currentStep: n,
+          draft: {
+            ...prev.draft,
+            paymentMethod: "isento" as const,
+            waivedFee: true,
+          },
+        };
+        void persist(next, true);
+        return next;
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    goTo(n, 1);
   };
 
   const goPrev = () => {
@@ -207,6 +241,7 @@ export function EnrollmentWizard() {
     const p = prevStep(session.currentStep, {
       age,
       plan: session.draft.plan,
+      scholarship: session.draft.scholarshipValid === true,
     });
     if (p) goTo(p, -1);
   };
@@ -317,6 +352,7 @@ export function EnrollmentWizard() {
   const progress = stepDisplayIndex(session.currentStep, {
     age,
     plan: session.draft.plan,
+    scholarship: session.draft.scholarshipValid === true,
   });
   const step = session.currentStep;
 

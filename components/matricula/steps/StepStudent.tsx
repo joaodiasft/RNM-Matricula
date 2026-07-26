@@ -49,6 +49,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
         referralCodeInput: "",
         scholarshipCode: "",
         scholarshipValid: false,
+        paymentMethod: undefined,
       });
       return;
     }
@@ -77,6 +78,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
           scholarshipCode: code,
           scholarshipValid: true,
           waivedFee: true,
+          paymentMethod: "isento",
           referralCodeInput: "",
         });
       } else {
@@ -84,6 +86,9 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
           referralCodeInput: code,
           scholarshipCode: "",
           scholarshipValid: false,
+          ...(draft.paymentMethod === "isento"
+            ? { paymentMethod: undefined }
+            : {}),
         });
       }
       setErrors((prev) => {
@@ -374,7 +379,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
           </div>
           {draft.scholarshipValid && (
             <p className="mt-2 text-xs font-medium text-success">
-              Condição especial aplicada.
+              Bolsa integral 100% — mensalidade e taxa isentas.
             </p>
           )}
           {!draft.scholarshipValid &&

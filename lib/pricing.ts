@@ -2,7 +2,7 @@ import type { Subject } from "./courses";
 
 export type Modality = "desconto" | "desconto_parcial" | "normal";
 export type Plan = "mensal" | "trimestral" | "total";
-export type PaymentMethod = "dinheiro" | "cartao" | "pix";
+export type PaymentMethod = "dinheiro" | "cartao" | "pix" | "isento";
 
 export const MODALITY_LABELS: Record<Modality, string> = {
   desconto: "Modalidade 1 — Com desconto",
@@ -46,6 +46,7 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   dinheiro: "Dinheiro à vista",
   cartao: "Cartão (crédito ou débito)",
   pix: "Pix",
+  isento: "Isento — bolsa integral (100%)",
 };
 
 /** Valor mensal por modalidade e matéria */
@@ -100,7 +101,7 @@ export function calculatePricing(input: {
   const planSubtotal = monthlyValue * months;
 
   // Bolsa integral: zera plano e taxa
-  if (input.scholarship) {
+  if (input.scholarship || input.paymentMethod === "isento") {
     return {
       monthlyValue: 0,
       months,

@@ -38,6 +38,13 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   const cashDiscountApplies = draft.modality === "desconto_parcial" && !isBolsa;
 
   useEffect(() => {
+    if (!isBolsa) return;
+    if (draft.paymentMethod !== "isento" || !draft.waivedFee) {
+      onChange({ paymentMethod: "isento", waivedFee: true });
+    }
+  }, [isBolsa, draft.paymentMethod, draft.waivedFee, onChange]);
+
+  useEffect(() => {
     fetch("/api/settings/card-fee")
       .then((r) => r.json())
       .then((d) => {
@@ -47,7 +54,13 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   }, []);
 
   const submit = () => {
-    if (!draft.paymentMethod) {
+    if (isBolsa) {
+      onChange({ paymentMethod: "isento", waivedFee: true });
+      setError(null);
+      onNext();
+      return;
+    }
+    if (!draft.paymentMethod || draft.paymentMethod === "isento") {
       setError("Escolha a forma de pagamento");
       toast.push({
         title: "Forma de pagamento",
@@ -59,6 +72,27 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
     setError(null);
     onNext();
   };
+
+  if (isBolsa) {
+    return (
+      <div>
+        <StepTitle
+          title="Pagamento"
+          subtitle="Bolsa integral aplicada — não há valores a pagar."
+        />
+        <div className="rounded-2xl border border-success/30 bg-success-soft px-4 py-5 text-sm text-ink">
+          <p className="font-display text-lg font-bold text-ink">
+            Isento — bolsa 100%
+          </p>
+          <p className="mt-2 text-ink-soft">
+            Mensalidade e taxa de matrícula ficam zeradas. Nenhuma forma de
+            pagamento é necessária.
+          </p>
+        </div>
+        <NavButtons onBack={onBack} onNext={submit} nextLabel="Continuar" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -79,7 +113,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                   subjects,
                   cardFeePercent: cardFee,
                   waivedFee: draft.waivedFee,
-                  scholarship: isBolsa,
+                  scholarship: false,
                 })
               : null;
 
@@ -131,7 +165,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                   pagamento.
                 </p>
               )}
-              {method === "pix" && pricing && selected && !isBolsa && (
+              {method === "pix" && pricing && selected && (
                 <p className="mt-2 text-sm font-semibold text-ink">
                   Total do plano: {formatBRL(pricing.planTotal)}
                 </p>

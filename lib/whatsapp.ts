@@ -20,6 +20,7 @@ export type WhatsAppPayload = {
   paymentMethod: PaymentMethod;
   planTotal: number;
   enrollmentFee?: number;
+  scholarship?: boolean;
 };
 
 export function buildWhatsAppMessage(data: WhatsAppPayload): string {
@@ -32,17 +33,25 @@ export function buildWhatsAppMessage(data: WhatsAppPayload): string {
     })
     .join("\n📚 Curso: ");
 
+  const isBolsa = data.scholarship === true || data.paymentMethod === "isento";
+
   const lines = [
     `Olá! Acabei de concluir minha matrícula na ${COMPANY.name}. Segue meu resumo:`,
     "",
     `👤 Aluno: ${data.fullName}`,
     `📚 Curso: ${coursesText}`,
     `💳 Modalidade: ${MODALITY_LABELS[data.modality]} · Plano: ${PLAN_LABELS[data.plan]}`,
-    `💵 Forma de pagamento: ${PAYMENT_LABELS[data.paymentMethod]}`,
-    `💰 Valor do plano: ${formatBRL(data.planTotal)}`,
+    isBolsa
+      ? `💵 Pagamento: Isento — bolsa integral (100%)`
+      : `💵 Forma de pagamento: ${PAYMENT_LABELS[data.paymentMethod]}`,
+    isBolsa
+      ? `💰 Valor do plano: R$ 0,00`
+      : `💰 Valor do plano: ${formatBRL(data.planTotal)}`,
   ];
 
-  if (data.enrollmentFee != null) {
+  if (isBolsa) {
+    lines.push(`🧾 Taxa de matrícula: isenta`);
+  } else if (data.enrollmentFee != null) {
     lines.push(`🧾 Taxa de matrícula: ${formatBRL(data.enrollmentFee)}`);
   }
 

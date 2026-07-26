@@ -26,11 +26,14 @@ const BASE_NOTICES: {
   key: NoticeKey;
   title: string;
   body: string;
+  bodyBolsa?: string;
 }[] = [
   {
     key: "noticePayment",
     title: "Vencimento todo dia 5",
     body: "A mensalidade vence todo dia 5. Se precisar de prazo, avise a secretaria com antecedência — vamos ajudar a organizar.",
+    bodyBolsa:
+      "Com bolsa integral (100%), não há mensalidade nem taxa a pagar nesta matrícula. Se a condição especial for revogada pela secretaria, as regras de pagamento voltam a valer.",
   },
   {
     key: "noticeAbsence",
@@ -41,11 +44,15 @@ const BASE_NOTICES: {
     key: "noticeModality",
     title: "Modalidade até o fim do curso",
     body: "A modalidade escolhida vale até o fim do período letivo. Alteração só na secretaria. Nas modalidades com desconto, o não cumprimento das obrigações faz o valor voltar ao normal.",
+    bodyBolsa:
+      "A modalidade escolhida vale até o fim do período letivo. Com bolsa integral, valores permanecem isentos enquanto a condição especial estiver ativa. Alteração só na secretaria.",
   },
   {
     key: "noticeGroups",
     title: "Grupos de avisos",
     body: "Cada turma tem um grupo oficial de avisos. Seu pedido de entrada só é aprovado após a confirmação do pagamento. Não saia do grupo sem falar com a secretaria.",
+    bodyBolsa:
+      "Cada turma tem um grupo oficial de avisos. Com bolsa integral, o pedido de entrada é aprovado após a confirmação da matrícula (sem pagamento). Não saia do grupo sem falar com a secretaria.",
   },
   {
     key: "noticePunctuality",
@@ -63,6 +70,7 @@ export function StepNotices({ draft, onChange, onNext, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
   const showContractNotice = draft.contractSigned === true;
+  const isBolsa = draft.scholarshipValid === true;
 
   const requiredKeys: NoticeKey[] = [
     ...BASE_NOTICES.map((n) => n.key),
@@ -127,11 +135,15 @@ export function StepNotices({ draft, onChange, onNext, onBack }: Props) {
         {BASE_NOTICES.map((n) => (
           <Item
             key={n.key}
-            title={n.title}
+            title={
+              isBolsa && n.key === "noticePayment"
+                ? "Sem cobrança (bolsa integral)"
+                : n.title
+            }
             checked={draft[n.key]}
             onToggle={(v) => onChange({ [n.key]: v })}
           >
-            {n.body}
+            {isBolsa && n.bodyBolsa ? n.bodyBolsa : n.body}
           </Item>
         ))}
 

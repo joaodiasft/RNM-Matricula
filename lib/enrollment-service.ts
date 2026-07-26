@@ -396,6 +396,12 @@ export async function completeEnrollment(
     ? (JSON.parse(enrollment.draftData) as EnrollmentDraft)
     : {};
 
+  // Bolsa 100%: força isenção e forma de pagamento isenta
+  if (draft.scholarshipValid) {
+    draft.waivedFee = true;
+    draft.paymentMethod = "isento";
+  }
+
   if (!draft.fullName || !draft.birthDateBr || !draft.email || !draft.phone) {
     throw new Error("DADOS_INCOMPLETOS");
   }
@@ -635,8 +641,12 @@ export async function completeEnrollment(
     modality: MODALITY_LABELS[draft.modality as Modality],
     plan: PLAN_LABELS[draft.plan as Plan],
     planDetail: pricing.calculationLabel,
-    paymentMethod: PAYMENT_LABELS[draft.paymentMethod as PaymentMethod],
+    paymentMethod: draft.scholarshipValid
+      ? "Isento — bolsa integral (100%)"
+      : PAYMENT_LABELS[draft.paymentMethod as PaymentMethod],
     enrollmentFee: pricing.enrollmentFee,
+    planTotal: pricing.planTotal,
+    scholarship: draft.scholarshipValid === true,
     autoRenew: draft.plan === "mensal" ? Boolean(draft.autoRenew) : false,
     referralCode,
     editUrl,
@@ -668,6 +678,7 @@ export async function completeEnrollment(
       paymentMethod: draft.paymentMethod as PaymentMethod,
       planTotal: pricing.planTotal,
       enrollmentFee: pricing.enrollmentFee,
+      scholarship: draft.scholarshipValid === true,
     },
   };
 }

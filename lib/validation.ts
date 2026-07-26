@@ -217,7 +217,7 @@ export const draftServerSchema = z
     modality: z.enum(["desconto", "desconto_parcial", "normal"]),
     waivedFee: z.boolean(),
     plan: z.enum(["mensal", "trimestral", "total"]),
-    paymentMethod: z.enum(["dinheiro", "cartao", "pix"]),
+    paymentMethod: z.enum(["dinheiro", "cartao", "pix", "isento"]),
     autoRenew: z.boolean(),
     noticePayment: z.boolean(),
     noticeAbsence: z.boolean(),
@@ -267,7 +267,7 @@ export type EnrollmentDraft = {
   modality?: "desconto" | "desconto_parcial" | "normal";
   waivedFee?: boolean;
   plan?: "mensal" | "trimestral" | "total";
-  paymentMethod?: "dinheiro" | "cartao" | "pix";
+  paymentMethod?: "dinheiro" | "cartao" | "pix" | "isento";
   autoRenew?: boolean;
   noticePayment?: boolean;
   noticeAbsence?: boolean;

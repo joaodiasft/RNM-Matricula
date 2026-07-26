@@ -72,11 +72,11 @@ export function StepReview({
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
   const reviewAge = draft.birthDateBr ? calcAgeFromBr(draft.birthDateBr) : null;
   const pricing =
-    draft.modality && draft.plan && draft.paymentMethod
+    draft.modality && draft.plan && (draft.paymentMethod || draft.scholarshipValid)
       ? calculatePricing({
           modality: draft.modality as Modality,
           plan: draft.plan as Plan,
-          paymentMethod: draft.paymentMethod as PaymentMethod,
+          paymentMethod: (draft.paymentMethod as PaymentMethod) || "isento",
           subjects,
           waivedFee: draft.waivedFee,
           scholarship: draft.scholarshipValid === true,
@@ -457,7 +457,7 @@ export function StepReview({
               <SummaryTile
                 label="Pagamento"
                 value={PAYMENT_LABELS[draft.paymentMethod as PaymentMethod]}
-                onEdit={() => onEdit(7)}
+                onEdit={() => onEdit(draft.scholarshipValid ? 1 : 7)}
               />
             )}
             {draft.plan === "mensal" && (
@@ -496,7 +496,9 @@ export function StepReview({
                   )}
                 </div>
                 <p className="data text-2xl font-extrabold text-brand">
-                  {formatBRL(pricing.planTotal)}
+                  {draft.scholarshipValid
+                    ? "R$ 0,00"
+                    : formatBRL(pricing.planTotal)}
                 </p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">

@@ -31,11 +31,11 @@ export function StepWhatsApp({
 }: Props) {
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
   const pricing =
-    draft.modality && draft.plan && draft.paymentMethod
+    draft.modality && draft.plan && (draft.paymentMethod || draft.scholarshipValid)
       ? calculatePricing({
           modality: draft.modality as Modality,
           plan: draft.plan as Plan,
-          paymentMethod: draft.paymentMethod as PaymentMethod,
+          paymentMethod: (draft.paymentMethod as PaymentMethod) || "isento",
           subjects,
           waivedFee: draft.waivedFee,
           scholarship: draft.scholarshipValid === true,

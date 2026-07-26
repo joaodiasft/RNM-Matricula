@@ -14,9 +14,11 @@ export const STEP_NAMES = [
 type StepOpts = {
   age?: number | null;
   plan?: string | null;
+  /** Bolsa 100%: pula forma de pagamento */
+  scholarship?: boolean;
 };
 
-/** Índices lógicos 1–10 (passo 2 e 8 podem ser pulados) */
+/** Índices lógicos 1–10 (passos 2, 7 e 8 podem ser pulados) */
 export function getVisibleSteps(
   ageOrOpts: number | null | StepOpts,
   planArg?: string | null
@@ -29,10 +31,18 @@ export function getVisibleSteps(
     typeof ageOrOpts === "object" && ageOrOpts !== null
       ? (ageOrOpts.plan ?? null)
       : (planArg ?? null);
+  const scholarship =
+    typeof ageOrOpts === "object" && ageOrOpts !== null
+      ? Boolean(ageOrOpts.scholarship)
+      : false;
 
   let all = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   if (age !== null && age >= 18) {
     all = all.filter((s) => s !== 2);
+  }
+  // Bolsa integral: sem cobrança — não escolhe forma de pagamento
+  if (scholarship) {
+    all = all.filter((s) => s !== 7);
   }
   // Rematrícula automática só faz sentido no plano mensal
   if (plan !== "mensal") {

@@ -27,7 +27,8 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
     return calculatePricing({
       modality: draft.modality as Modality,
       plan: (draft.plan as Plan) || "mensal",
-      paymentMethod: (draft.paymentMethod as PaymentMethod) || "pix",
+      paymentMethod:
+        (draft.paymentMethod as PaymentMethod) || (isBolsa ? "isento" : "pix"),
       subjects,
       waivedFee: draft.waivedFee,
       scholarship: isBolsa,
@@ -42,7 +43,8 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
   ]);
 
   const provisional =
-    Boolean(draft.modality) && !(draft.plan && draft.paymentMethod);
+    Boolean(draft.modality) &&
+    !(draft.plan && (draft.paymentMethod || isBolsa));
   const filledBits = [
     draft.fullName,
     courses.length,
