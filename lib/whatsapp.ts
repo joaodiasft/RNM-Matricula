@@ -21,6 +21,13 @@ export type WhatsAppPayload = {
   planTotal: number;
   enrollmentFee?: number;
   scholarship?: boolean;
+  invoice?: {
+    name: string;
+    cpf: string;
+    address: string;
+    phone: string;
+    notes?: string;
+  } | null;
 };
 
 export function buildWhatsAppMessage(data: WhatsAppPayload): string {
@@ -53,6 +60,20 @@ export function buildWhatsAppMessage(data: WhatsAppPayload): string {
     lines.push(`🧾 Taxa de matrícula: isenta`);
   } else if (data.enrollmentFee != null) {
     lines.push(`🧾 Taxa de matrícula: ${formatBRL(data.enrollmentFee)}`);
+  }
+
+  if (data.invoice) {
+    lines.push(
+      "",
+      `📄 Nota fiscal: SIM`,
+      `   Nome: ${data.invoice.name}`,
+      `   CPF: ${data.invoice.cpf}`,
+      `   Endereço: ${data.invoice.address}`,
+      `   Telefone: ${data.invoice.phone}`
+    );
+    if (data.invoice.notes?.trim()) {
+      lines.push(`   Obs.: ${data.invoice.notes.trim()}`);
+    }
   }
 
   lines.push(

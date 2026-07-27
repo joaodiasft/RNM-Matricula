@@ -45,6 +45,13 @@ export function confirmationEmailHtml(data: {
   autoRenew: boolean;
   referralCode?: string | null;
   editUrl?: string;
+  invoice?: {
+    name: string;
+    cpf: string;
+    address: string;
+    phone: string;
+    notes?: string;
+  } | null;
 }) {
   const ageText = data.age != null ? `${data.age} anos` : "—";
   const referralBlock = data.referralCode
@@ -66,6 +73,21 @@ export function confirmationEmailHtml(data: {
       : data.planTotal != null
         ? formatBRL(data.planTotal)
         : null;
+  const invoiceBlock = data.invoice
+    ? `<li><strong>Nota fiscal:</strong> Sim
+        <ul style="margin:6px 0 0;padding-left:18px;">
+          <li>Nome: ${escapeHtml(data.invoice.name)}</li>
+          <li>CPF: ${escapeHtml(data.invoice.cpf)}</li>
+          <li>Endereço: ${escapeHtml(data.invoice.address)}</li>
+          <li>Telefone: ${escapeHtml(data.invoice.phone)}</li>
+          ${
+            data.invoice.notes?.trim()
+              ? `<li>Obs.: ${escapeHtml(data.invoice.notes.trim())}</li>`
+              : ""
+          }
+        </ul>
+      </li>`
+    : "";
   const body = `
     <p>Olá, <strong style="color:#14213d;">${escapeHtml(data.studentName)}</strong>!</p>
     <p>Sua matrícula na <strong>${escapeHtml(COMPANY.name)}</strong> foi recebida. Resumo:</p>
@@ -77,6 +99,7 @@ export function confirmationEmailHtml(data: {
       <li><strong>Pagamento:</strong> ${escapeHtml(data.paymentMethod)}</li>
       ${planTotalText ? `<li><strong>Valor do plano:</strong> ${escapeHtml(planTotalText)}</li>` : ""}
       <li><strong>Taxa de matrícula:</strong> ${escapeHtml(feeText)}</li>
+      ${invoiceBlock}
       ${renewLine}
       ${referralBlock}
     </ul>

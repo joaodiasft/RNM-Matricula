@@ -218,6 +218,12 @@ export const draftServerSchema = z
     waivedFee: z.boolean(),
     plan: z.enum(["mensal", "trimestral", "total"]),
     paymentMethod: z.enum(["dinheiro", "cartao", "pix", "isento"]),
+    needsInvoice: z.boolean(),
+    invoiceName: str(120),
+    invoiceCpf: str(18),
+    invoiceAddress: str(200),
+    invoicePhone: str(20),
+    invoiceNotes: str(500),
     autoRenew: z.boolean(),
     noticePayment: z.boolean(),
     noticeAbsence: z.boolean(),
@@ -268,6 +274,12 @@ export type EnrollmentDraft = {
   waivedFee?: boolean;
   plan?: "mensal" | "trimestral" | "total";
   paymentMethod?: "dinheiro" | "cartao" | "pix" | "isento";
+  needsInvoice?: boolean;
+  invoiceName?: string;
+  invoiceCpf?: string;
+  invoiceAddress?: string;
+  invoicePhone?: string;
+  invoiceNotes?: string;
   autoRenew?: boolean;
   noticePayment?: boolean;
   noticeAbsence?: boolean;

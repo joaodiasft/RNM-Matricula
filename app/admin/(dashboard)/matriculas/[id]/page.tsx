@@ -593,6 +593,29 @@ export default function EnrollmentDetailPage() {
         </Section>
 
         {draft && Object.keys(draft).length > 0 && (
+          <Section title="Nota fiscal" className="lg:col-span-2">
+            {draft.needsInvoice === true ? (
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <FieldRow label="Solicitou NF">Sim</FieldRow>
+                <FieldRow label="Nome">{String(draft.invoiceName || "—")}</FieldRow>
+                <FieldRow label="CPF">{String(draft.invoiceCpf || "—")}</FieldRow>
+                <FieldRow label="Telefone">
+                  {String(draft.invoicePhone || "—")}
+                </FieldRow>
+                <FieldRow label="Endereço">
+                  {String(draft.invoiceAddress || "—")}
+                </FieldRow>
+                <FieldRow label="Observação">
+                  {String(draft.invoiceNotes || "—")}
+                </FieldRow>
+              </dl>
+            ) : (
+              <p className="text-sm text-muted">Não solicitou nota fiscal.</p>
+            )}
+          </Section>
+        )}
+
+        {draft && Object.keys(draft).length > 0 && (
           <Section title="Todos os dados preenchidos" className="lg:col-span-2">
             <p className="mb-4 text-sm text-muted">
               Tudo que o aluno informou no formulário (incluindo campos

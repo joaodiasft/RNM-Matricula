@@ -460,6 +460,19 @@ export function StepReview({
                 onEdit={() => onEdit(draft.scholarshipValid ? 1 : 7)}
               />
             )}
+            {draft.needsInvoice && (
+              <SummaryTile
+                label="Nota fiscal"
+                value={[
+                  draft.invoiceName,
+                  draft.invoiceCpf,
+                  draft.invoicePhone,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "Solicitada"}
+                onEdit={() => onEdit(7)}
+              />
+            )}
             {draft.plan === "mensal" && (
               <SummaryTile
                 label="Rematrícula"

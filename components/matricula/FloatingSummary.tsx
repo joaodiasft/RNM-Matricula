@@ -233,6 +233,16 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                     value={PAYMENT_LABELS[draft.paymentMethod as PaymentMethod]}
                   />
                 )}
+                {draft.needsInvoice && (
+                  <Row
+                    label="Nota fiscal"
+                    value={
+                      [draft.invoiceName, draft.invoiceCpf]
+                        .filter(Boolean)
+                        .join(" · ") || "Solicitada"
+                    }
+                  />
+                )}
                 {draft.plan === "mensal" && draft.autoRenew !== undefined && (
                   <Row
                     label="Rematrícula"

@@ -668,6 +668,17 @@ export async function completeEnrollment(
     })
     .join("; ");
 
+  const invoicePayload =
+    draft.needsInvoice === true
+      ? {
+          name: (draft.invoiceName || "").trim(),
+          cpf: (draft.invoiceCpf || "").trim(),
+          address: (draft.invoiceAddress || "").trim(),
+          phone: (draft.invoicePhone || "").trim(),
+          notes: (draft.invoiceNotes || "").trim() || undefined,
+        }
+      : null;
+
   const html = confirmationEmailHtml({
     studentName: draft.fullName,
     age,
@@ -684,6 +695,7 @@ export async function completeEnrollment(
     autoRenew: draft.plan === "mensal" ? Boolean(draft.autoRenew) : false,
     referralCode,
     editUrl,
+    invoice: invoicePayload,
   });
 
   const subject = `✅ Matrícula confirmada — ${draft.fullName} | ${COMPANY.name}`;
@@ -713,6 +725,7 @@ export async function completeEnrollment(
       planTotal: pricing.planTotal,
       enrollmentFee: pricing.enrollmentFee,
       scholarship: draft.scholarshipValid === true,
+      invoice: invoicePayload,
     },
   };
 }

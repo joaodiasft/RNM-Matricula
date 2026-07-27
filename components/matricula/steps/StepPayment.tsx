@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import {
+  isValidCpf,
+  maskCpf,
+  maskPhone,
+  onlyDigits,
+} from "@/lib/validation";
+import {
   calculatePricing,
   formatBRL,
   PAYMENT_LABELS,
@@ -11,7 +17,7 @@ import {
   type Plan,
 } from "@/lib/pricing";
 import type { Subject } from "@/lib/courses";
-import { NavButtons, StepTitle } from "../ui";
+import { Field, inputClass, NavButtons, StepTitle } from "../ui";
 import { useToast } from "@/components/ui/Toast";
 
 type Props = {
@@ -35,11 +41,13 @@ const HINTS: Record<Exclude<PaymentMethod, "isento">, string> = {
 
 export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [cardFee, setCardFee] = useState(3.5);
   const toast = useToast();
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
   const isBolsa = draft.scholarshipValid === true;
   const cashDiscountApplies = draft.modality === "desconto_parcial" && !isBolsa;
+  const needsInvoice = draft.needsInvoice === true;
 
   useEffect(() => {
     if (!isBolsa) return;
@@ -57,9 +65,25 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
       .catch(() => {});
   }, []);
 
+  const toggleInvoice = (checked: boolean) => {
+    if (!checked) {
+      onChange({ needsInvoice: false });
+      setFieldErrors({});
+      return;
+    }
+    onChange({
+      needsInvoice: true,
+      invoiceName: draft.invoiceName?.trim() || draft.fullName || "",
+      invoiceCpf: draft.invoiceCpf?.trim() || draft.cpf || "",
+      invoiceAddress: draft.invoiceAddress?.trim() || draft.address || "",
+      invoicePhone: draft.invoicePhone?.trim() || draft.phone || "",
+      invoiceNotes: draft.invoiceNotes || "",
+    });
+  };
+
   const submit = () => {
     if (isBolsa) {
-      onChange({ paymentMethod: "isento", waivedFee: true });
+      onChange({ paymentMethod: "isento", waivedFee: true, needsInvoice: false });
       setError(null);
       onNext();
       return;
@@ -73,6 +97,35 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
       });
       return;
     }
+
+    if (needsInvoice) {
+      const nextErrors: Record<string, string> = {};
+      if (!draft.invoiceName?.trim()) nextErrors.invoiceName = "Informe o nome";
+      if (!draft.invoiceCpf?.trim()) {
+        nextErrors.invoiceCpf = "Informe o CPF";
+      } else if (!isValidCpf(draft.invoiceCpf)) {
+        nextErrors.invoiceCpf = "CPF inválido";
+      }
+      if (!draft.invoiceAddress?.trim()) {
+        nextErrors.invoiceAddress = "Informe o endereço";
+      }
+      const phoneDigits = onlyDigits(draft.invoicePhone || "");
+      if (phoneDigits.length < 10) {
+        nextErrors.invoicePhone = "Informe um telefone válido";
+      }
+      if (Object.keys(nextErrors).length > 0) {
+        setFieldErrors(nextErrors);
+        setError("Preencha os dados da nota fiscal");
+        toast.push({
+          title: "Nota fiscal",
+          message: "Complete os campos obrigatórios para a nota fiscal.",
+          tone: "warning",
+        });
+        return;
+      }
+    }
+
+    setFieldErrors({});
     setError(null);
     onNext();
   };
@@ -177,6 +230,112 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-line bg-white p-4 shadow-[var(--shadow-xs)]">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={needsInvoice}
+            onChange={(e) => toggleInvoice(e.target.checked)}
+            className="mt-1 h-4 w-4 accent-[var(--brand)]"
+          />
+          <span>
+            <span className="block font-bold text-ink">
+              Precisa de nota fiscal
+            </span>
+            <span className="mt-1 block text-sm text-ink-soft">
+              Marque se quiser NF. Preencha os dados de quem deve constar na
+              nota.
+            </span>
+          </span>
+        </label>
+
+        {needsInvoice && (
+          <div className="mt-4 space-y-3 border-t border-line pt-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand">
+              Dados para nota fiscal
+            </p>
+            <Field label="Nome" error={fieldErrors.invoiceName}>
+              <input
+                className={inputClass(!!fieldErrors.invoiceName)}
+                value={draft.invoiceName ?? ""}
+                onChange={(e) => {
+                  onChange({ invoiceName: e.target.value });
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.invoiceName;
+                    return next;
+                  });
+                }}
+                placeholder="Nome completo"
+                autoComplete="name"
+              />
+            </Field>
+            <Field label="CPF" error={fieldErrors.invoiceCpf}>
+              <input
+                className={`${inputClass(!!fieldErrors.invoiceCpf)} data`}
+                value={draft.invoiceCpf ?? ""}
+                onChange={(e) => {
+                  onChange({ invoiceCpf: maskCpf(e.target.value) });
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.invoiceCpf;
+                    return next;
+                  });
+                }}
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+                autoComplete="off"
+              />
+            </Field>
+            <Field label="Endereço" error={fieldErrors.invoiceAddress}>
+              <input
+                className={inputClass(!!fieldErrors.invoiceAddress)}
+                value={draft.invoiceAddress ?? ""}
+                onChange={(e) => {
+                  onChange({ invoiceAddress: e.target.value });
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.invoiceAddress;
+                    return next;
+                  });
+                }}
+                placeholder="Rua, número, bairro, cidade"
+                autoComplete="street-address"
+              />
+            </Field>
+            <Field label="Telefone" error={fieldErrors.invoicePhone}>
+              <input
+                className={`${inputClass(!!fieldErrors.invoicePhone)} data`}
+                value={draft.invoicePhone ?? ""}
+                onChange={(e) => {
+                  onChange({ invoicePhone: maskPhone(e.target.value) });
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.invoicePhone;
+                    return next;
+                  });
+                }}
+                placeholder="(00) 00000-0000"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+            </Field>
+            <Field
+              label="Observação (opcional)"
+              hint="Algo que deseja colocar na nota ou avisar a secretaria."
+            >
+              <textarea
+                className={inputClass()}
+                rows={3}
+                value={draft.invoiceNotes ?? ""}
+                onChange={(e) => onChange({ invoiceNotes: e.target.value })}
+                placeholder="Ex.: emitir no nome do responsável, CNPJ, etc."
+              />
+            </Field>
+          </div>
+        )}
       </div>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
