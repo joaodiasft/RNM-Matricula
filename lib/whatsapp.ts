@@ -65,7 +65,7 @@ export function buildWhatsAppMessage(data: WhatsAppPayload): string {
   if (data.invoice) {
     lines.push(
       "",
-      `📄 Nota fiscal: SIM`,
+      `📄 Nota fiscal (responsável): SIM`,
       `   Nome: ${data.invoice.name}`,
       `   CPF: ${data.invoice.cpf}`,
       `   Endereço: ${data.invoice.address}`,

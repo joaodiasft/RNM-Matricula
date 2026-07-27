@@ -74,7 +74,7 @@ export function confirmationEmailHtml(data: {
         ? formatBRL(data.planTotal)
         : null;
   const invoiceBlock = data.invoice
-    ? `<li><strong>Nota fiscal:</strong> Sim
+    ? `<li><strong>Nota fiscal (responsável):</strong> Sim
         <ul style="margin:6px 0 0;padding-left:18px;">
           <li>Nome: ${escapeHtml(data.invoice.name)}</li>
           <li>CPF: ${escapeHtml(data.invoice.cpf)}</li>

@@ -462,7 +462,7 @@ export function StepReview({
             )}
             {draft.needsInvoice && (
               <SummaryTile
-                label="Nota fiscal"
+                label="NF (responsável)"
                 value={[
                   draft.invoiceName,
                   draft.invoiceCpf,

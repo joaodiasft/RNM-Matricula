@@ -71,12 +71,20 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
       setFieldErrors({});
       return;
     }
+
+    // Prefere dados do responsável (mãe ou pai); senão, deixa em branco
+    // para o usuário preencher quem deve constar na NF.
+    const guardianName =
+      draft.motherName?.trim() || draft.fatherName?.trim() || "";
+    const guardianPhone =
+      draft.motherPhone?.trim() || draft.fatherPhone?.trim() || "";
+
     onChange({
       needsInvoice: true,
-      invoiceName: draft.invoiceName?.trim() || draft.fullName || "",
-      invoiceCpf: draft.invoiceCpf?.trim() || draft.cpf || "",
+      invoiceName: draft.invoiceName?.trim() || guardianName,
+      invoiceCpf: draft.invoiceCpf?.trim() || "",
       invoiceAddress: draft.invoiceAddress?.trim() || draft.address || "",
-      invoicePhone: draft.invoicePhone?.trim() || draft.phone || "",
+      invoicePhone: draft.invoicePhone?.trim() || guardianPhone,
       invoiceNotes: draft.invoiceNotes || "",
     });
   };
@@ -115,10 +123,11 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
       }
       if (Object.keys(nextErrors).length > 0) {
         setFieldErrors(nextErrors);
-        setError("Preencha os dados da nota fiscal");
+        setError("Preencha os dados do responsável para a nota fiscal");
         toast.push({
           title: "Nota fiscal",
-          message: "Complete os campos obrigatórios para a nota fiscal.",
+          message:
+            "Complete os dados do responsável que deve constar na nota fiscal.",
           tone: "warning",
         });
         return;
@@ -245,8 +254,9 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
               Precisa de nota fiscal
             </span>
             <span className="mt-1 block text-sm text-ink-soft">
-              Marque se quiser NF. Preencha os dados de quem deve constar na
-              nota.
+              Marque se quiser NF. Os dados abaixo são do{" "}
+              <strong>responsável</strong> (quem deve constar na nota), não do
+              aluno.
             </span>
           </span>
         </label>
@@ -254,9 +264,12 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
         {needsInvoice && (
           <div className="mt-4 space-y-3 border-t border-line pt-4">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand">
-              Dados para nota fiscal
+              Dados do responsável para nota fiscal
             </p>
-            <Field label="Nome" error={fieldErrors.invoiceName}>
+            <Field
+              label="Nome do responsável"
+              error={fieldErrors.invoiceName}
+            >
               <input
                 className={inputClass(!!fieldErrors.invoiceName)}
                 value={draft.invoiceName ?? ""}
@@ -268,11 +281,11 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                     return next;
                   });
                 }}
-                placeholder="Nome completo"
+                placeholder="Nome completo do responsável"
                 autoComplete="name"
               />
             </Field>
-            <Field label="CPF" error={fieldErrors.invoiceCpf}>
+            <Field label="CPF do responsável" error={fieldErrors.invoiceCpf}>
               <input
                 className={`${inputClass(!!fieldErrors.invoiceCpf)} data`}
                 value={draft.invoiceCpf ?? ""}
@@ -289,7 +302,10 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                 autoComplete="off"
               />
             </Field>
-            <Field label="Endereço" error={fieldErrors.invoiceAddress}>
+            <Field
+              label="Endereço do responsável"
+              error={fieldErrors.invoiceAddress}
+            >
               <input
                 className={inputClass(!!fieldErrors.invoiceAddress)}
                 value={draft.invoiceAddress ?? ""}
@@ -305,7 +321,10 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                 autoComplete="street-address"
               />
             </Field>
-            <Field label="Telefone" error={fieldErrors.invoicePhone}>
+            <Field
+              label="Telefone do responsável"
+              error={fieldErrors.invoicePhone}
+            >
               <input
                 className={`${inputClass(!!fieldErrors.invoicePhone)} data`}
                 value={draft.invoicePhone ?? ""}
@@ -331,7 +350,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                 rows={3}
                 value={draft.invoiceNotes ?? ""}
                 onChange={(e) => onChange({ invoiceNotes: e.target.value })}
-                placeholder="Ex.: emitir no nome do responsável, CNPJ, etc."
+                placeholder="Ex.: emitir no nome da mãe, e-mail para envio da NF, etc."
               />
             </Field>
           </div>

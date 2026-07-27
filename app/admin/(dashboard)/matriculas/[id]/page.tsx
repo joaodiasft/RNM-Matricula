@@ -593,12 +593,16 @@ export default function EnrollmentDetailPage() {
         </Section>
 
         {draft && Object.keys(draft).length > 0 && (
-          <Section title="Nota fiscal" className="lg:col-span-2">
+          <Section title="Nota fiscal (responsável)" className="lg:col-span-2">
             {draft.needsInvoice === true ? (
               <dl className="grid gap-3 sm:grid-cols-2">
                 <FieldRow label="Solicitou NF">Sim</FieldRow>
-                <FieldRow label="Nome">{String(draft.invoiceName || "—")}</FieldRow>
-                <FieldRow label="CPF">{String(draft.invoiceCpf || "—")}</FieldRow>
+                <FieldRow label="Nome do responsável">
+                  {String(draft.invoiceName || "—")}
+                </FieldRow>
+                <FieldRow label="CPF do responsável">
+                  {String(draft.invoiceCpf || "—")}
+                </FieldRow>
                 <FieldRow label="Telefone">
                   {String(draft.invoicePhone || "—")}
                 </FieldRow>

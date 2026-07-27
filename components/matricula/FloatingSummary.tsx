@@ -235,7 +235,7 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                 )}
                 {draft.needsInvoice && (
                   <Row
-                    label="Nota fiscal"
+                    label="NF (responsável)"
                     value={
                       [draft.invoiceName, draft.invoiceCpf]
                         .filter(Boolean)
