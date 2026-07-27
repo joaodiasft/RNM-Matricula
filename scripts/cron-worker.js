@@ -2,7 +2,7 @@
  * Worker opcional que chama as rotas de cron do app Next.js.
  * Secrets: APP_URL, CRON_SECRET
  */
-export default {
+const worker = {
   async scheduled(event, env) {
     const base = env.APP_URL?.replace(/\/$/, "");
     const secret = env.CRON_SECRET;
@@ -29,3 +29,5 @@ export default {
     }
   },
 };
+
+export default worker;

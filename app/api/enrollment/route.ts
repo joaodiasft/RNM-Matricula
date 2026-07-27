@@ -4,7 +4,8 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
-  const rl = rateLimit(`enroll-create:${ip}`, 10, 60_000);
+  // Folga alta: num mutirão presencial muitas famílias saem pelo mesmo IP (NAT).
+  const rl = rateLimit(`enroll-create:${ip}`, 60, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas. Aguarde um minuto." },

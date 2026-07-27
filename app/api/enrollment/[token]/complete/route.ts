@@ -9,7 +9,8 @@ type Params = { params: Promise<{ token: string }> };
 export async function POST(req: Request, { params }: Params) {
   const { token } = await params;
   const ip = clientIp(req);
-  const rl = rateLimit(`enroll-complete:${ip}`, 8, 60_000);
+  // Folga p/ IP compartilhado em evento; conclusão real ainda passa por Turnstile.
+  const rl = rateLimit(`enroll-complete:${ip}`, 40, 60_000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Muitas tentativas. Aguarde um minuto." },
@@ -72,6 +73,8 @@ export async function POST(req: Request, { params }: Params) {
       CONFIRMACAO_INVALIDA: "Confirme e-mail e telefone corretamente",
       RESPONSAVEIS_PENDENTES: "Preencha pelo menos um responsável",
       EMAIL_NAO_VERIFICADO: "Verifique seu e-mail com o código enviado",
+      BOLSA_INVALIDA:
+        "O código de bolsa não é válido ou já foi utilizado. Revise a forma de pagamento.",
       DUPLICIDADE:
         "Já existe matrícula com estes dados na mesma turma. A secretaria foi avisada.",
     };

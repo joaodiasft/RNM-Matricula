@@ -276,57 +276,112 @@ textarea:focus-visible,
 .hero-stage {
   position: relative;
   isolation: isolate;
+  /* Clipa só o eixo horizontal: mata o overflow lateral dos blobs no mobile,
+     mas mantém o brilho vertical bleeding acima/abaixo do card. */
+  overflow-x: clip;
 }
 
 .hero-blob {
   position: absolute;
   border-radius: 999px;
-  filter: blur(52px);
+  filter: blur(56px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.85;
+  opacity: 0.9;
+  will-change: transform;
 }
 
 .hero-blob--rosa {
-  width: 10rem;
-  height: 10rem;
-  left: -1rem;
-  top: 28%;
-  background: color-mix(in oklab, #e84a8a 42%, transparent);
+  width: 13rem;
+  height: 13rem;
+  left: -2.5rem;
+  top: 16%;
+  background: color-mix(in oklab, var(--brand) 55%, transparent);
+  animation: hero-float-a 15s ease-in-out infinite;
 }
 
 .hero-blob--gold {
-  width: 12rem;
-  height: 9rem;
-  right: -1.5rem;
-  top: 8%;
-  background: color-mix(in oklab, var(--gold-on-dark) 36%, transparent);
+  width: 14rem;
+  height: 11rem;
+  right: -2.5rem;
+  top: -3%;
+  background: color-mix(in oklab, var(--gold-on-dark) 46%, transparent);
+  animation: hero-float-b 19s ease-in-out infinite;
 }
 
 .hero-blob--ink {
-  width: 8rem;
-  height: 8rem;
-  right: 22%;
-  bottom: -18%;
-  background: color-mix(in oklab, var(--brand) 30%, transparent);
+  width: 10rem;
+  height: 10rem;
+  right: 30%;
+  bottom: -24%;
+  background: color-mix(in oklab, var(--brand-deep) 44%, transparent);
+  animation: hero-float-a 22s ease-in-out infinite reverse;
+}
+
+@keyframes hero-float-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10px, -12px) scale(1.06);
+  }
+}
+@keyframes hero-float-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-14px, 9px) scale(1.08);
+  }
 }
 
 .hero-glass {
   position: relative;
   z-index: 1;
-  background: linear-gradient(
-    165deg,
-    color-mix(in oklab, #152038 58%, transparent),
-    color-mix(in oklab, #0a101c 78%, transparent)
-  );
-  backdrop-filter: blur(22px) saturate(1.35);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
-  border: 1px solid color-mix(in oklab, #fff 18%, transparent);
+  background:
+    radial-gradient(
+      120% 80% at 85% -10%,
+      color-mix(in oklab, var(--brand) 26%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      90% 70% at -5% 110%,
+      color-mix(in oklab, var(--gold-on-dark) 16%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, #1a1020 62%, transparent),
+      color-mix(in oklab, #0a0710 82%, transparent)
+    );
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid color-mix(in oklab, #fff 16%, transparent);
   box-shadow:
-    0 20px 48px -16px rgba(20, 33, 61, 0.3),
-    0 4px 14px rgba(20, 33, 61, 0.08),
-    inset 0 1px 0 color-mix(in oklab, #fff 18%, transparent);
+    0 24px 60px -18px color-mix(in oklab, var(--brand-deep) 45%, rgba(10, 7, 16, 0.5)),
+    0 4px 14px rgba(10, 7, 16, 0.18),
+    inset 0 1px 0 color-mix(in oklab, #fff 20%, transparent);
   color: #fff;
+}
+
+/* Hairline superior magenta→dourado — assinatura de marca no topo do card */
+.hero-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--brand) 25%,
+    var(--gold-on-dark) 60%,
+    transparent
+  );
+  opacity: 0.9;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .hero-glass h1 {
@@ -392,6 +447,94 @@ textarea:focus-visible,
 
 .hero-label {
   color: var(--gold-on-dark-soft);
+}
+
+/* Selo "matrículas abertas" com ponto pulsante verde */
+.hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.34rem 0.72rem 0.34rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: color-mix(in oklab, #fff 90%, transparent);
+  background: color-mix(in oklab, #fff 9%, transparent);
+  border: 1px solid color-mix(in oklab, #fff 16%, transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.hero-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3ee08f;
+  box-shadow: 0 0 0 0 color-mix(in oklab, #3ee08f 65%, transparent);
+  animation: hero-pulse 2.2s ease-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes hero-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, #3ee08f 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.hero-title {
+  margin-top: 0.85rem;
+  font-size: clamp(1.9rem, 7.6vw, 2.45rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+/* Palavra-chave em gradiente vibrante (legível sobre a faixa escura) */
+.hero-accent {
+  background: linear-gradient(
+    100deg,
+    var(--gold-on-dark) 0%,
+    #ffd48a 52%,
+    #ff9ecf 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  margin-top: 0.62rem;
+  max-width: 30rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: color-mix(in oklab, #fff 74%, transparent);
+}
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.hero-chips span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.72rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: color-mix(in oklab, #fff 92%, transparent);
+  background: color-mix(in oklab, var(--brand) 28%, transparent);
+  border: 1px solid color-mix(in oklab, #fff 15%, transparent);
 }
 
 .hero-trust {

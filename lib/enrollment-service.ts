@@ -40,15 +40,23 @@ import {
   seedClassRows,
 } from "./v2-helpers";
 
+// Reconciliação do catálogo de turmas é cara (N updates) e os horários só mudam
+// em deploy — então rodamos no máximo UMA vez por isolate. As leituras de vagas
+// (seatsTaken) continuam sempre frescas via getClassesAvailability().
+let classesReconciled = false;
+
 export async function ensureClassesSeeded() {
+  if (classesReconciled) return;
   const db = getDb();
-  const existing = await db.select().from(classes);
+
+  const existing = await db.select({ id: classes.id }).from(classes).limit(1);
   if (existing.length === 0) {
     await db.insert(classes).values(seedClassRows());
+    classesReconciled = true;
     return;
   }
 
-  // Mantém horários do catálogo sincronizados (ex.: R1/R2)
+  // Mantém horários do catálogo sincronizados (ex.: R1/R2) — uma vez por isolate.
   for (const row of seedClassRows()) {
     await db
       .update(classes)
@@ -61,6 +69,7 @@ export async function ensureClassesSeeded() {
       })
       .where(eq(classes.code, row.code));
   }
+  classesReconciled = true;
 }
 
 export async function getClassesAvailability() {
@@ -396,10 +405,31 @@ export async function completeEnrollment(
     ? (JSON.parse(enrollment.draftData) as EnrollmentDraft)
     : {};
 
-  // Bolsa 100%: força isenção e forma de pagamento isenta
-  if (draft.scholarshipValid) {
-    draft.waivedFee = true;
+  // ── Bolsa 100% — NUNCA confie no cliente. ────────────────────────────────
+  // `scholarshipValid`, `waivedFee` e `paymentMethod: "isento"` chegam do
+  // navegador e zerariam toda a cobrança em calculatePricing(). Revalidamos o
+  // código de bolsa no banco: só isenta se existir um código real ainda não
+  // usado (ou já usado por ESTA matrícula, para reconclusões idempotentes).
+  let scholarshipApproved = false;
+  const scholarshipCodeInput = draft.scholarshipCode?.trim().toUpperCase();
+  if (scholarshipCodeInput) {
+    const [bolsa] = await db
+      .select()
+      .from(scholarshipCodes)
+      .where(eq(scholarshipCodes.code, scholarshipCodeInput))
+      .limit(1);
+    if (bolsa && (!bolsa.usedAt || bolsa.usedByEnrollmentId === enrollment.id)) {
+      scholarshipApproved = true;
+    }
+  }
+
+  draft.scholarshipValid = scholarshipApproved;
+  draft.waivedFee = scholarshipApproved;
+  if (scholarshipApproved) {
     draft.paymentMethod = "isento";
+  } else if (draft.paymentMethod === "isento") {
+    // Tentativa de isenção sem bolsa válida — bloqueia a matrícula grátis.
+    throw new Error("BOLSA_INVALIDA");
   }
 
   if (!draft.fullName || !draft.birthDateBr || !draft.email || !draft.phone) {
@@ -455,17 +485,32 @@ export async function completeEnrollment(
     throw new Error("DUPLICIDADE");
   }
 
-  const availability = await getClassesAvailability();
-  const byCode = Object.fromEntries(availability.map((c) => [c.code, c]));
+  await ensureClassesSeeded();
   const waitlistCodes: string[] = [];
   const enrolledCodes: string[] = [];
 
+  // Reserva de vaga ATÔMICA: incrementa seatsTaken apenas se ainda houver vaga
+  // (WHERE seatsTaken < maxSeats). Isso evita corrida entre matrículas simultâneas
+  // que veriam a mesma "última vaga" e estourariam o limite da turma.
   for (const c of draft.courses) {
-    const cls = byCode[c.classCode];
-    if (!cls || cls.seatsTaken >= cls.maxSeats) {
-      waitlistCodes.push(c.classCode);
-    } else {
+    const claimed = await db
+      .update(classes)
+      .set({
+        seatsTaken: sql`${classes.seatsTaken} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(classes.code, c.classCode),
+          sql`${classes.seatsTaken} < ${classes.maxSeats}`
+        )
+      )
+      .returning({ code: classes.code });
+
+    if (claimed.length > 0) {
       enrolledCodes.push(c.classCode);
+    } else {
+      waitlistCodes.push(c.classCode);
     }
   }
 
@@ -513,17 +558,6 @@ export async function completeEnrollment(
       lgpdConsent: true,
     })
     .where(eq(students.id, enrollment.studentId!));
-
-  // Incrementa vagas das turmas com vaga
-  for (const code of enrolledCodes) {
-    await db
-      .update(classes)
-      .set({
-        seatsTaken: sql`${classes.seatsTaken} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(eq(classes.code, code));
-  }
 
   // Lista de espera
   for (const code of waitlistCodes) {

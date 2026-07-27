@@ -52,25 +52,29 @@ export default function MatriculaPage() {
         <header className="hero-glass overflow-hidden rounded-[var(--radius-xl)]">
           <div className="hero-logo-wrap">
             <div className="hero-logo-plate">
-              <Logo
-                variant="onLight"
-                priority
-                className="hero-logo-img"
-              />
+              <Logo variant="onLight" priority className="hero-logo-img" />
             </div>
           </div>
 
-          <div className="px-5 pb-6 pt-4 sm:px-7 sm:pb-7 sm:pt-5">
-            <p className="hero-label text-[10px] font-semibold uppercase tracking-[0.22em]">
-              Matrícula online
-            </p>
-            <h1 className="font-display mt-2 text-[1.85rem] font-bold leading-[1.06] tracking-[-0.03em] text-white sm:text-[2.15rem]">
-              Faça sua matrícula
+          <div className="px-5 pb-6 pt-5 sm:px-7 sm:pb-7 sm:pt-6">
+            <span className="hero-status">
+              <span className="hero-status-dot" aria-hidden />
+              Matrículas abertas · 2º semestre
+            </span>
+
+            <h1 className="hero-title font-display">
+              Faça sua <span className="hero-accent">matrícula online</span>
             </h1>
-            <p className="mt-2 max-w-md text-[0.9rem] leading-relaxed text-white/70">
-              Poucos passos, progresso salvo automaticamente. Feche e continue
-              quando quiser.
+            <p className="hero-sub">
+              Poucos passos, com o progresso salvo automaticamente. Feche e
+              continue quando quiser — sem perder nada.
             </p>
+
+            <div className="hero-chips" aria-label="Cursos disponíveis">
+              <span>Redação</span>
+              <span>Exatas</span>
+              <span>Matemática</span>
+            </div>
 
             <ul className="hero-trust" aria-label="Vantagens da matrícula online">
               {TRUST.map((t) => (
