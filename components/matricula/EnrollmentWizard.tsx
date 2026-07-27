@@ -18,6 +18,7 @@ import { nextStep, prevStep, stepDisplayIndex } from "@/lib/steps";
 import { ProgressBar } from "./ProgressBar";
 import { FloatingSummary } from "./FloatingSummary";
 import { ResumeModal } from "./ResumeModal";
+import { ImportantNoticeModal } from "./ImportantNoticeModal";
 import { StepStudent } from "./steps/StepStudent";
 import { StepGuardians } from "./steps/StepGuardians";
 import { StepCourses } from "./steps/StepCourses";
@@ -44,6 +45,7 @@ export function EnrollmentWizard() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResume, setShowResume] = useState(false);
+  const [showImportantNotice, setShowImportantNotice] = useState(true);
   const [pendingResume, setPendingResume] = useState<SessionState | null>(null);
   const [completed, setCompleted] = useState<{
     whatsappUrl: string;
@@ -283,6 +285,13 @@ export function EnrollmentWizard() {
         draft={session?.draft ?? {}}
         referralCode={completed.referralCode}
       />
+    );
+  }
+
+  // Aviso importante na entrada da matrícula (antes de retomar / preencher)
+  if (showImportantNotice && (session || (showResume && pendingResume))) {
+    return (
+      <ImportantNoticeModal onContinue={() => setShowImportantNotice(false)} />
     );
   }
 
