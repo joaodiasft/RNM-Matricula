@@ -8,7 +8,7 @@ export type Modality =
 export type Plan = "mensal" | "trimestral" | "total";
 export type PaymentMethod = "dinheiro" | "cartao" | "pix" | "isento";
 
-/** Nome canônico do colégio elegível à Modalidade 4 (APMF). */
+/** Nome canônico do colégio elegível à Modalidade 4. */
 export const APMF_SCHOOL_NAME =
   "Colégio Estadual Militar Ayrton Senna";
 
@@ -30,8 +30,6 @@ export function isApmfSchool(school: string | null | undefined): boolean {
   const hasMilitar = /\bmilitar\b/.test(n);
   const hasAyrton = /\bayrton\b/.test(n) || /\baryton\b/.test(n);
   const hasSenna = /\bsenna\b/.test(n);
-  // Aceita se tiver (ayrton + senna) com colegio/militar/estadual
-  // ou colegio + estadual + militar + senna
   if (hasAyrton && hasSenna && (hasColegio || hasMilitar || hasEstadual)) {
     return true;
   }
@@ -43,14 +41,14 @@ export const MODALITY_LABELS: Record<Modality, string> = {
   desconto: "Modalidade 1 — Com desconto",
   desconto_parcial: "Modalidade 2 — Desconto parcial",
   normal: "Modalidade 3 — Normal",
-  apmf: "Modalidade 4 — APMF (Ayrton Senna)",
+  apmf: "Modalidade 4 — Colégio Estadual Militar Ayrton Senna",
 };
 
 export const MODALITY_SHORT: Record<Modality, string> = {
   desconto: "Maior desconto",
   desconto_parcial: "Desconto parcial",
   normal: "Sem compromisso de divulgação",
-  apmf: "Desconto APMF",
+  apmf: "Colégio Ayrton Senna",
 };
 
 export const MODALITY_OBLIGATIONS: Record<Modality, string> = {
@@ -59,8 +57,7 @@ export const MODALITY_OBLIGATIONS: Record<Modality, string> = {
   desconto_parcial:
     "Divulgar o curso no WhatsApp e Instagram. Sem obrigação de indicação.",
   normal: "Sem obrigações de divulgação — só assistir às aulas.",
-  apmf:
-    "Exclusivo para contribuintes da APMF do Colégio Estadual Militar Ayrton Senna. Pode selecionar agora e no 1º dia de aula apresente o cartão na secretaria.",
+  apmf: "Valores especiais para alunos do Colégio Estadual Militar Ayrton Senna.",
 };
 
 export const PLAN_LABELS: Record<Plan, string> = {
@@ -93,11 +90,11 @@ const MONTHLY: Record<Modality, Record<Subject, number>> = {
   desconto: { redacao: 150, exatas: 150, matematica: 150 },
   desconto_parcial: { redacao: 200, exatas: 200, matematica: 200 },
   normal: { redacao: 250, exatas: 300, matematica: 250 },
-  /** Mesmo valor da modalidade 1 — R$ 150 por curso */
+  /** Valores de referência (modalidade normal) para exibir o desconto */
   apmf: { redacao: 150, exatas: 150, matematica: 150 },
 };
 
-/** Valores de referência (modalidade normal) para exibir o desconto APMF */
+/** Valores de referência (modalidade normal) para exibir o desconto */
 export const NORMAL_MONTHLY: Record<Subject, number> = {
   redacao: 250,
   exatas: 300,
@@ -209,7 +206,7 @@ export function getSubjectMonthly(modality: Modality, subject: Subject): number 
   return MONTHLY[modality][subject];
 }
 
-/** Economia da modalidade APMF em relação ao valor normal (cheio). */
+/** Economia da modalidade 4 em relação ao valor normal (cheio). */
 export function getApmfDiscount(subject: Subject): number {
   return NORMAL_MONTHLY[subject] - MONTHLY.apmf[subject];
 }

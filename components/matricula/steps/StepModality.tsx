@@ -30,7 +30,7 @@ const HIGHLIGHT: Record<Modality, string> = {
   desconto: "Menor mensalidade · com divulgação + indicação",
   desconto_parcial: "Mensalidade intermediária · só divulgação",
   normal: "Valor cheio · sem obrigações extras",
-  apmf: "R$ 150 por curso · só contribuintes APMF",
+  apmf: "R$ 150 por curso",
 };
 
 export function StepModality({ draft, onChange, onNext, onBack }: Props) {
@@ -67,7 +67,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
         "A Modalidade 4 só vale para alunos do Colégio Estadual Militar Ayrton Senna."
       );
       toast.push({
-        title: "Modalidade APMF",
+        title: "Modalidade 4",
         message:
           "Confira o campo “Onde estuda” — precisa ser o Colégio Estadual Militar Ayrton Senna.",
         tone: "warning",
@@ -99,21 +99,6 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
           <p className="font-bold">Condição especial ativa</p>
           <p className="mt-1 text-ink-soft">
             Mensalidade e taxa ficam isentas nesta matrícula.
-          </p>
-        </div>
-      )}
-
-      {apmfEligible && !isBolsa && (
-        <div className="mb-5 rounded-2xl border border-brand/30 bg-brand-soft/70 px-4 py-3.5 text-sm text-ink">
-          <p className="font-bold text-brand-deep">
-            Colégio Ayrton Senna detectado
-          </p>
-          <p className="mt-1 text-ink-soft">
-            A <strong>Modalidade 4 (APMF)</strong> está disponível. O desconto
-            de R$&nbsp;150 por curso vale somente para{" "}
-            <strong>contribuintes da APMF</strong> deste colégio. Você pode
-            selecionar agora e no <strong>1º dia de aula</strong> apresentar o
-            cartão na secretaria.
           </p>
         </div>
       )}
@@ -182,8 +167,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                             </span>
                             {formatBRL(getSubjectMonthly(m, s))}/mês
                             <span className="mt-0.5 block text-[11px] font-semibold text-success">
-                              Desconto APMF −
-                              {formatBRL(getApmfDiscount(s))}
+                              Desconto −{formatBRL(getApmfDiscount(s))}
                             </span>
                           </span>
                         ) : (
@@ -230,10 +214,6 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                           (−{formatBRL(100)})
                         </li>
                       </ul>
-                      <p className="mt-2 font-medium text-ink">
-                        Somente para contribuintes da APMF. No 1º dia de aula,
-                        apresente o cartão na secretaria.
-                      </p>
                     </div>
                   )}
                 </div>

@@ -290,7 +290,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
           hint={
             concluded
               ? "Preenchido automaticamente — você já concluiu o Ensino Médio."
-              : "Se for do Colégio Estadual Militar Ayrton Senna, use o atalho abaixo para liberar a Modalidade 4 (APMF)."
+              : undefined
           }
         >
           <input
@@ -328,7 +328,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
               }
             >
               {isApmfSchool(draft.school) ? "✓ " : ""}
-              Colégio Estadual Militar Ayrton Senna (APMF)
+              {APMF_SCHOOL_NAME}
             </button>
           )}
         </Field>
