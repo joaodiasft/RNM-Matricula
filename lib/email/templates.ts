@@ -52,6 +52,17 @@ export function confirmationEmailHtml(data: {
     phone: string;
     notes?: string;
   } | null;
+  enrollmentNumber?: string | null;
+  accesses?: {
+    sistemaLogin: string;
+    sistemaPassword: string;
+    responsavelLogin: string;
+    responsavelPassword: string;
+    sofiaLogin: string;
+    sofiaPassword: string;
+    correcaoLogin: string;
+    correcaoPassword: string;
+  } | null;
 }) {
   const ageText = data.age != null ? `${data.age} anos` : "—";
   const referralBlock = data.referralCode
@@ -88,9 +99,47 @@ export function confirmationEmailHtml(data: {
         </ul>
       </li>`
     : "";
+  const numberBlock = data.enrollmentNumber
+    ? `<div style="margin:18px 0;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg,#14213d,#0d1730);text-align:center;">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#f2b705;font-weight:700;">Número de matrícula</p>
+        <p style="margin:0;font-size:30px;letter-spacing:.14em;font-weight:800;color:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;">${escapeHtml(data.enrollmentNumber)}</p>
+      </div>`
+    : "";
+
+  const accessRow = (
+    label: string,
+    login: string,
+    senha: string,
+    hint?: string
+  ) =>
+    `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;vertical-align:top;">
+        <strong style="color:#14213d;">${escapeHtml(label)}</strong>
+        ${hint ? `<br/><span style="font-size:12px;color:#6b7385;">${escapeHtml(hint)}</span>` : ""}
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#35415c;">
+        ${escapeHtml(login)}<br/>
+        <span style="color:#6b7385;">senha:</span> <strong>${escapeHtml(senha)}</strong>
+      </td>
+    </tr>`;
+
+  const accessBlock = data.accesses
+    ? `<div style="margin:20px 0;padding:2px 0;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#14213d;">🔐 Seus acessos</p>
+        <p style="margin:0 0 12px;font-size:13px;color:#6b7385;">Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.</p>
+        <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;">
+          ${accessRow("Sistema (aluno)", data.accesses.sistemaLogin, data.accesses.sistemaPassword, "Login = número de matrícula")}
+          ${accessRow("Responsável", data.accesses.responsavelLogin, data.accesses.responsavelPassword)}
+          ${accessRow("Sofia", data.accesses.sofiaLogin, data.accesses.sofiaPassword)}
+          ${accessRow("Correção", data.accesses.correcaoLogin, data.accesses.correcaoPassword)}
+        </table>
+      </div>`
+    : "";
+
   const body = `
     <p>Olá, <strong style="color:#14213d;">${escapeHtml(data.studentName)}</strong>!</p>
     <p>Sua matrícula na <strong>${escapeHtml(COMPANY.name)}</strong> foi recebida. Resumo:</p>
+    ${numberBlock}
     <ul style="padding-left:18px;margin:16px 0;">
       <li><strong>Aluno:</strong> ${escapeHtml(data.studentName)} · ${escapeHtml(ageText)}</li>
       <li><strong>Curso(s):</strong> ${escapeHtml(data.coursesText)}</li>
@@ -103,11 +152,58 @@ export function confirmationEmailHtml(data: {
       ${renewLine}
       ${referralBlock}
     </ul>
+    ${accessBlock}
     <p>Próximo passo: envie o resumo pelo WhatsApp da equipe para confirmarmos tudo.</p>
     ${editBlock}
     <p style="margin-top:20px;">Bem-vindo(a)! 🎉</p>
   `;
   return layout("Matrícula confirmada", body);
+}
+
+export function accessEmailHtml(data: {
+  studentName: string;
+  enrollmentNumber?: string | null;
+  accesses: {
+    sistemaLogin: string;
+    sistemaPassword: string;
+    responsavelLogin: string;
+    responsavelPassword: string;
+    sofiaLogin: string;
+    sofiaPassword: string;
+    correcaoLogin: string;
+    correcaoPassword: string;
+  };
+}) {
+  const a = data.accesses;
+  const numberBlock = data.enrollmentNumber
+    ? `<div style="margin:0 0 18px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg,#14213d,#0d1730);text-align:center;">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#f2b705;font-weight:700;">Número de matrícula</p>
+        <p style="margin:0;font-size:30px;letter-spacing:.14em;font-weight:800;color:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;">${escapeHtml(data.enrollmentNumber)}</p>
+      </div>`
+    : "";
+  const rowHtml = (label: string, login: string, senha: string, hint?: string) =>
+    `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;vertical-align:top;">
+        <strong style="color:#14213d;">${escapeHtml(label)}</strong>
+        ${hint ? `<br/><span style="font-size:12px;color:#6b7385;">${escapeHtml(hint)}</span>` : ""}
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#35415c;">
+        ${escapeHtml(login)}<br/><span style="color:#6b7385;">senha:</span> <strong>${escapeHtml(senha)}</strong>
+      </td>
+    </tr>`;
+  const body = `
+    <p>Olá, <strong style="color:#14213d;">${escapeHtml(data.studentName)}</strong>!</p>
+    <p>Seguem seus dados de acesso na <strong>${escapeHtml(COMPANY.name)}</strong>:</p>
+    ${numberBlock}
+    <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;">
+      ${rowHtml("Sistema (aluno)", a.sistemaLogin, a.sistemaPassword, "Login = número de matrícula")}
+      ${rowHtml("Responsável", a.responsavelLogin, a.responsavelPassword)}
+      ${rowHtml("Sofia", a.sofiaLogin, a.sofiaPassword)}
+      ${rowHtml("Correção", a.correcaoLogin, a.correcaoPassword)}
+    </table>
+    <p style="margin-top:16px;font-size:13px;color:#6b7385;">Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.</p>
+  `;
+  return layout("Seus acessos", body);
 }
 
 export function duplicateAlertHtml(data: {

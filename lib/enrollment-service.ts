@@ -39,6 +39,13 @@ import {
   OTP_TTL_MINUTES,
   seedClassRows,
 } from "./v2-helpers";
+import {
+  buildAccessSet,
+  ensureAccessSchema,
+  ensureEnrollmentAccesses,
+  nextEnrollmentNumber,
+  type AccessSet,
+} from "./access";
 
 // Reconciliação do catálogo de turmas é cara (N updates) e os horários só mudam
 // em deploy — então rodamos no máximo UMA vez por isolate. As leituras de vagas
@@ -633,11 +640,26 @@ export async function completeEnrollment(
     process.env.NEXT_PUBLIC_APP_URL || "https://rnm-matricula.jmdias2901.workers.dev";
   const editUrl = `${appUrl}/editar/${editToken}`;
 
+  // ── Número de matrícula (R0001+) e acessos gerados ────────────────────────
+  await ensureAccessSchema();
+  const enrollmentNumber =
+    enrollment.enrollmentNumber || (await nextEnrollmentNumber());
+  const principalName =
+    (draft.principalGuardian === "mae"
+      ? draft.motherName || draft.fatherName
+      : draft.fatherName || draft.motherName) || draft.fullName;
+  const accessSet: AccessSet = buildAccessSet({
+    enrollmentNumber,
+    studentName: draft.fullName,
+    principalName,
+  });
+
   const [updated] = await db
     .update(enrollments)
     .set({
       status: "concluida",
       currentStep: 10,
+      enrollmentNumber,
       modality: draft.modality,
       plan: draft.plan,
       paymentMethod: draft.paymentMethod,
@@ -658,6 +680,9 @@ export async function completeEnrollment(
     })
     .where(eq(enrollments.id, enrollment.id))
     .returning();
+
+  // Grava os acessos (idempotente — não sobrescreve se já existirem).
+  await ensureEnrollmentAccesses(enrollment.id, accessSet);
 
   const coursesText = draft.courses
     .map((c) => {
@@ -696,9 +721,11 @@ export async function completeEnrollment(
     referralCode,
     editUrl,
     invoice: invoicePayload,
+    enrollmentNumber,
+    accesses: accessSet,
   });
 
-  const subject = `✅ Matrícula confirmada — ${draft.fullName} | ${COMPANY.name}`;
+  const subject = `✅ Matrícula confirmada — ${enrollmentNumber} · ${draft.fullName} | ${COMPANY.name}`;
   const companyEmail = process.env.COMPANY_EMAIL || COMPANY.email;
 
   await Promise.all([
@@ -713,6 +740,8 @@ export async function completeEnrollment(
     draft,
     referralCode,
     editUrl,
+    enrollmentNumber,
+    accesses: accessSet,
     waitlistCodes,
     whatsapp: {
       fullName: draft.fullName,

@@ -204,6 +204,7 @@ export const draftServerSchema = z
     fatherPhone: str(20),
     motherName: str(120),
     motherPhone: str(20),
+    principalGuardian: z.enum(["pai", "mae"]),
     courses: z
       .array(
         z.object({
@@ -264,6 +265,7 @@ export type EnrollmentDraft = {
   fatherPhone?: string;
   motherName?: string;
   motherPhone?: string;
+  principalGuardian?: "pai" | "mae";
   courses?: {
     subject: "redacao" | "exatas" | "matematica";
     classCode: string;

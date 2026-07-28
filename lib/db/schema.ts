@@ -56,6 +56,8 @@ export const enrollments = pgTable(
     studentId: uuid("student_id").references(() => students.id, {
       onDelete: "cascade",
     }),
+    /** Número de matrícula visível (ex.: R0001) — atribuído ao concluir. */
+    enrollmentNumber: text("enrollment_number"),
     sessionToken: text("session_token").notNull(),
     editToken: text("edit_token"),
     status: text("status").notNull().default("em_andamento"),
@@ -93,6 +95,35 @@ export const enrollments = pgTable(
   (t) => [
     uniqueIndex("enrollments_session_token_idx").on(t.sessionToken),
     uniqueIndex("enrollments_edit_token_idx").on(t.editToken),
+    uniqueIndex("enrollments_enrollment_number_idx").on(t.enrollmentNumber),
+  ]
+);
+
+/**
+ * Acessos gerados por matrícula (Sistema/Responsável/Sofia/Correção).
+ * São credenciais para plataformas externas — geradas com senha padrão,
+ * editáveis pela secretaria e enviadas junto com a confirmação.
+ */
+export const enrollmentAccesses = pgTable(
+  "enrollment_accesses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    enrollmentId: uuid("enrollment_id")
+      .references(() => enrollments.id, { onDelete: "cascade" })
+      .notNull(),
+    sistemaLogin: text("sistema_login"),
+    sistemaPassword: text("sistema_password"),
+    responsavelLogin: text("responsavel_login"),
+    responsavelPassword: text("responsavel_password"),
+    sofiaLogin: text("sofia_login"),
+    sofiaPassword: text("sofia_password"),
+    correcaoLogin: text("correcao_login"),
+    correcaoPassword: text("correcao_password"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("enrollment_accesses_enrollment_idx").on(t.enrollmentId),
   ]
 );
 

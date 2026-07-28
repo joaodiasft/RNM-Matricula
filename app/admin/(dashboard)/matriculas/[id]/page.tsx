@@ -12,6 +12,7 @@ import {
   type Plan,
 } from "@/lib/pricing";
 import { getClassByCode, SUBJECT_LABELS } from "@/lib/courses";
+import { COMPANY } from "@/lib/company";
 import {
   ContactActions,
   FieldRow,
@@ -25,8 +26,63 @@ import {
   inputAdminClass,
 } from "@/components/admin/ui";
 
+type AccessSet = {
+  sistemaLogin: string;
+  sistemaPassword: string;
+  responsavelLogin: string;
+  responsavelPassword: string;
+  sofiaLogin: string;
+  sofiaPassword: string;
+  correcaoLogin: string;
+  correcaoPassword: string;
+};
+
+const EMPTY_ACCESS: AccessSet = {
+  sistemaLogin: "",
+  sistemaPassword: "",
+  responsavelLogin: "",
+  responsavelPassword: "",
+  sofiaLogin: "",
+  sofiaPassword: "",
+  correcaoLogin: "",
+  correcaoPassword: "",
+};
+
+const ACCESS_GROUPS: {
+  label: string;
+  hint: string;
+  loginField: keyof AccessSet;
+  passField: keyof AccessSet;
+}[] = [
+  {
+    label: "Sistema (aluno)",
+    hint: "Login = número de matrícula",
+    loginField: "sistemaLogin",
+    passField: "sistemaPassword",
+  },
+  {
+    label: "Responsável",
+    hint: "Responsável principal",
+    loginField: "responsavelLogin",
+    passField: "responsavelPassword",
+  },
+  {
+    label: "Sofia",
+    hint: "Plataforma Sofia",
+    loginField: "sofiaLogin",
+    passField: "sofiaPassword",
+  },
+  {
+    label: "Correção",
+    hint: "Acesso compartilhado",
+    loginField: "correcaoLogin",
+    passField: "correcaoPassword",
+  },
+];
+
 type Enrollment = {
   id: string;
+  enrollmentNumber: string | null;
   status: string;
   modality: string | null;
   plan: string | null;
@@ -95,6 +151,11 @@ export default function EnrollmentDetailPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Acessos do aluno (credenciais)
+  const [accesses, setAccesses] = useState<AccessSet | null>(null);
+  const [accessBusy, setAccessBusy] = useState(false);
+  const [accessMsg, setAccessMsg] = useState<string | null>(null);
+
   // editable fields
   const [status, setStatus] = useState("");
   const [modality, setModality] = useState("");
@@ -125,6 +186,7 @@ export default function EnrollmentDetailPage() {
     setCourses(data.courses || []);
     setReferrals(data.referrals || []);
     setDraft(data.draft);
+    setAccesses(data.accesses ?? null);
     setStatus(e.status);
     setModality(e.modality || "");
     setPlan(e.plan || "");
@@ -182,6 +244,95 @@ export default function EnrollmentDetailPage() {
     if (res.ok) router.push("/admin/dashboard");
   };
 
+  const acc = accesses ?? EMPTY_ACCESS;
+
+  const setAccessField = (field: keyof AccessSet, value: string) => {
+    setAccesses((prev) => ({ ...(prev ?? EMPTY_ACCESS), [field]: value }));
+  };
+
+  const saveAccesses = async () => {
+    setAccessBusy(true);
+    setAccessMsg(null);
+    const res = await fetch(`/api/admin/enrollments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accesses: acc }),
+    });
+    setAccessBusy(false);
+    setAccessMsg(res.ok ? "Acessos salvos" : "Falha ao salvar acessos");
+  };
+
+  const regenerateAccesses = async () => {
+    if (!confirm("Regenerar os acessos padrão? Isso substitui os valores atuais."))
+      return;
+    setAccessBusy(true);
+    setAccessMsg(null);
+    const res = await fetch(`/api/admin/enrollments/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "regenerate" }),
+    });
+    setAccessBusy(false);
+    if (!res.ok) {
+      setAccessMsg("Falha ao regenerar");
+      return;
+    }
+    const data = await res.json();
+    if (data.accesses) setAccesses(data.accesses);
+    setAccessMsg("Acessos regenerados");
+    void load();
+  };
+
+  const sendAccessEmail = async () => {
+    setAccessBusy(true);
+    setAccessMsg(null);
+    const res = await fetch(`/api/admin/enrollments/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "send_email" }),
+    });
+    setAccessBusy(false);
+    const data = await res.json().catch(() => ({}));
+    setAccessMsg(
+      res.ok ? `E-mail enviado para ${data.sentTo}` : data.error || "Falha ao enviar"
+    );
+  };
+
+  const buildAccessWhatsApp = () =>
+    [
+      `📋 *${COMPANY.name}* — Dados de acesso`,
+      ``,
+      `👤 Aluno: ${student?.fullName ?? ""}`,
+      `🎫 Matrícula: ${enrollment?.enrollmentNumber ?? "—"}`,
+      ``,
+      `🔐 *Sistema (aluno)*`,
+      `Login: ${acc.sistemaLogin}`,
+      `Senha: ${acc.sistemaPassword}`,
+      ``,
+      `🔐 *Responsável*`,
+      `Login: ${acc.responsavelLogin}`,
+      `Senha: ${acc.responsavelPassword}`,
+      ``,
+      `🔐 *Sofia*`,
+      `Login: ${acc.sofiaLogin}`,
+      `Senha: ${acc.sofiaPassword}`,
+      ``,
+      `🔐 *Correção*`,
+      `Login: ${acc.correcaoLogin}`,
+      `Senha: ${acc.correcaoPassword}`,
+      ``,
+      `Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.`,
+    ].join("\n");
+
+  const copyAccessWhatsApp = async () => {
+    try {
+      await navigator.clipboard.writeText(buildAccessWhatsApp());
+      setAccessMsg("Mensagem copiada — cole no WhatsApp");
+    } catch {
+      setAccessMsg("Não foi possível copiar");
+    }
+  };
+
   if (error) {
     return (
       <div className="rounded-2xl border border-danger/30 bg-danger-soft p-6 text-danger">
@@ -221,6 +372,11 @@ export default function EnrollmentDetailPage() {
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
+            {enrollment.enrollmentNumber && (
+              <span className="inline-flex items-center rounded-full bg-ink px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider text-white">
+                {enrollment.enrollmentNumber}
+              </span>
+            )}
             <StatusBadge status={enrollment.status} />
             {enrollment.emailVerified && (
               <span className="rounded-full bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success">
@@ -281,6 +437,110 @@ export default function EnrollmentDetailPage() {
       )}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <Section
+          title="Acessos do aluno"
+          className="lg:col-span-2"
+          action={
+            <span className="text-xs font-semibold text-muted">
+              {accesses ? "Gerados" : "Ainda não gerados"}
+            </span>
+          }
+        >
+          <p className="mb-4 text-sm text-muted">
+            Credenciais do aluno para Sistema, Responsável, Sofia e Correção.
+            Confira, ajuste se precisar, e envie por e-mail ou WhatsApp.
+          </p>
+
+          {!accesses && (
+            <div className="mb-4 rounded-xl border border-warning/30 bg-warning-soft/40 px-4 py-3 text-sm text-ink-soft">
+              Esta matrícula ainda não tem acessos. Clique em{" "}
+              <strong>Gerar acessos</strong> para criar as credenciais padrão.
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {ACCESS_GROUPS.map((g) => (
+              <div
+                key={g.loginField}
+                className="rounded-xl border border-line bg-bg-subtle p-4"
+              >
+                <div className="mb-2 flex items-baseline justify-between gap-2">
+                  <p className="text-sm font-bold text-ink">{g.label}</p>
+                  <span className="text-[11px] text-muted">{g.hint}</span>
+                </div>
+                <label className="block text-xs font-semibold text-muted">
+                  Login / e-mail
+                  <input
+                    className={`${inputAdminClass()} mt-1 font-mono text-[13px]`}
+                    value={acc[g.loginField]}
+                    onChange={(e) =>
+                      setAccessField(g.loginField, e.target.value)
+                    }
+                  />
+                </label>
+                <label className="mt-2 block text-xs font-semibold text-muted">
+                  Senha
+                  <input
+                    className={`${inputAdminClass()} mt-1 font-mono text-[13px]`}
+                    value={acc[g.passField]}
+                    onChange={(e) =>
+                      setAccessField(g.passField, e.target.value)
+                    }
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
+
+          {accessMsg && (
+            <p
+              className={`mt-4 rounded-xl px-3 py-2.5 text-sm font-medium ${
+                /copiada|salvos|enviado|regenerados/.test(accessMsg)
+                  ? "bg-success-soft text-success"
+                  : "bg-danger-soft text-danger"
+              }`}
+              role="status"
+            >
+              {accessMsg}
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={saveAccesses}
+              disabled={accessBusy || !accesses}
+              className={btnPrimaryClass()}
+            >
+              {accessBusy ? "…" : "Salvar acessos"}
+            </button>
+            <button
+              type="button"
+              onClick={sendAccessEmail}
+              disabled={accessBusy || !accesses}
+              className={btnGhostClass()}
+            >
+              Enviar por e-mail
+            </button>
+            <button
+              type="button"
+              onClick={copyAccessWhatsApp}
+              disabled={!accesses}
+              className={btnGhostClass()}
+            >
+              Copiar mensagem (WhatsApp)
+            </button>
+            <button
+              type="button"
+              onClick={regenerateAccesses}
+              disabled={accessBusy}
+              className={btnGhostClass()}
+            >
+              {accesses ? "Regenerar acessos" : "Gerar acessos"}
+            </button>
+          </div>
+        </Section>
+
         <Section title="Aluno">
           <dl>
             <FieldRow label="Nome">{student?.fullName}</FieldRow>
