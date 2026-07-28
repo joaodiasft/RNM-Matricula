@@ -15,6 +15,7 @@ import { getClassByCode, SUBJECT_LABELS, type Subject } from "@/lib/courses";
 import { COMPANY } from "@/lib/company";
 import { SeloNotaMil } from "../SeloNotaMil";
 import { ClassGroupsPanel } from "../ClassGroupsPanel";
+import { PaymentChoice } from "../PaymentChoice";
 
 type Props = {
   studentName: string;
@@ -30,6 +31,8 @@ export function StepWhatsApp({
   referralCode,
 }: Props) {
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
+  const isFree =
+    draft.scholarshipValid === true || draft.paymentMethod === "isento";
   const pricing =
     draft.modality && draft.plan && (draft.paymentMethod || draft.scholarshipValid)
       ? calculatePricing({
@@ -121,6 +124,10 @@ export function StepWhatsApp({
       </div>
 
       <div className="px-6 pb-8 sm:px-8">
+        {!isFree && subjects.length > 0 && (
+          <PaymentChoice subjects={subjects} />
+        )}
+
         <div className="mb-6">
           <ClassGroupsPanel
             classCodes={(draft.courses ?? []).map((c) => c.classCode)}
