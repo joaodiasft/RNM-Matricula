@@ -7,6 +7,10 @@ import {
   btnGhostClass,
   btnPrimaryClass,
 } from "@/components/admin/ui";
+import {
+  modalityLabel,
+  obligationStatusLabel,
+} from "@/lib/draft-labels";
 
 export default function AdminOperationsPage() {
   const [tab, setTab] = useState<"obligations" | "referrals" | "duplicates">(
@@ -153,10 +157,13 @@ export default function AdminOperationsPage() {
               {tab === "obligations" && (
                 <>
                   <p className="mt-2 text-muted">
-                    Modalidade: <strong>{item.enrollment.modality}</strong> ·
-                    Status:{" "}
-                    <strong>{item.enrollment.obligationStatus || "—"}</strong> ·
-                    Prazo: {item.enrollment.obligationDeadline || "—"}
+                    Modalidade:{" "}
+                    <strong>{modalityLabel(item.enrollment.modality)}</strong> ·
+                    Situação:{" "}
+                    <strong>
+                      {obligationStatusLabel(item.enrollment.obligationStatus)}
+                    </strong>{" "}
+                    · Prazo: {item.enrollment.obligationDeadline || "—"}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button

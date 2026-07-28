@@ -9,7 +9,7 @@ const LINKS = [
   { href: "/admin/turmas", label: "Turmas" },
   { href: "/admin/bolsas", label: "Bolsas" },
   { href: "/admin/operacoes", label: "Operações" },
-  { href: "/admin/settings", label: "Config" },
+  { href: "/admin/settings", label: "Configurações" },
 ];
 
 export function AdminNav() {
@@ -21,7 +21,7 @@ export function AdminNav() {
         <Link href="/admin/dashboard" className="font-display text-lg font-bold text-ink">
           {COMPANY.name}
           <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 font-sans text-[10px] font-extrabold uppercase tracking-wider text-brand">
-            Admin
+            Secretaria
           </span>
         </Link>
         <nav className="flex flex-wrap items-center gap-1 text-sm">

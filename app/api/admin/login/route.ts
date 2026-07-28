@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[admin-login]", err);
-    return NextResponse.json({ error: "Erro no login" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao entrar" }, { status: 500 });
   }
 }
 

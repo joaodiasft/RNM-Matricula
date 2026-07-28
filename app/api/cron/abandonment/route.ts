@@ -19,7 +19,7 @@ function authorize(req: Request) {
 
 export async function GET(req: Request) {
   if (!authorize(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   try {

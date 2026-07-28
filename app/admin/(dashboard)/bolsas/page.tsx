@@ -147,7 +147,7 @@ export default function BolsasAdminPage() {
           <thead className="border-b border-line bg-bg-subtle text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="px-4 py-3">Código</th>
-              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Situação</th>
               <th className="px-4 py-3">Usado por</th>
               <th className="px-4 py-3">Quando</th>
               <th className="px-4 py-3" />

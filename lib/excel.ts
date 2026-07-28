@@ -93,7 +93,7 @@ export async function buildEnrollmentsWorkbook(opts?: {
     "Nome da mãe / telefone",
     "Curso(s) e turma(s)",
     "Modalidade",
-    "Status da obrigação",
+    "Situação da obrigação",
     "Código de indicação gerado",
     "Código de indicação usado",
     "Plano de pagamento",
@@ -102,7 +102,7 @@ export async function buildEnrollmentsWorkbook(opts?: {
     "Taxa de matrícula",
     "Forma de pagamento",
     "Rematrícula automática",
-    "Status",
+    "Situação",
   ];
 
   const lines: string[] = [headers.map(csvEscape).join(";")];

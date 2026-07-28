@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
             Matrículas
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Gerencie status, contatos, valores e exportações em um só lugar.
+            Gerencie situações, contatos, valores e exportações em um só lugar.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
             onChange={(e) => setStatus(e.target.value)}
             className={inputAdminClass()}
           >
-            <option value="">Todos os status</option>
+            <option value="">Todas as situações</option>
             <option value="concluida">Concluída</option>
             <option value="em_andamento">Em andamento</option>
             <option value="abandonada">Abandonada</option>
@@ -262,7 +262,7 @@ export default function AdminDashboardPage() {
               <th className="px-4 py-3 font-bold">Turmas</th>
               <th className="px-4 py-3 font-bold">Modalidade / Plano</th>
               <th className="px-4 py-3 font-bold">Valor</th>
-              <th className="px-4 py-3 font-bold">Status</th>
+              <th className="px-4 py-3 font-bold">Situação</th>
               <th className="px-4 py-3 font-bold">Data</th>
               <th className="px-4 py-3 font-bold">Ações</th>
             </tr>

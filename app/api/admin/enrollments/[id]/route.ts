@@ -63,7 +63,7 @@ const ALLOWED_OBLIGATION = new Set([
 export async function GET(_req: Request, { params }: Params) {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -133,7 +133,7 @@ export async function GET(_req: Request, { params }: Params) {
 export async function PATCH(req: Request, { params }: Params) {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -173,14 +173,14 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   if (body.status && !ALLOWED_STATUS.has(body.status)) {
-    return NextResponse.json({ error: "Status inválido" }, { status: 400 });
+    return NextResponse.json({ error: "Situação inválida" }, { status: 400 });
   }
   if (
     body.obligationStatus &&
     !ALLOWED_OBLIGATION.has(body.obligationStatus)
   ) {
     return NextResponse.json(
-      { error: "Status de obrigação inválido" },
+      { error: "Situação de obrigação inválida" },
       { status: 400 }
     );
   }
@@ -234,7 +234,7 @@ export async function PATCH(req: Request, { params }: Params) {
 export async function POST(req: Request, { params }: Params) {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -350,7 +350,7 @@ export async function POST(req: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const { id } = await params;

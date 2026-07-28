@@ -8,7 +8,7 @@ import { getCardFeePercent } from "@/lib/enrollment-service";
 export async function GET() {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
   const percent = await getCardFeePercent();
   return NextResponse.json({ cardFeePercent: percent });
@@ -17,7 +17,7 @@ export async function GET() {
 export async function PUT(req: Request) {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = (await req.json()) as { cardFeePercent?: number };

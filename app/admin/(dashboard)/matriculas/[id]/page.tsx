@@ -25,6 +25,10 @@ import {
   formatMoney,
   inputAdminClass,
 } from "@/components/admin/ui";
+import {
+  draftFieldLabel,
+  formatDraftValue,
+} from "@/lib/draft-labels";
 
 type AccessSet = {
   sistemaLogin: string;
@@ -56,7 +60,7 @@ const ACCESS_GROUPS: {
 }[] = [
   {
     label: "Sistema (aluno)",
-    hint: "Login = número de matrícula",
+    hint: "Usuário = número de matrícula",
     loginField: "sistemaLogin",
     passField: "sistemaPassword",
   },
@@ -306,19 +310,19 @@ export default function EnrollmentDetailPage() {
       `🎫 Matrícula: ${enrollment?.enrollmentNumber ?? "—"}`,
       ``,
       `🔐 *Sistema (aluno)*`,
-      `Login: ${acc.sistemaLogin}`,
+      `Usuário: ${acc.sistemaLogin}`,
       `Senha: ${acc.sistemaPassword}`,
       ``,
       `🔐 *Responsável*`,
-      `Login: ${acc.responsavelLogin}`,
+      `Usuário: ${acc.responsavelLogin}`,
       `Senha: ${acc.responsavelPassword}`,
       ``,
       `🔐 *Sofia*`,
-      `Login: ${acc.sofiaLogin}`,
+      `Usuário: ${acc.sofiaLogin}`,
       `Senha: ${acc.sofiaPassword}`,
       ``,
       `🔐 *Correção*`,
-      `Login: ${acc.correcaoLogin}`,
+      `Usuário: ${acc.correcaoLogin}`,
       `Senha: ${acc.correcaoPassword}`,
       ``,
       `Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.`,
@@ -469,7 +473,7 @@ export default function EnrollmentDetailPage() {
                   <span className="text-[11px] text-muted">{g.hint}</span>
                 </div>
                 <label className="block text-xs font-semibold text-muted">
-                  Login / e-mail
+                  Usuário / e-mail
                   <input
                     className={`${inputAdminClass()} mt-1 font-mono text-[13px]`}
                     value={acc[g.loginField]}
@@ -706,7 +710,7 @@ export default function EnrollmentDetailPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="block text-sm">
               <span className="mb-1.5 block text-xs font-semibold text-muted">
-                Status
+                Situação
               </span>
               <select
                 value={status}
@@ -789,7 +793,7 @@ export default function EnrollmentDetailPage() {
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <label className="block text-sm">
                   <span className="mb-1.5 block text-xs font-semibold text-muted">
-                    Status
+                    Situação
                   </span>
                   <select
                     value={obligationStatus}
@@ -892,14 +896,10 @@ export default function EnrollmentDetailPage() {
                   className="rounded-xl border border-line bg-bg-subtle px-3.5 py-3"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wide text-muted">
-                    {key}
+                    {draftFieldLabel(key)}
                   </p>
                   <p className="mt-1 break-words text-sm font-medium text-ink">
-                    {value === null || value === undefined || value === ""
-                      ? "—"
-                      : typeof value === "object"
-                        ? JSON.stringify(value)
-                        : String(value)}
+                    {formatDraftValue(key, value)}
                   </p>
                 </div>
               ))}

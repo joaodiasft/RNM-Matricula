@@ -8,7 +8,7 @@ import { ensureClassesSeeded } from "@/lib/enrollment-service";
 export async function GET() {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   await ensureClassesSeeded();
@@ -29,7 +29,7 @@ export async function GET() {
 export async function PUT(req: Request) {
   const session = await getAdminSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   const body = (await req.json()) as { code?: string; maxSeats?: number };

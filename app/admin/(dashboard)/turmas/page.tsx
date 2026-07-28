@@ -7,6 +7,7 @@ import {
   inputAdminClass,
   waLink,
 } from "@/components/admin/ui";
+import { SUBJECT_LABELS, type Subject } from "@/lib/courses";
 
 type ClassRow = {
   code: string;
@@ -97,7 +98,7 @@ export default function AdminClassesPage() {
                   <td className="px-4 py-3.5">
                     <span className="font-bold text-ink">{r.code}</span>
                     <span className="mt-0.5 block text-xs text-muted">
-                      {r.subject}
+                      {SUBJECT_LABELS[r.subject as Subject] || r.subject}
                     </span>
                   </td>
                   <td className="px-4 py-3.5 text-xs text-muted">

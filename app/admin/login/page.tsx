@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Falha no login");
+        setError(data.error || "Não foi possível entrar");
         setLoading(false);
         return;
       }
