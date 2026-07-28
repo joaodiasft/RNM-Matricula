@@ -1,36 +1,51 @@
-export async function verifyTurnstile(token: string | undefined | null): Promise<boolean> {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
+/**
+ * Cloudflare Turnstile (anti-robô).
+ *
+ * Comportamento:
+ * - Sem TURNSTILE_SECRET_KEY → desligado (libera). Assim o formulário
+ *   não trava em produção por má configuração de secrets.
+ * - Com secret → exige token válido do widget (NEXT_PUBLIC_TURNSTILE_SITE_KEY).
+ */
+export async function verifyTurnstile(
+  token: string | undefined | null
+): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
 
   if (!secret) {
-    // Em produção, falta de secret = FALHA FECHADA. Não deixamos o anti-robô
-    // ser silenciosamente desligado por má configuração de ambiente.
-    if (process.env.NODE_ENV === "production") {
-      console.error(
-        "[turnstile] TURNSTILE_SECRET_KEY ausente em produção — bloqueando envio."
-      );
-      return false;
-    }
-    // Fora de produção (dev/preview local sem chave), libera para não travar testes.
+    // Não configurado = anti-robô desligado (dev e produção).
     return true;
   }
 
-  if (!token) return false;
+  if (!token?.trim()) return false;
 
   const form = new URLSearchParams();
   form.set("secret", secret);
-  form.set("response", token);
+  form.set("response", token.trim());
 
   try {
     const res = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       { method: "POST", body: form }
     );
-    if (!res.ok) return false;
-    const data = (await res.json()) as { success?: boolean };
+    if (!res.ok) {
+      console.error("[turnstile] siteverify HTTP", res.status);
+      return false;
+    }
+    const data = (await res.json()) as {
+      success?: boolean;
+      "error-codes"?: string[];
+    };
+    if (!data.success) {
+      console.error("[turnstile] rejeitado:", data["error-codes"] ?? data);
+    }
     return Boolean(data.success);
   } catch (err) {
-    // Erro de rede ao validar → falha fechada (não deixa passar sem verificação).
     console.error("[turnstile] falha ao verificar token:", err);
     return false;
   }
+}
+
+/** True quando o anti-robô está de fato exigido no servidor. */
+export function isTurnstileRequired(): boolean {
+  return Boolean(process.env.TURNSTILE_SECRET_KEY?.trim());
 }
