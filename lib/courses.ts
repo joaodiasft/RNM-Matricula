@@ -19,7 +19,7 @@ export const CLASSES: ClassInfo[] = [
     level: "medio",
     label: "Redação — Ensino Médio",
     day: "Terça",
-    schedule: "18h30 – 20h00",
+    schedule: "18h45 – 20h15",
     duration: "1h30",
   },
   {
@@ -28,7 +28,7 @@ export const CLASSES: ClassInfo[] = [
     level: "medio",
     label: "Redação — Ensino Médio",
     day: "Quinta",
-    schedule: "18h30 – 20h00",
+    schedule: "18h45 – 20h15",
     duration: "1h30",
   },
   {
