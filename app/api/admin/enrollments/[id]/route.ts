@@ -21,6 +21,8 @@ import {
 import { accessEmailHtml } from "@/lib/email/templates";
 import { sendEmail } from "@/lib/email/send";
 import { COMPANY } from "@/lib/company";
+import { adminChangeEnrollmentClass } from "@/lib/enrollment-service";
+import { CLASSES } from "@/lib/courses";
 
 const ACCESS_FIELDS = [
   "sistemaLogin",
@@ -240,6 +242,8 @@ export async function POST(req: Request, { params }: Params) {
   const { id } = await params;
   const body = (await req.json().catch(() => null)) as {
     action?: string;
+    subject?: string;
+    newClassCode?: string;
   } | null;
   if (!body?.action) {
     return NextResponse.json({ error: "Ação ausente" }, { status: 400 });
@@ -259,6 +263,51 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   const studentName = row.student?.fullName || "Aluno";
+
+  if (body.action === "change_class") {
+    const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+    const newClassCode =
+      typeof body.newClassCode === "string" ? body.newClassCode.trim() : "";
+    if (!subject || !newClassCode) {
+      return NextResponse.json(
+        { error: "Informe a matéria e a nova turma." },
+        { status: 400 }
+      );
+    }
+    if (!CLASSES.some((c) => c.code === newClassCode && c.subject === subject)) {
+      return NextResponse.json(
+        { error: "Turma inválida para esta matéria." },
+        { status: 400 }
+      );
+    }
+    try {
+      const result = await adminChangeEnrollmentClass({
+        enrollmentId: id,
+        subject,
+        newClassCode,
+      });
+      await db.insert(auditLogs).values({
+        adminUserId: session.userId,
+        action: "change_class",
+        entityType: "enrollment",
+        entityId: id,
+        meta: JSON.stringify(result),
+      });
+      return NextResponse.json({ ok: true, ...result });
+    } catch (err) {
+      const code = err instanceof Error ? err.message : "ERRO";
+      const messages: Record<string, string> = {
+        NOT_FOUND: "Matrícula não encontrada.",
+        TURMA_INVALIDA: "Turma inválida.",
+        MATERIA_DIFERENTE: "A nova turma precisa ser da mesma matéria.",
+        CURSO_NAO_ENCONTRADO: "Este aluno não tem essa matéria cadastrada.",
+      };
+      return NextResponse.json(
+        { error: messages[code] || "Não foi possível trocar a turma." },
+        { status: code === "NOT_FOUND" || code === "CURSO_NAO_ENCONTRADO" ? 404 : 400 }
+      );
+    }
+  }
 
   if (body.action === "regenerate") {
     const [guardian] = row.student

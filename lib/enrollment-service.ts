@@ -794,3 +794,163 @@ export async function getCardFeePercent(): Promise<number> {
     ? Number(row.value)
     : Number(process.env.DEFAULT_CARD_FEE_PERCENT || 3.5);
 }
+
+/**
+ * Secretaria troca a turma do aluno na mesma matéria.
+ * Libera a vaga da turma antiga (se tinha) e ocupa a nova.
+ * Se a nova estiver lotada, ainda assim coloca o aluno (força a vaga).
+ */
+export async function adminChangeEnrollmentClass(input: {
+  enrollmentId: string;
+  subject: string;
+  newClassCode: string;
+}): Promise<{
+  classCode: string;
+  onWaitlist: boolean;
+  forcedSeat: boolean;
+  previousClassCode: string;
+}> {
+  const { enrollmentId, subject, newClassCode } = input;
+  const info = getClassByCode(newClassCode);
+  if (!info) throw new Error("TURMA_INVALIDA");
+  if (info.subject !== subject) throw new Error("MATERIA_DIFERENTE");
+
+  const db = getDb();
+  await ensureClassesSeeded();
+
+  const [enrollment] = await db
+    .select()
+    .from(enrollments)
+    .where(eq(enrollments.id, enrollmentId))
+    .limit(1);
+  if (!enrollment) throw new Error("NOT_FOUND");
+
+  const [current] = await db
+    .select()
+    .from(enrollmentCourses)
+    .where(
+      and(
+        eq(enrollmentCourses.enrollmentId, enrollmentId),
+        eq(enrollmentCourses.subject, subject)
+      )
+    )
+    .limit(1);
+
+  if (!current) throw new Error("CURSO_NAO_ENCONTRADO");
+  if (current.classCode === newClassCode) {
+    return {
+      classCode: newClassCode,
+      onWaitlist: Boolean(current.onWaitlist),
+      forcedSeat: false,
+      previousClassCode: current.classCode,
+    };
+  }
+
+  const previousClassCode = current.classCode;
+  const wasEnrolled = !current.onWaitlist;
+
+  // Libera vaga da turma antiga, se o aluno ocupava uma.
+  if (wasEnrolled) {
+    await db
+      .update(classes)
+      .set({
+        seatsTaken: sql`GREATEST(${classes.seatsTaken} - 1, 0)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(classes.code, previousClassCode));
+  }
+
+  // Remove da lista de espera da turma antiga (se estava).
+  await db
+    .delete(waitlist)
+    .where(
+      and(
+        eq(waitlist.enrollmentId, enrollmentId),
+        eq(waitlist.classCode, previousClassCode)
+      )
+    );
+
+  // Tenta vaga normal; se lotada, força (secretaria).
+  let forcedSeat = false;
+  const claimed = await db
+    .update(classes)
+    .set({
+      seatsTaken: sql`${classes.seatsTaken} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(classes.code, newClassCode),
+        sql`${classes.seatsTaken} < ${classes.maxSeats}`
+      )
+    )
+    .returning({ code: classes.code });
+
+  if (claimed.length === 0) {
+    forcedSeat = true;
+    await db
+      .update(classes)
+      .set({
+        seatsTaken: sql`${classes.seatsTaken} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(classes.code, newClassCode));
+  }
+
+  // Não fica em lista de espera ao trocar pela secretaria.
+  await db
+    .delete(waitlist)
+    .where(
+      and(
+        eq(waitlist.enrollmentId, enrollmentId),
+        eq(waitlist.classCode, newClassCode)
+      )
+    );
+
+  await db
+    .update(enrollmentCourses)
+    .set({ classCode: newClassCode, onWaitlist: false })
+    .where(eq(enrollmentCourses.id, current.id));
+
+  // Mantém o rascunho alinhado, se existir.
+  if (enrollment.draftData) {
+    try {
+      const draft = JSON.parse(enrollment.draftData) as EnrollmentDraft;
+      if (Array.isArray(draft.courses)) {
+        draft.courses = draft.courses.map((c) =>
+          c.subject === subject ? { ...c, classCode: newClassCode } : c
+        );
+      }
+      if (Array.isArray(draft.waitlistCodes)) {
+        draft.waitlistCodes = draft.waitlistCodes.filter(
+          (code) => code !== previousClassCode && code !== newClassCode
+        );
+      }
+      await db
+        .update(enrollments)
+        .set({
+          draftData: JSON.stringify(draft),
+          lastActivityAt: new Date(),
+        })
+        .where(eq(enrollments.id, enrollmentId));
+    } catch {
+      await db
+        .update(enrollments)
+        .set({ lastActivityAt: new Date() })
+        .where(eq(enrollments.id, enrollmentId));
+    }
+  } else {
+    await db
+      .update(enrollments)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(enrollments.id, enrollmentId));
+  }
+
+  return {
+    classCode: newClassCode,
+    onWaitlist: false,
+    forcedSeat,
+    previousClassCode,
+  };
+}
+

@@ -11,7 +11,8 @@ import {
   type PaymentMethod,
   type Plan,
 } from "@/lib/pricing";
-import { getClassByCode, SUBJECT_LABELS } from "@/lib/courses";
+import { getClassByCode, SUBJECT_LABELS, CLASSES } from "@/lib/courses";
+import type { Subject } from "@/lib/courses";
 import { COMPANY } from "@/lib/company";
 import {
   ContactActions,
@@ -159,6 +160,9 @@ export default function EnrollmentDetailPage() {
   const [accesses, setAccesses] = useState<AccessSet | null>(null);
   const [accessBusy, setAccessBusy] = useState(false);
   const [accessMsg, setAccessMsg] = useState<string | null>(null);
+  const [classBusy, setClassBusy] = useState<string | null>(null);
+  const [classMsg, setClassMsg] = useState<string | null>(null);
+  const [classDraft, setClassDraft] = useState<Record<string, string>>({});
 
   // editable fields
   const [status, setStatus] = useState("");
@@ -188,6 +192,11 @@ export default function EnrollmentDetailPage() {
     setStudent(data.student);
     setGuardian(data.guardian);
     setCourses(data.courses || []);
+    const nextDraft: Record<string, string> = {};
+    for (const c of (data.courses || []) as Course[]) {
+      nextDraft[c.subject] = c.classCode;
+    }
+    setClassDraft(nextDraft);
     setReferrals(data.referrals || []);
     setDraft(data.draft);
     setAccesses(data.accesses ?? null);
@@ -231,6 +240,39 @@ export default function EnrollmentDetailPage() {
       return;
     }
     setMessage("Alterações salvas");
+    void load();
+  };
+
+  const changeClass = async (subject: string) => {
+    const newClassCode = classDraft[subject];
+    if (!newClassCode) return;
+    const current = courses.find((c) => c.subject === subject);
+    if (current?.classCode === newClassCode) {
+      setClassMsg("Já está nesta turma.");
+      return;
+    }
+    setClassBusy(subject);
+    setClassMsg(null);
+    const res = await fetch(`/api/admin/enrollments/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "change_class",
+        subject,
+        newClassCode,
+      }),
+    });
+    setClassBusy(null);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setClassMsg(data.error || "Não foi possível trocar a turma.");
+      return;
+    }
+    setClassMsg(
+      data.forcedSeat
+        ? `Turma alterada para ${data.classCode} (turma estava lotada — vaga forçada).`
+        : `Turma alterada para ${data.classCode}.`
+    );
     void load();
   };
 
@@ -610,9 +652,14 @@ export default function EnrollmentDetailPage() {
           {courses.length === 0 ? (
             <p className="text-sm text-muted">Nenhuma turma vinculada ainda.</p>
           ) : (
-            <ul className="grid gap-2 sm:grid-cols-2">
+            <ul className="grid gap-3 sm:grid-cols-2">
               {courses.map((c) => {
                 const info = getClassByCode(c.classCode);
+                const options = CLASSES.filter(
+                  (opt) => opt.subject === (c.subject as Subject)
+                );
+                const selected = classDraft[c.subject] || c.classCode;
+                const dirty = selected !== c.classCode;
                 return (
                   <li
                     key={`${c.classCode}-${c.subject}`}
@@ -622,8 +669,7 @@ export default function EnrollmentDetailPage() {
                       <p className="font-bold text-ink">
                         {SUBJECT_LABELS[
                           c.subject as keyof typeof SUBJECT_LABELS
-                        ] ?? c.subject}{" "}
-                        · {c.classCode}
+                        ] ?? c.subject}
                       </p>
                       {c.onWaitlist && (
                         <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-warning">
@@ -633,13 +679,52 @@ export default function EnrollmentDetailPage() {
                     </div>
                     {info && (
                       <p className="mt-1 text-sm text-muted">
-                        {info.day} · {info.schedule}
+                        Atual: {c.classCode} · {info.day} · {info.schedule}
                       </p>
                     )}
+                    <label className="mt-3 block text-xs font-semibold text-muted">
+                      Trocar turma
+                      <select
+                        className={`${inputAdminClass()} mt-1`}
+                        value={selected}
+                        onChange={(e) =>
+                          setClassDraft((prev) => ({
+                            ...prev,
+                            [c.subject]: e.target.value,
+                          }))
+                        }
+                      >
+                        {options.map((opt) => (
+                          <option key={opt.code} value={opt.code}>
+                            {opt.code} — {opt.day} · {opt.schedule}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      disabled={!dirty || classBusy === c.subject}
+                      onClick={() => void changeClass(c.subject)}
+                      className={`${btnPrimaryClass()} mt-3 w-full sm:w-auto`}
+                    >
+                      {classBusy === c.subject ? "Trocando…" : "Salvar turma"}
+                    </button>
                   </li>
                 );
               })}
             </ul>
+          )}
+          {classMsg && (
+            <p
+              className={`mt-3 rounded-xl px-3 py-2 text-sm font-medium ${
+                /alterada|Já está/.test(classMsg)
+                  ? "bg-success-soft text-success"
+                  : "bg-danger-soft text-danger"
+              }`}
+              role="status"
+            >
+              {classMsg}
+            </p>
           )}
           <Link
             href="/admin/turmas"
