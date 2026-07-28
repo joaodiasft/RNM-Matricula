@@ -215,7 +215,7 @@ export const draftServerSchema = z
       .max(6),
     waitlistCodes: z.array(str(24)).max(12),
     courseInfoAck: z.boolean(),
-    modality: z.enum(["desconto", "desconto_parcial", "normal"]),
+    modality: z.enum(["desconto", "desconto_parcial", "normal", "apmf"]),
     waivedFee: z.boolean(),
     plan: z.enum(["mensal", "trimestral", "total"]),
     paymentMethod: z.enum(["dinheiro", "cartao", "pix", "isento"]),
@@ -272,7 +272,7 @@ export type EnrollmentDraft = {
   }[];
   waitlistCodes?: string[];
   courseInfoAck?: boolean;
-  modality?: "desconto" | "desconto_parcial" | "normal";
+  modality?: "desconto" | "desconto_parcial" | "normal" | "apmf";
   waivedFee?: boolean;
   plan?: "mensal" | "trimestral" | "total";
   paymentMethod?: "dinheiro" | "cartao" | "pix" | "isento";

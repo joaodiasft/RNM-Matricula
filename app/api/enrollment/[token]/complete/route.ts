@@ -75,6 +75,8 @@ export async function POST(req: Request, { params }: Params) {
       EMAIL_NAO_VERIFICADO: "Verifique seu e-mail com o código enviado",
       BOLSA_INVALIDA:
         "O código de bolsa não é válido ou já foi utilizado. Revise a forma de pagamento.",
+      APMF_ESCOLA_INVALIDA:
+        "A Modalidade 4 (APMF) só vale para alunos do Colégio Estadual Militar Ayrton Senna. Confira o campo “Onde estuda”.",
       DUPLICIDADE:
         "Já existe matrícula com estes dados na mesma turma. A secretaria foi avisada.",
     };

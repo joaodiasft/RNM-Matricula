@@ -19,6 +19,7 @@ import {
   MODALITY_LABELS,
   PAYMENT_LABELS,
   PLAN_LABELS,
+  isApmfSchool,
   type Modality,
   type PaymentMethod,
   type Plan,
@@ -444,6 +445,9 @@ export async function completeEnrollment(
   }
   if (!draft.courses?.length || !draft.modality || !draft.plan || !draft.paymentMethod) {
     throw new Error("DADOS_INCOMPLETOS");
+  }
+  if (draft.modality === "apmf" && !isApmfSchool(draft.school)) {
+    throw new Error("APMF_ESCOLA_INVALIDA");
   }
   if (!draft.courseInfoAck || !draft.noticePayment || !draft.noticeAbsence || !draft.noticeModality) {
     throw new Error("AVISOS_PENDENTES");

@@ -27,6 +27,7 @@ const BASE_NOTICES: {
   title: string;
   body: string;
   bodyBolsa?: string;
+  bodyApmf?: string;
 }[] = [
   {
     key: "noticePayment",
@@ -46,6 +47,8 @@ const BASE_NOTICES: {
     body: "A modalidade escolhida vale até o fim do período letivo. Alteração só na secretaria. Nas modalidades com desconto, o não cumprimento das obrigações faz o valor voltar ao normal.",
     bodyBolsa:
       "A modalidade escolhida vale até o fim do período letivo. Com bolsa integral, valores permanecem isentos enquanto a condição especial estiver ativa. Alteração só na secretaria.",
+    bodyApmf:
+      "Modalidade 4 (APMF): desconto exclusivo para contribuintes da APMF do Colégio Estadual Militar Ayrton Senna. No 1º dia de aula, apresente o cartão na secretaria. Sem o cartão, a secretaria pode ajustar para o valor normal.",
   },
   {
     key: "noticeGroups",
@@ -71,6 +74,7 @@ export function StepNotices({ draft, onChange, onNext, onBack }: Props) {
   const toast = useToast();
   const showContractNotice = draft.contractSigned === true;
   const isBolsa = draft.scholarshipValid === true;
+  const isApmf = draft.modality === "apmf";
 
   const requiredKeys: NoticeKey[] = [
     ...BASE_NOTICES.map((n) => n.key),
@@ -143,7 +147,11 @@ export function StepNotices({ draft, onChange, onNext, onBack }: Props) {
             checked={draft[n.key]}
             onToggle={(v) => onChange({ [n.key]: v })}
           >
-            {isBolsa && n.bodyBolsa ? n.bodyBolsa : n.body}
+            {isBolsa && n.bodyBolsa
+              ? n.bodyBolsa
+              : isApmf && n.bodyApmf
+                ? n.bodyApmf
+                : n.body}
           </Item>
         ))}
 

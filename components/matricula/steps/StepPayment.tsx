@@ -219,7 +219,9 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                         ? " (Modalidade 3)"
                         : draft.modality === "desconto"
                           ? " (Modalidade 1)"
-                          : ""}
+                          : draft.modality === "apmf"
+                            ? " (Modalidade 4 — APMF)"
+                            : ""}
                       . O valor do plano permanece o calculado.
                     </>
                   )}

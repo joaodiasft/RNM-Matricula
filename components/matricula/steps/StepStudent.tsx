@@ -14,6 +14,7 @@ import {
   GRADES,
   isConcludedGrade,
 } from "@/lib/courses";
+import { APMF_SCHOOL_NAME, isApmfSchool } from "@/lib/pricing";
 import { COMPANY } from "@/lib/company";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
 import { AgeBadge } from "../AgeBadge";
@@ -286,15 +287,50 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
         <Field
           label="Onde estuda *"
           error={errors.school}
-          hint={concluded ? "Preenchido automaticamente — você já concluiu o Ensino Médio." : undefined}
+          hint={
+            concluded
+              ? "Preenchido automaticamente — você já concluiu o Ensino Médio."
+              : "Se for do Colégio Estadual Militar Ayrton Senna, use o atalho abaixo para liberar a Modalidade 4 (APMF)."
+          }
         >
           <input
             className={inputClass(!!errors.school)}
             value={draft.school ?? ""}
-            onChange={(e) => onChange({ school: e.target.value })}
+            onChange={(e) => {
+              const school = e.target.value;
+              onChange({
+                school,
+                ...(draft.modality === "apmf" && !isApmfSchool(school)
+                  ? { modality: undefined }
+                  : {}),
+              });
+            }}
             disabled={concluded}
             aria-disabled={concluded}
+            list="school-suggestions"
+            placeholder="Nome da escola"
           />
+          <datalist id="school-suggestions">
+            <option value={APMF_SCHOOL_NAME} />
+          </datalist>
+          {!concluded && (
+            <button
+              type="button"
+              className={`mt-2 w-full rounded-xl border px-3 py-2.5 text-left text-xs transition ${
+                isApmfSchool(draft.school)
+                  ? "border-brand bg-brand-soft font-semibold text-brand-deep"
+                  : "border-line bg-white text-ink-soft hover:border-brand/40"
+              }`}
+              onClick={() =>
+                onChange({
+                  school: APMF_SCHOOL_NAME,
+                })
+              }
+            >
+              {isApmfSchool(draft.school) ? "✓ " : ""}
+              Colégio Estadual Militar Ayrton Senna (APMF)
+            </button>
+          )}
         </Field>
 
         <Field label="CPF (opcional)" error={errors.cpf}>

@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import {
   formatBRL,
+  getApmfDiscount,
   getSubjectMonthly,
+  isApmfSchool,
   MODALITY_LABELS,
   MODALITY_OBLIGATIONS,
   MODALITY_SHORT,
+  NORMAL_MONTHLY,
   type Modality,
 } from "@/lib/pricing";
 import { SUBJECT_LABELS, type Subject } from "@/lib/courses";
@@ -21,12 +24,13 @@ type Props = {
   onBack: () => void;
 };
 
-const MODALITIES: Modality[] = ["desconto", "desconto_parcial", "normal"];
+const BASE_MODALITIES: Modality[] = ["desconto", "desconto_parcial", "normal"];
 
 const HIGHLIGHT: Record<Modality, string> = {
   desconto: "Menor mensalidade · com divulgação + indicação",
   desconto_parcial: "Mensalidade intermediária · só divulgação",
   normal: "Valor cheio · sem obrigações extras",
+  apmf: "R$ 150 por curso · só contribuintes APMF",
 };
 
 export function StepModality({ draft, onChange, onNext, onBack }: Props) {
@@ -36,13 +40,36 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
     new Set((draft.courses ?? []).map((c) => c.subject))
   ) as Subject[];
   const isBolsa = draft.scholarshipValid === true;
+  const apmfEligible = isApmfSchool(draft.school);
+  const modalities: Modality[] = apmfEligible
+    ? [...BASE_MODALITIES, "apmf"]
+    : BASE_MODALITIES;
+
+  // Se a escola deixou de ser elegível, remove a modalidade APMF selecionada.
+  useEffect(() => {
+    if (!apmfEligible && draft.modality === "apmf") {
+      onChange({ modality: undefined });
+    }
+  }, [apmfEligible, draft.modality, onChange]);
 
   const submit = () => {
     if (!draft.modality) {
       setError("Escolha uma modalidade");
       toast.push({
         title: "Escolha a modalidade",
-        message: "Selecione uma das três opções para ver os valores.",
+        message: "Selecione uma das opções para ver os valores.",
+        tone: "warning",
+      });
+      return;
+    }
+    if (draft.modality === "apmf" && !apmfEligible) {
+      setError(
+        "A Modalidade 4 só vale para alunos do Colégio Estadual Militar Ayrton Senna."
+      );
+      toast.push({
+        title: "Modalidade APMF",
+        message:
+          "Confira o campo “Onde estuda” — precisa ser o Colégio Estadual Militar Ayrton Senna.",
         tone: "warning",
       });
       return;
@@ -76,8 +103,23 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
         </div>
       )}
 
+      {apmfEligible && !isBolsa && (
+        <div className="mb-5 rounded-2xl border border-brand/30 bg-brand-soft/70 px-4 py-3.5 text-sm text-ink">
+          <p className="font-bold text-brand-deep">
+            Colégio Ayrton Senna detectado
+          </p>
+          <p className="mt-1 text-ink-soft">
+            A <strong>Modalidade 4 (APMF)</strong> está disponível. O desconto
+            de R$&nbsp;150 por curso vale somente para{" "}
+            <strong>contribuintes da APMF</strong> deste colégio. Você pode
+            selecionar agora e no <strong>1º dia de aula</strong> apresentar o
+            cartão na secretaria.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-3">
-        {MODALITIES.map((m) => {
+        {modalities.map((m) => {
           const selected = draft.modality === m;
           return (
             <button
@@ -89,6 +131,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                 selected
                   ? "border-brand bg-brand-soft/80 ring-2 ring-brand/25 shadow-[var(--shadow-sm)]"
                   : "border-line bg-white hover:border-brand/35",
+                m === "apmf" ? "border-brand/40" : "",
               ].join(" ")}
             >
               <div className="flex items-start justify-between gap-3">
@@ -129,10 +172,23 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                       className="flex items-center justify-between gap-3"
                     >
                       <span className="text-ink-soft">{SUBJECT_LABELS[s]}</span>
-                      <span className="font-bold tabular-nums text-ink">
-                        {isBolsa
-                          ? "Isento"
-                          : `${formatBRL(getSubjectMonthly(m, s))}/mês`}
+                      <span className="text-right font-bold tabular-nums text-ink">
+                        {isBolsa ? (
+                          "Isento"
+                        ) : m === "apmf" ? (
+                          <span className="block">
+                            <span className="mr-2 text-xs font-medium text-muted line-through">
+                              {formatBRL(NORMAL_MONTHLY[s])}
+                            </span>
+                            {formatBRL(getSubjectMonthly(m, s))}/mês
+                            <span className="mt-0.5 block text-[11px] font-semibold text-success">
+                              Desconto APMF −
+                              {formatBRL(getApmfDiscount(s))}
+                            </span>
+                          </span>
+                        ) : (
+                          `${formatBRL(getSubjectMonthly(m, s))}/mês`
+                        )}
                       </span>
                     </div>
                   ))}
@@ -154,6 +210,31 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                       <strong>dinheiro à vista</strong> ganha 5% de desconto
                       extra no valor do plano.
                     </p>
+                  )}
+                  {m === "apmf" && !isBolsa && (
+                    <div className="rounded-xl bg-white/90 px-3 py-2.5 text-xs leading-relaxed text-ink-soft">
+                      <p className="font-semibold text-ink">
+                        Desconto aplicado (em relação ao valor normal):
+                      </p>
+                      <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
+                        <li>
+                          Redação: de {formatBRL(250)} para {formatBRL(150)}{" "}
+                          (−{formatBRL(100)})
+                        </li>
+                        <li>
+                          Exatas: de {formatBRL(300)} para {formatBRL(150)}{" "}
+                          (−{formatBRL(150)})
+                        </li>
+                        <li>
+                          Matemática: de {formatBRL(250)} para {formatBRL(150)}{" "}
+                          (−{formatBRL(100)})
+                        </li>
+                      </ul>
+                      <p className="mt-2 font-medium text-ink">
+                        Somente para contribuintes da APMF. No 1º dia de aula,
+                        apresente o cartão na secretaria.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
