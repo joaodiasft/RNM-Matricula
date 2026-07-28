@@ -51,10 +51,10 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
 
   useEffect(() => {
     if (!isBolsa) return;
-    if (draft.paymentMethod !== "isento" || !draft.waivedFee) {
-      onChange({ paymentMethod: "isento", waivedFee: true });
-    }
-  }, [isBolsa, draft.paymentMethod, draft.waivedFee, onChange]);
+    if (draft.paymentMethod === "isento" && draft.waivedFee) return;
+    onChange({ paymentMethod: "isento", waivedFee: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao ativar bolsa
+  }, [isBolsa]);
 
   useEffect(() => {
     fetch("/api/settings/card-fee")

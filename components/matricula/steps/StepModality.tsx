@@ -45,12 +45,14 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
     ? [...BASE_MODALITIES, "apmf"]
     : BASE_MODALITIES;
 
-  // Se a escola deixou de ser elegível, remove a modalidade APMF selecionada.
+  // Limpa modalidade 4 só uma vez quando a escola deixa de ser elegível
+  // (evita loop com onChange em cada render).
   useEffect(() => {
     if (!apmfEligible && draft.modality === "apmf") {
       onChange({ modality: undefined });
     }
-  }, [apmfEligible, draft.modality, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apmfEligible]);
 
   const submit = () => {
     if (!draft.modality) {

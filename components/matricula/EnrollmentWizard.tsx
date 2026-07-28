@@ -126,7 +126,7 @@ export function EnrollmentWizard() {
         setSaving(true);
         setSaved(false);
         try {
-          await fetch(`/api/enrollment/${next.token}`, {
+          const res = await fetch(`/api/enrollment/${next.token}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -134,12 +134,17 @@ export function EnrollmentWizard() {
               draft: next.draft,
             }),
           });
+          if (!res.ok) {
+            console.error("[persist]", res.status, await res.text().catch(() => ""));
+            return;
+          }
           localStorage.setItem(
             LOCAL_STORAGE_KEY,
             JSON.stringify({ token: next.token })
           );
           setSaved(true);
         } catch (e) {
+          // Rede/HMR: não derruba a UI — o rascunho continua local.
           console.error(e);
         } finally {
           setSaving(false);
@@ -160,7 +165,14 @@ export function EnrollmentWizard() {
     (partial: Partial<EnrollmentDraft>) => {
       setSession((prev) => {
         if (!prev) return prev;
-        return { ...prev, draft: { ...prev.draft, ...partial } };
+        const draft = { ...prev.draft, ...partial };
+        // Remove chaves explicitamente undefined (ex.: limpar modalidade).
+        for (const key of Object.keys(partial) as (keyof EnrollmentDraft)[]) {
+          if (partial[key] === undefined) {
+            delete draft[key];
+          }
+        }
+        return { ...prev, draft };
       });
     },
     []
@@ -187,23 +199,35 @@ export function EnrollmentWizard() {
     [persist]
   );
 
-  // Sessões antigas: pula passos ocultos (rematrícula / pagamento com bolsa)
+  // Sessões antigas: pula passos ocultos (rematrícula / pagamento com bolsa).
+  // Depende só dos campos relevantes — NÃO de `session` inteiro, senão cada
+  // autosave reentra no efeito e gera loop de goTo → persist → Failed to fetch.
   useEffect(() => {
     if (!session) return;
+    const step = session.currentStep;
+    const plan = session.draft.plan;
     const scholarship = session.draft.scholarshipValid === true;
-    if (session.currentStep === 8 && session.draft.plan !== "mensal") {
+
+    if (step === 8 && plan !== "mensal") {
       goTo(9, 1);
       return;
     }
-    if (session.currentStep === 7 && scholarship) {
+    if (step === 7 && scholarship) {
       const n = nextStep(7, {
         age,
-        plan: session.draft.plan,
+        plan,
         scholarship: true,
       });
-      if (n) goTo(n, 1);
+      if (n != null && n !== step) goTo(n, 1);
     }
-  }, [session, goTo, age]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intencional: só reage a step/plan/bolsa
+  }, [
+    session?.currentStep,
+    session?.draft.plan,
+    session?.draft.scholarshipValid,
+    age,
+    goTo,
+  ]);
 
   const goNext = () => {
     if (!session) return;

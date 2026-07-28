@@ -90,7 +90,6 @@ const MONTHLY: Record<Modality, Record<Subject, number>> = {
   desconto: { redacao: 150, exatas: 150, matematica: 150 },
   desconto_parcial: { redacao: 200, exatas: 200, matematica: 200 },
   normal: { redacao: 250, exatas: 300, matematica: 250 },
-  /** Valores de referência (modalidade normal) para exibir o desconto */
   apmf: { redacao: 150, exatas: 150, matematica: 150 },
 };
 
