@@ -30,7 +30,7 @@ const HIGHLIGHT: Record<Modality, string> = {
   desconto: "Menor mensalidade · com divulgação + indicação",
   desconto_parcial: "Mensalidade intermediária · só divulgação",
   normal: "Valor cheio · sem obrigações extras",
-  apmf: "R$ 150 por curso",
+  apmf: "R$ 150/curso · APMF + divulgação",
 };
 
 export function StepModality({ draft, onChange, onNext, onBack }: Props) {
@@ -200,9 +200,30 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                   {m === "apmf" && !isBolsa && (
                     <div className="rounded-xl bg-white/90 px-3 py-2.5 text-xs leading-relaxed text-ink-soft">
                       <p className="font-semibold text-ink">
-                        Desconto aplicado (em relação ao valor normal):
+                        Condições do desconto (Modalidade 4)
                       </p>
-                      <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
+                      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+                        <li>
+                          O valor de{" "}
+                          <strong>R$ 150 por curso</strong> vale{" "}
+                          <strong>
+                            somente com a apresentação da contribuição da APMF
+                          </strong>
+                          .
+                        </li>
+                        <li>
+                          É <strong>obrigatório ajudar na divulgação</strong> do
+                          curso no WhatsApp e no Instagram.
+                        </li>
+                        <li>
+                          Sem a comprovação da APMF ou sem cumprir a divulgação,
+                          o valor volta para a Modalidade 3 (normal).
+                        </li>
+                      </ul>
+                      <p className="mt-2.5 font-semibold text-ink">
+                        Desconto em relação ao valor normal:
+                      </p>
+                      <ul className="mt-1 list-disc space-y-0.5 pl-4">
                         <li>
                           Redação: de {formatBRL(250)} para {formatBRL(150)}{" "}
                           (−{formatBRL(100)})

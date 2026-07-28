@@ -397,7 +397,9 @@ export default function EnrollmentDetailPage() {
   }
 
   const showObligation =
-    modality === "desconto" || modality === "desconto_parcial";
+    modality === "desconto" ||
+    modality === "desconto_parcial" ||
+    modality === "apmf";
   const appUrl =
     typeof window !== "undefined"
       ? window.location.origin

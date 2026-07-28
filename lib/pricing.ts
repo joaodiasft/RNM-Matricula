@@ -41,14 +41,14 @@ export const MODALITY_LABELS: Record<Modality, string> = {
   desconto: "Modalidade 1 — Com desconto",
   desconto_parcial: "Modalidade 2 — Desconto parcial",
   normal: "Modalidade 3 — Normal",
-  apmf: "Modalidade 4 — Colégio Estadual Militar Ayrton Senna",
+  apmf: "Modalidade 4 — Ayrton Senna (APMF)",
 };
 
 export const MODALITY_SHORT: Record<Modality, string> = {
   desconto: "Maior desconto",
   desconto_parcial: "Desconto parcial",
   normal: "Sem compromisso de divulgação",
-  apmf: "Colégio Ayrton Senna",
+  apmf: "Ayrton Senna · APMF",
 };
 
 export const MODALITY_OBLIGATIONS: Record<Modality, string> = {
@@ -57,7 +57,8 @@ export const MODALITY_OBLIGATIONS: Record<Modality, string> = {
   desconto_parcial:
     "Divulgar o curso no WhatsApp e Instagram. Sem obrigação de indicação.",
   normal: "Sem obrigações de divulgação — só assistir às aulas.",
-  apmf: "Valores especiais para alunos do Colégio Estadual Militar Ayrton Senna.",
+  apmf:
+    "Desconto válido somente com apresentação da contribuição da APMF. Também é obrigatório ajudar na divulgação do curso (WhatsApp e Instagram).",
 };
 
 export const PLAN_LABELS: Record<Plan, string> = {

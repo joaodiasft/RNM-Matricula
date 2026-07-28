@@ -174,7 +174,8 @@ export default function AdminOperationsPage() {
                           enrollmentId: item.enrollment.id,
                           obligationDivulged: true,
                           obligationStatus:
-                            item.enrollment.modality === "desconto_parcial"
+                            item.enrollment.modality === "desconto_parcial" ||
+                            item.enrollment.modality === "apmf"
                               ? "cumprida"
                               : item.enrollment.obligationBroughtStudent
                                 ? "cumprida"

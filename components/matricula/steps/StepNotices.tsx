@@ -48,7 +48,7 @@ const BASE_NOTICES: {
     bodyBolsa:
       "A modalidade escolhida vale até o fim do período letivo. Com bolsa integral, valores permanecem isentos enquanto a condição especial estiver ativa. Alteração só na secretaria.",
     bodyApmf:
-      "Modalidade 4: valores especiais para alunos do Colégio Estadual Militar Ayrton Senna. Alteração de modalidade só na secretaria.",
+      "Modalidade 4 (Colégio Ayrton Senna): o desconto de R$ 150 por curso vale somente com a apresentação da contribuição da APMF. Também é obrigatório ajudar na divulgação do curso (WhatsApp e Instagram). Sem isso, o valor volta ao normal. Alteração de modalidade só na secretaria.",
   },
   {
     key: "noticeGroups",

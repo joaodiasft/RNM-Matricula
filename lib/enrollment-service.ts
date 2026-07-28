@@ -551,7 +551,9 @@ export async function completeEnrollment(
   const deadlineStr = deadline.toISOString().slice(0, 10);
 
   const needsObligation =
-    draft.modality === "desconto" || draft.modality === "desconto_parcial";
+    draft.modality === "desconto" ||
+    draft.modality === "desconto_parcial" ||
+    draft.modality === "apmf";
 
   await db
     .update(students)
