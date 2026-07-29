@@ -435,7 +435,7 @@ export async function POST(req: Request, { params }: Params) {
   return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
 }
 
-export async function DELETE(_req: Request, { params }: Params) {
+export async function DELETE(req: Request, { params }: Params) {
   const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -454,6 +454,30 @@ export async function DELETE(_req: Request, { params }: Params) {
     return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   }
 
+  // Matrículas concluídas ficam protegidas — não apagam de verdade.
+  if (row.status === "concluida") {
+    return NextResponse.json(
+      {
+        error:
+          "Matrícula concluída não pode ser apagada. Os dados do aluno ficam salvos. Se precisar corrigir, edite a matrícula.",
+      },
+      { status: 403 }
+    );
+  }
+
+  const body = (await req.json().catch(() => null)) as {
+    confirm?: string;
+  } | null;
+  if (body?.confirm !== "APAGAR") {
+    return NextResponse.json(
+      {
+        error:
+          'Para apagar, confirme digitando APAGAR. Matrículas concluídas nunca são apagadas.',
+      },
+      { status: 400 }
+    );
+  }
+
   if (row.studentId) {
     await db.delete(students).where(eq(students.id, row.studentId));
   } else {
@@ -465,6 +489,7 @@ export async function DELETE(_req: Request, { params }: Params) {
     action: "lgpd_delete",
     entityType: "enrollment",
     entityId: id,
+    meta: JSON.stringify({ statusWas: row.status }),
   });
 
   return NextResponse.json({ ok: true });

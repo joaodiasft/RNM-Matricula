@@ -277,17 +277,30 @@ export default function EnrollmentDetailPage() {
   };
 
   const erase = async () => {
-    if (
-      !confirm(
-        "Apagar definitivamente os dados deste aluno (LGPD)? Esta ação não pode ser desfeita."
-      )
-    ) {
+    if (enrollment?.status === "concluida") {
+      setMessage(
+        "Matrícula concluída fica salva. Não é possível apagar estes dados."
+      );
+      return;
+    }
+    const typed = window.prompt(
+      "Isso apaga permanentemente. Digite APAGAR para confirmar (matrículas concluídas não podem ser apagadas):"
+    );
+    if (typed !== "APAGAR") {
+      setMessage("Apagamento cancelado.");
       return;
     }
     const res = await fetch(`/api/admin/enrollments/${id}`, {
       method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: "APAGAR" }),
     });
-    if (res.ok) router.push("/admin/dashboard");
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      router.push("/admin/dashboard");
+      return;
+    }
+    setMessage(data.error || "Não foi possível apagar.");
   };
 
   const acc = accesses ?? EMPTY_ACCESS;
@@ -1002,16 +1015,26 @@ export default function EnrollmentDetailPage() {
 
       <div className="mt-8 rounded-2xl border border-danger/25 bg-danger-soft/40 p-5">
         <h2 className="font-semibold text-danger">Zona sensível — LGPD</h2>
-        <p className="mt-1 text-sm text-muted">
-          Remove aluno, responsáveis e matrícula de forma permanente.
-        </p>
-        <button
-          type="button"
-          onClick={erase}
-          className="mt-4 rounded-xl border border-danger px-4 py-2.5 text-sm font-bold text-danger transition hover:bg-danger hover:text-white"
-        >
-          Apagar dados (LGPD)
-        </button>
+        {enrollment.status === "concluida" ? (
+          <p className="mt-1 text-sm text-muted">
+            Esta matrícula está <strong>concluída</strong> e fica salva no
+            sistema. Não é possível apagar alunos com matrícula concluída.
+          </p>
+        ) : (
+          <>
+            <p className="mt-1 text-sm text-muted">
+              Remove aluno, responsáveis e matrícula de forma permanente. Use só
+              em rascunhos/testes — matrículas concluídas estão protegidas.
+            </p>
+            <button
+              type="button"
+              onClick={erase}
+              className="mt-4 rounded-xl border border-danger px-4 py-2.5 text-sm font-bold text-danger transition hover:bg-danger hover:text-white"
+            >
+              Apagar dados (LGPD)
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
