@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import { guardiansStepSchema, maskPhone } from "@/lib/validation";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
+import { useToast } from "@/components/ui/Toast";
 
 type Props = {
   draft: EnrollmentDraft;
@@ -14,6 +15,7 @@ type Props = {
 
 export function StepGuardians({ draft, onChange, onNext, onBack }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   const fatherFilled = Boolean(draft.fatherName?.trim());
   const motherFilled = Boolean(draft.motherName?.trim());
@@ -36,6 +38,13 @@ export function StepGuardians({ draft, onChange, onNext, onBack }: Props) {
         if (!map[key]) map[key] = issue.message;
       }
       setErrors(map);
+      toast.push({
+        title: "Dados incompletos",
+        message:
+          Object.values(map)[0] ||
+          "Preencha pelo menos um responsável (nome e telefone).",
+        tone: "danger",
+      });
       return;
     }
     setErrors({});

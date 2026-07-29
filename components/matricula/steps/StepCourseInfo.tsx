@@ -48,7 +48,7 @@ export function StepCourseInfo({ draft, onChange, onNext, onBack }: Props) {
       toast.push({
         title: "Falta confirmar",
         message: "Marque que está ciente das informações do curso.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }

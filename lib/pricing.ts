@@ -53,12 +53,12 @@ export const MODALITY_SHORT: Record<Modality, string> = {
 
 export const MODALITY_OBLIGATIONS: Record<Modality, string> = {
   desconto:
-    "Divulgar o curso no WhatsApp e Instagram e indicar pelo menos 1 aluno novo.",
+    "Ajudar na divulgação (foto no dia de aula e repostar marcações no Instagram) e trazer 1 aluno novo até o final do mês (vale também para o próximo módulo — ele precisa se matricular).",
   desconto_parcial:
-    "Divulgar o curso no WhatsApp e Instagram. Sem obrigação de indicação.",
+    "Ajudar na divulgação: foto no dia de aula dentro da sala e repostar quando o curso marcar você no Instagram.",
   normal: "Sem obrigações de divulgação — só assistir às aulas.",
   apmf:
-    "Desconto válido somente com apresentação da contribuição da APMF. Também é obrigatório ajudar na divulgação do curso (WhatsApp e Instagram).",
+    "Desconto somente com apresentação da contribuição da APMF. Também ajudar na divulgação (foto no dia de aula e repostar marcações no Instagram).",
 };
 
 export const PLAN_LABELS: Record<Plan, string> = {

@@ -37,7 +37,7 @@ export function StepPlan({ draft, onChange, onNext, onBack }: Props) {
       toast.push({
         title: "Escolha o plano",
         message: "Selecione mensal, trimestral ou curso completo.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }

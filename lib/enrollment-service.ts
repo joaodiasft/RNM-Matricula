@@ -443,6 +443,9 @@ export async function completeEnrollment(
   if (!draft.fullName || !draft.birthDateBr || !draft.email || !draft.phone) {
     throw new Error("DADOS_INCOMPLETOS");
   }
+  if (!draft.instagram?.trim()) {
+    throw new Error("DADOS_INCOMPLETOS");
+  }
   if (!draft.courses?.length || !draft.modality || !draft.plan || !draft.paymentMethod) {
     throw new Error("DADOS_INCOMPLETOS");
   }
@@ -450,6 +453,15 @@ export async function completeEnrollment(
     throw new Error("APMF_ESCOLA_INVALIDA");
   }
   if (!draft.courseInfoAck || !draft.noticePayment || !draft.noticeAbsence || !draft.noticeModality) {
+    throw new Error("AVISOS_PENDENTES");
+  }
+  if (
+    (draft.modality === "desconto" ||
+      draft.modality === "desconto_parcial" ||
+      draft.modality === "apmf") &&
+    (!draft.modalityDutyAck ||
+      !(draft.modalityDutySignature && draft.modalityDutySignature.trim().length >= 3))
+  ) {
     throw new Error("AVISOS_PENDENTES");
   }
   if (

@@ -97,7 +97,7 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
       toast.push({
         title: "Selecione a turma",
         message: "Escolha pelo menos uma turma para continuar.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }

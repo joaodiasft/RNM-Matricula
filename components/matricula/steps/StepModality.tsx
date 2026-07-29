@@ -60,7 +60,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
       toast.push({
         title: "Escolha a modalidade",
         message: "Selecione uma das opções para ver os valores.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }
@@ -72,7 +72,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
         title: "Modalidade 4",
         message:
           "Confira o campo “Onde estuda” — precisa ser o Colégio Estadual Militar Ayrton Senna.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }
@@ -112,7 +112,13 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
             <button
               key={m}
               type="button"
-              onClick={() => onChange({ modality: m })}
+              onClick={() =>
+                onChange({
+                  modality: m,
+                  modalityDutyAck: false,
+                  modalityDutySignature: "",
+                })
+              }
               className={[
                 "w-full rounded-2xl border px-4 py-4 text-left transition",
                 selected

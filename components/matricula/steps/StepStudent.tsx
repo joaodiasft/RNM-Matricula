@@ -18,6 +18,7 @@ import { APMF_SCHOOL_NAME, isApmfSchool } from "@/lib/pricing";
 import { COMPANY } from "@/lib/company";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
 import { AgeBadge } from "../AgeBadge";
+import { useToast } from "@/components/ui/Toast";
 
 type Props = {
   draft: EnrollmentDraft;
@@ -33,6 +34,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [otpNotice, setOtpNotice] = useState(false);
   const [codeChecking, setCodeChecking] = useState(false);
+  const toast = useToast();
   const [codeInput, setCodeInput] = useState(
     () => draft.scholarshipCode || draft.referralCodeInput || ""
   );
@@ -160,6 +162,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
       birthDateBr: draft.birthDateBr ?? "",
       email: draft.email ?? "",
       phone: draft.phone ?? "",
+      instagram: draft.instagram ?? "",
       grade: draft.grade ?? "",
       school: draft.school ?? "",
       cpf: draft.cpf ?? "",
@@ -175,8 +178,17 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
         if (!map[key]) map[key] = issue.message;
       }
       setErrors(map);
+      const first = Object.values(map)[0] || "Confira os campos destacados.";
+      toast.push({
+        title: "Falta preencher algo",
+        message: first,
+        tone: "danger",
+      });
       return;
     }
+    // Normaliza Instagram sem @ no início
+    const ig = result.data.instagram.trim().replace(/^@/, "");
+    onChange({ instagram: ig });
     setErrors({});
     onNext();
   };
@@ -265,6 +277,21 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
             onChange={(e) => onChange({ phone: maskPhone(e.target.value) })}
             inputMode="tel"
             placeholder="(62) 99999-9999"
+          />
+        </Field>
+
+        <Field
+          label="Instagram *"
+          error={errors.instagram}
+          hint="Obrigatório para a divulgação do curso. Pode digitar com ou sem @"
+        >
+          <input
+            className={inputClass(!!errors.instagram)}
+            value={draft.instagram ?? ""}
+            onChange={(e) => onChange({ instagram: e.target.value })}
+            autoComplete="username"
+            placeholder="@seu.usuario"
+            inputMode="text"
           />
         </Field>
 

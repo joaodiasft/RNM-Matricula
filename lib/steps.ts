@@ -1,24 +1,34 @@
-export const STEP_NAMES = [
-  "Dados do aluno",
-  "Responsáveis",
-  "Turmas",
-  "Informações do curso",
-  "Modalidade e valores",
-  "Plano de pagamento",
-  "Forma de pagamento",
-  "Rematrícula",
-  "Avisos finais",
-  "Revisão",
-] as const;
+export const STEP_LABELS: Record<number, string> = {
+  1: "Dados do aluno",
+  2: "Responsáveis",
+  3: "Turmas",
+  4: "Informações do curso",
+  5: "Modalidade e valores",
+  11: "Compromissos da modalidade",
+  6: "Plano de pagamento",
+  7: "Forma de pagamento",
+  8: "Rematrícula",
+  9: "Avisos finais",
+  10: "Revisão",
+};
 
 type StepOpts = {
   age?: number | null;
   plan?: string | null;
   /** Bolsa 100%: pula forma de pagamento */
   scholarship?: boolean;
+  modality?: string | null;
 };
 
-/** Índices lógicos 1–10 (passos 2, 7 e 8 podem ser pulados) */
+export function needsModalityDutyStep(modality?: string | null): boolean {
+  return (
+    modality === "desconto" ||
+    modality === "desconto_parcial" ||
+    modality === "apmf"
+  );
+}
+
+/** Índices lógicos (passos 2, 7, 8 e 11 podem ser pulados) */
 export function getVisibleSteps(
   ageOrOpts: number | null | StepOpts,
   planArg?: string | null
@@ -35,16 +45,22 @@ export function getVisibleSteps(
     typeof ageOrOpts === "object" && ageOrOpts !== null
       ? Boolean(ageOrOpts.scholarship)
       : false;
+  const modality =
+    typeof ageOrOpts === "object" && ageOrOpts !== null
+      ? (ageOrOpts.modality ?? null)
+      : null;
 
-  let all = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  // 11 = compromissos da modalidade (logo após a escolha da modalidade)
+  let all = [1, 2, 3, 4, 5, 11, 6, 7, 8, 9, 10];
   if (age !== null && age >= 18) {
     all = all.filter((s) => s !== 2);
   }
-  // Bolsa integral: sem cobrança — não escolhe forma de pagamento
+  if (!needsModalityDutyStep(modality)) {
+    all = all.filter((s) => s !== 11);
+  }
   if (scholarship) {
     all = all.filter((s) => s !== 7);
   }
-  // Rematrícula automática só faz sentido no plano mensal
   if (plan !== "mensal") {
     all = all.filter((s) => s !== 8);
   }
@@ -62,11 +78,10 @@ export function stepDisplayIndex(
 } {
   const visible = getVisibleSteps(ageOrOpts, planArg);
   const idx = Math.max(0, visible.indexOf(step));
-  const nameIdx = step - 1;
   return {
     current: idx + 1,
     total: visible.length,
-    label: STEP_NAMES[nameIdx] ?? `Passo ${step}`,
+    label: STEP_LABELS[step] ?? `Passo ${step}`,
   };
 }
 

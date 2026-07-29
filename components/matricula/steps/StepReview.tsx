@@ -436,11 +436,33 @@ export function StepReview({
           </div>
 
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
+            {(draft.email || draft.phone || draft.instagram) && (
+              <SummaryTile
+                label="Contato"
+                value={[
+                  draft.email,
+                  draft.phone,
+                  draft.instagram
+                    ? `@${draft.instagram.replace(/^@/, "")}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+                onEdit={() => onEdit(1)}
+              />
+            )}
             {draft.modality && (
               <SummaryTile
                 label="Modalidade"
                 value={MODALITY_LABELS[draft.modality as Modality]}
                 onEdit={() => onEdit(5)}
+              />
+            )}
+            {draft.modalityDutySignature && (
+              <SummaryTile
+                label="Ciência dos compromissos"
+                value={draft.modalityDutySignature}
+                onEdit={() => onEdit(11)}
               />
             )}
             {draft.plan && (

@@ -594,6 +594,11 @@ export default function EnrollmentDetailPage() {
             <FieldRow label="Nome">{student?.fullName}</FieldRow>
             <FieldRow label="E-mail">{student?.email}</FieldRow>
             <FieldRow label="Telefone">{student?.phone}</FieldRow>
+            <FieldRow label="Instagram">
+              {draft?.instagram
+                ? `@${String(draft.instagram).replace(/^@/, "")}`
+                : "—"}
+            </FieldRow>
             <FieldRow label="Nascimento">
               {student?.birthDate
                 ? formatDate(student.birthDate)

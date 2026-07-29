@@ -107,6 +107,16 @@ export const studentStepSchema = z.object({
     .refine((v) => brDateToIso(v) !== null, { message: "Data inválida (DD/MM/AAAA)" }),
   email: z.string().email("E-mail inválido"),
   phone: phoneSchema,
+  instagram: z
+    .string()
+    .min(1, "Informe seu Instagram")
+    .refine(
+      (v) => {
+        const u = v.trim().replace(/^@/, "");
+        return /^[a-zA-Z0-9._]{2,30}$/.test(u);
+      },
+      { message: "Instagram inválido (ex.: seu.usuario)" }
+    ),
   grade: z.string().min(1, "Selecione a série"),
   school: z.string().min(2, "Informe onde estuda"),
   cpf: z
@@ -189,6 +199,7 @@ export const draftServerSchema = z
     birthDateBr: str(10),
     email: str(254),
     phone: str(20),
+    instagram: str(40),
     grade: str(40),
     school: str(120),
     cpf: str(18),
@@ -216,6 +227,8 @@ export const draftServerSchema = z
     waitlistCodes: z.array(str(24)).max(12),
     courseInfoAck: z.boolean(),
     modality: z.enum(["desconto", "desconto_parcial", "normal", "apmf"]),
+    modalityDutyAck: z.boolean(),
+    modalityDutySignature: str(120),
     waivedFee: z.boolean(),
     plan: z.enum(["mensal", "trimestral", "total"]),
     paymentMethod: z.enum(["dinheiro", "cartao", "pix", "isento"]),
@@ -240,7 +253,7 @@ export const draftServerSchema = z
   .partial();
 
 export const patchBodySchema = z.object({
-  currentStep: z.number().int().min(1).max(10).optional(),
+  currentStep: z.number().int().min(1).max(11).optional(),
   draft: draftServerSchema.optional(),
 });
 
@@ -250,6 +263,7 @@ export type EnrollmentDraft = {
   birthDateBr?: string;
   email?: string;
   phone?: string;
+  instagram?: string;
   grade?: string;
   school?: string;
   cpf?: string;
@@ -273,6 +287,8 @@ export type EnrollmentDraft = {
   waitlistCodes?: string[];
   courseInfoAck?: boolean;
   modality?: "desconto" | "desconto_parcial" | "normal" | "apmf";
+  modalityDutyAck?: boolean;
+  modalityDutySignature?: string;
   waivedFee?: boolean;
   plan?: "mensal" | "trimestral" | "total";
   paymentMethod?: "dinheiro" | "cartao" | "pix" | "isento";

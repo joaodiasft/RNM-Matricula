@@ -81,6 +81,7 @@ export async function buildEnrollmentsWorkbook(opts?: {
     "Faixa etária",
     "E-mail",
     "Telefone/WhatsApp",
+    "Instagram",
     "Série atual",
     "Onde estuda",
     "CPF",
@@ -93,6 +94,8 @@ export async function buildEnrollmentsWorkbook(opts?: {
     "Nome da mãe / telefone",
     "Curso(s) e turma(s)",
     "Modalidade",
+    "Ciência dos compromissos",
+    "Assinatura dos compromissos",
     "Situação da obrigação",
     "Código de indicação gerado",
     "Código de indicação usado",
@@ -155,6 +158,7 @@ export async function buildEnrollmentsWorkbook(opts?: {
       ageBand,
       s?.email ?? "",
       s?.phone ?? "",
+      draft.instagram ? `@${String(draft.instagram).replace(/^@/, "")}` : "",
       s?.grade ?? "",
       s?.school ?? "",
       s?.cpf ?? "",
@@ -171,6 +175,8 @@ export async function buildEnrollmentsWorkbook(opts?: {
       e.modality
         ? (MODALITY_LABELS[e.modality as Modality] ?? e.modality)
         : "",
+      draft.modalityDutyAck ? "Sim" : "Não",
+      draft.modalityDutySignature ?? "",
       e.obligationStatus
         ? (OBLIGATION_LABELS[e.obligationStatus] ?? e.obligationStatus)
         : "",

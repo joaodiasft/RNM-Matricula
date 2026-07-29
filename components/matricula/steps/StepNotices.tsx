@@ -88,7 +88,7 @@ export function StepNotices({ draft, onChange, onNext, onBack }: Props) {
       toast.push({
         title: "Avisos incompletos",
         message: "Confirme cada ponto listado abaixo.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }

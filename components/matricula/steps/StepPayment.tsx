@@ -101,7 +101,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
       toast.push({
         title: "Forma de pagamento",
         message: "Selecione dinheiro, cartão ou Pix.",
-        tone: "warning",
+        tone: "danger",
       });
       return;
     }
@@ -128,7 +128,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
           title: "Nota fiscal",
           message:
             "Complete os dados do responsável que deve constar na nota fiscal.",
-          tone: "warning",
+          tone: "danger",
         });
         return;
       }

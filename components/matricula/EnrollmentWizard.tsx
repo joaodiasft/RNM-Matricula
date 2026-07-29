@@ -14,7 +14,7 @@ import {
 } from "@/lib/company";
 import type { EnrollmentDraft } from "@/lib/validation";
 import { calcAgeFromBr } from "@/lib/validation";
-import { nextStep, prevStep, stepDisplayIndex } from "@/lib/steps";
+import { nextStep, prevStep, stepDisplayIndex, needsModalityDutyStep } from "@/lib/steps";
 import { ProgressBar } from "./ProgressBar";
 import { FloatingSummary } from "./FloatingSummary";
 import { ResumeModal } from "./ResumeModal";
@@ -24,6 +24,7 @@ import { StepGuardians } from "./steps/StepGuardians";
 import { StepCourses } from "./steps/StepCourses";
 import { StepCourseInfo } from "./steps/StepCourseInfo";
 import { StepModality } from "./steps/StepModality";
+import { StepModalityDuty } from "./steps/StepModalityDuty";
 import { StepPlan } from "./steps/StepPlan";
 import { StepPayment } from "./steps/StepPayment";
 import { StepAutoRenew } from "./steps/StepAutoRenew";
@@ -199,7 +200,7 @@ export function EnrollmentWizard() {
     [persist]
   );
 
-  // Sessões antigas: pula passos ocultos (rematrícula / pagamento com bolsa).
+  // Sessões antigas: pula passos ocultos (rematrícula / pagamento / compromissos).
   // Depende só dos campos relevantes — NÃO de `session` inteiro, senão cada
   // autosave reentra no efeito e gera loop de goTo → persist → Failed to fetch.
   useEffect(() => {
@@ -207,24 +208,28 @@ export function EnrollmentWizard() {
     const step = session.currentStep;
     const plan = session.draft.plan;
     const scholarship = session.draft.scholarshipValid === true;
+    const modality = session.draft.modality;
+    const opts = { age, plan, scholarship, modality };
 
+    if (step === 11 && !needsModalityDutyStep(modality)) {
+      const n = nextStep(5, opts);
+      if (n != null) goTo(n, 1);
+      return;
+    }
     if (step === 8 && plan !== "mensal") {
       goTo(9, 1);
       return;
     }
     if (step === 7 && scholarship) {
-      const n = nextStep(7, {
-        age,
-        plan,
-        scholarship: true,
-      });
+      const n = nextStep(7, { ...opts, scholarship: true });
       if (n != null && n !== step) goTo(n, 1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intencional: só reage a step/plan/bolsa
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intencional: só reage a step/plan/bolsa/modalidade
   }, [
     session?.currentStep,
     session?.draft.plan,
     session?.draft.scholarshipValid,
+    session?.draft.modality,
     age,
     goTo,
   ]);
@@ -236,6 +241,7 @@ export function EnrollmentWizard() {
       age,
       plan: session.draft.plan,
       scholarship,
+      modality: session.draft.modality,
     });
     if (!n) return;
 
@@ -268,6 +274,7 @@ export function EnrollmentWizard() {
       age,
       plan: session.draft.plan,
       scholarship: session.draft.scholarshipValid === true,
+      modality: session.draft.modality,
     });
     if (p) goTo(p, -1);
   };
@@ -386,6 +393,7 @@ export function EnrollmentWizard() {
     age,
     plan: session.draft.plan,
     scholarship: session.draft.scholarshipValid === true,
+    modality: session.draft.modality,
   });
   const step = session.currentStep;
 
@@ -446,6 +454,14 @@ export function EnrollmentWizard() {
             )}
             {step === 5 && (
               <StepModality
+                draft={session.draft}
+                onChange={updateDraft}
+                onNext={goNext}
+                onBack={goPrev}
+              />
+            )}
+            {step === 11 && (
+              <StepModalityDuty
                 draft={session.draft}
                 onChange={updateDraft}
                 onNext={goNext}
