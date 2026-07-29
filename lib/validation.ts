@@ -228,6 +228,7 @@ export const draftServerSchema = z
     courseInfoAck: z.boolean(),
     modality: z.enum(["desconto", "desconto_parcial", "normal", "apmf"]),
     modalityDutyAck: z.boolean(),
+    modalityDutyFollowedIg: z.boolean(),
     modalityDutySignature: str(120),
     waivedFee: z.boolean(),
     plan: z.enum(["mensal", "trimestral", "total"]),
@@ -288,6 +289,7 @@ export type EnrollmentDraft = {
   courseInfoAck?: boolean;
   modality?: "desconto" | "desconto_parcial" | "normal" | "apmf";
   modalityDutyAck?: boolean;
+  modalityDutyFollowedIg?: boolean;
   modalityDutySignature?: string;
   waivedFee?: boolean;
   plan?: "mensal" | "trimestral" | "total";

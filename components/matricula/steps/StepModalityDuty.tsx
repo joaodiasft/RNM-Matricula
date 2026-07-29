@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import { MODALITY_LABELS, type Modality } from "@/lib/pricing";
+import { COMPANY } from "@/lib/company";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
 import { useToast } from "@/components/ui/Toast";
 
@@ -68,8 +69,18 @@ export function StepModalityDuty({ draft, onChange, onNext, onBack }: Props) {
   const toast = useToast();
   const modality = draft.modality as Modality | undefined;
   const content = dutyContent(modality);
+  const igHandle = `@${COMPANY.instagram}`;
 
   const submit = () => {
+    if (!draft.modalityDutyFollowedIg) {
+      setError("Abra o Instagram do curso e marque que já segue");
+      toast.push({
+        title: "Siga o Instagram",
+        message: `Abra o perfil ${igHandle} e marque que você já segue.`,
+        tone: "danger",
+      });
+      return;
+    }
     if (!draft.modalityDutyAck) {
       setError("Marque que leu e está ciente para continuar");
       toast.push({
@@ -123,16 +134,41 @@ export function StepModalityDuty({ draft, onChange, onNext, onBack }: Props) {
         ))}
       </ul>
 
-      <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-bg-subtle px-4 py-3.5 text-sm font-medium text-ink transition hover:border-line-strong">
+      <div className="mt-5 rounded-2xl border border-brand/25 bg-brand-soft/50 px-4 py-4">
+        <p className="text-sm font-bold text-ink">Siga o Instagram do curso</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+          Para a divulgação funcionar, siga o perfil oficial da{" "}
+          {COMPANY.name}.
+        </p>
+        <a
+          href={COMPANY.instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="brand-gradient mt-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-brand)] transition hover:brightness-105"
+        >
+          Abrir {igHandle} no Instagram
+        </a>
+        <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-white px-3.5 py-3 text-sm font-medium text-ink">
+          <input
+            type="checkbox"
+            checked={draft.modalityDutyFollowedIg === true}
+            onChange={(e) =>
+              onChange({ modalityDutyFollowedIg: e.target.checked })
+            }
+            className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
+          />
+          <span>Já sigo o Instagram {igHandle}. *</span>
+        </label>
+      </div>
+
+      <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-bg-subtle px-4 py-3.5 text-sm font-medium text-ink transition hover:border-line-strong">
         <input
           type="checkbox"
           checked={draft.modalityDutyAck === true}
           onChange={(e) => onChange({ modalityDutyAck: e.target.checked })}
           className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
         />
-        <span>
-          Li e estou ciente das obrigações acima. *
-        </span>
+        <span>Li e estou ciente das obrigações acima. *</span>
       </label>
 
       <div className="mt-4">

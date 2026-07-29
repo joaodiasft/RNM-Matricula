@@ -37,6 +37,7 @@ export const DRAFT_FIELD_LABELS: Record<string, string> = {
   courseInfoAck: "Confirmou informações do curso",
   modality: "Modalidade",
   modalityDutyAck: "Ciência dos compromissos da modalidade",
+  modalityDutyFollowedIg: "Segue o Instagram do curso",
   modalityDutySignature: "Assinatura dos compromissos",
   waivedFee: "Taxa de matrícula isenta",
   plan: "Plano de pagamento",

@@ -116,6 +116,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                 onChange({
                   modality: m,
                   modalityDutyAck: false,
+                  modalityDutyFollowedIg: false,
                   modalityDutySignature: "",
                 })
               }

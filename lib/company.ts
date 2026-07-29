@@ -6,6 +6,9 @@ export const COMPANY = {
   phoneDigits: "5562981899570",
   urgencyPhone: "(62) 99555-1544",
   email: "naredacaonota1000@gmail.com",
+  /** Perfil oficial usado na divulgação / compromissos da modalidade. */
+  instagram: "naredacaonota1000",
+  instagramUrl: "https://www.instagram.com/naredacaonota1000/",
 } as const;
 
 export const LOCAL_STORAGE_KEY = "rnm_matricula_session";

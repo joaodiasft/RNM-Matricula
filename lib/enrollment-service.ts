@@ -460,6 +460,7 @@ export async function completeEnrollment(
       draft.modality === "desconto_parcial" ||
       draft.modality === "apmf") &&
     (!draft.modalityDutyAck ||
+      !draft.modalityDutyFollowedIg ||
       !(draft.modalityDutySignature && draft.modalityDutySignature.trim().length >= 3))
   ) {
     throw new Error("AVISOS_PENDENTES");
