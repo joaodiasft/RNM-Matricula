@@ -130,6 +130,19 @@ export async function ensureAccessSchema() {
     await db.execute(
       sql`CREATE UNIQUE INDEX IF NOT EXISTS enrollments_enrollment_number_idx ON enrollments (enrollment_number)`
     );
+    // Snapshot de pagamento (registrado pela secretaria no montador de mensagem).
+    await db.execute(
+      sql`ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS payment_status text`
+    );
+    await db.execute(
+      sql`ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS payment_month text`
+    );
+    await db.execute(
+      sql`ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS payment_form text`
+    );
+    await db.execute(
+      sql`ALTER TABLE enrollments ADD COLUMN IF NOT EXISTS payment_paid_on date`
+    );
     await db.execute(sql`CREATE TABLE IF NOT EXISTS enrollment_accesses (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       enrollment_id uuid NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,

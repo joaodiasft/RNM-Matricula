@@ -81,6 +81,11 @@ export const enrollments = pgTable(
     obligationDeadline: date("obligation_deadline"),
     obligationDivulged: boolean("obligation_divulged"),
     obligationBroughtStudent: boolean("obligation_brought_student"),
+    /** Snapshot do último pagamento registrado pela secretaria. */
+    paymentStatus: text("payment_status"),
+    paymentMonth: text("payment_month"),
+    paymentForm: text("payment_form"),
+    paymentPaidOn: date("payment_paid_on"),
     referralCodeUsed: text("referral_code_used"),
     lastActivityAt: timestamp("last_activity_at", {
       withTimezone: true,

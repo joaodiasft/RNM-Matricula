@@ -149,6 +149,10 @@ export async function PATCH(req: Request, { params }: Params) {
     obligationDeadline?: string | null;
     obligationDivulged?: boolean | null;
     obligationBroughtStudent?: boolean | null;
+    paymentStatus?: string | null;
+    paymentMonth?: string | null;
+    paymentForm?: string | null;
+    paymentPaidOn?: string | null;
     accesses?: unknown;
   } | null;
 
@@ -212,6 +216,41 @@ export async function PATCH(req: Request, { params }: Params) {
   }
   if (body.obligationBroughtStudent !== undefined) {
     patch.obligationBroughtStudent = body.obligationBroughtStudent;
+  }
+  if (body.paymentStatus !== undefined) {
+    const v = body.paymentStatus;
+    if (v && !["pago", "pendente", "atrasado"].includes(v)) {
+      return NextResponse.json(
+        { error: "Situação de pagamento inválida" },
+        { status: 400 }
+      );
+    }
+    patch.paymentStatus = v || null;
+  }
+  if (body.paymentMonth !== undefined) {
+    const v = body.paymentMonth;
+    if (v && !/^\d{4}-\d{2}$/.test(v)) {
+      return NextResponse.json(
+        { error: "Mês de competência inválido" },
+        { status: 400 }
+      );
+    }
+    patch.paymentMonth = v || null;
+  }
+  if (body.paymentForm !== undefined) {
+    patch.paymentForm = body.paymentForm
+      ? String(body.paymentForm).slice(0, 40)
+      : null;
+  }
+  if (body.paymentPaidOn !== undefined) {
+    const v = body.paymentPaidOn;
+    if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      return NextResponse.json(
+        { error: "Data de pagamento inválida" },
+        { status: 400 }
+      );
+    }
+    patch.paymentPaidOn = v || null;
   }
 
   const [updated] = await db
