@@ -8,6 +8,7 @@ import {
   students,
 } from "@/lib/db/schema";
 import { getAdminSession } from "@/lib/auth";
+import { ensureAccessSchema } from "@/lib/access";
 import { countEnrollmentsSince } from "@/lib/enrollment-stats";
 
 export async function GET(req: Request) {
@@ -26,6 +27,9 @@ export async function GET(req: Request) {
   const to = url.searchParams.get("to");
 
   try {
+    // Garante colunas novas (payment_*, enrollment_number) antes do SELECT.
+    // Sem isso a listagem inteira falha e as concluídas “somem” do painel.
+    await ensureAccessSchema();
     const db = getDb();
     const conditions = [];
 
