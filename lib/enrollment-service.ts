@@ -778,6 +778,274 @@ export async function completeEnrollment(
   };
 }
 
+// ── Matrícula presencial (secretaria) ──────────────────────────────────────
+// Cria uma matrícula JÁ CONCLUÍDA a partir do balcão. A secretaria está com a
+// pessoa na frente, então pulamos OTP/Turnstile/avisos/declaração digital que
+// existem só para o autoatendimento online. Mantemos o que é essencial ao
+// negócio: reserva de vaga atômica, preço, número de matrícula e acessos.
+
+export type AdminEnrollInput = {
+  fullName: string;
+  birthDateIso?: string | null; // YYYY-MM-DD
+  email?: string | null;
+  phone: string;
+  grade: string;
+  school?: string | null;
+  cpf?: string | null;
+  rg?: string | null;
+  address?: string | null;
+  instagram?: string | null;
+  referralSource?: string | null;
+  fatherName?: string | null;
+  fatherPhone?: string | null;
+  motherName?: string | null;
+  motherPhone?: string | null;
+  principalGuardian?: "pai" | "mae";
+  courses: { subject: Subject; classCode: string }[];
+  modality: Modality;
+  plan: Plan;
+  paymentMethod: PaymentMethod;
+  autoRenew?: boolean;
+  payment?: {
+    status?: string | null;
+    month?: string | null;
+    form?: string | null;
+    paidOn?: string | null;
+  } | null;
+  createdByName?: string | null;
+  sendConfirmationEmail?: boolean;
+};
+
+export async function adminCreateEnrollment(input: AdminEnrollInput) {
+  const db = getDb();
+  await ensureClassesSeeded();
+  await ensureAccessSchema();
+
+  const fullName = input.fullName?.trim();
+  const phone = input.phone?.trim();
+  if (!fullName) throw new Error("NOME_OBRIGATORIO");
+  if (!phone) throw new Error("TELEFONE_OBRIGATORIO");
+  if (!input.grade?.trim()) throw new Error("SERIE_OBRIGATORIA");
+  if (!input.courses?.length) throw new Error("TURMA_OBRIGATORIA");
+  if (!input.modality || !input.plan || !input.paymentMethod) {
+    throw new Error("DADOS_INCOMPLETOS");
+  }
+  // Uma turma por matéria.
+  const seenSubject = new Set<string>();
+  for (const c of input.courses) {
+    if (seenSubject.has(c.subject)) throw new Error("MATERIA_DUPLICADA");
+    seenSubject.add(c.subject);
+    if (!getClassByCode(c.classCode)) throw new Error("TURMA_INVALIDA");
+  }
+
+  const isScholarship = input.paymentMethod === "isento";
+  const age = input.birthDateIso ? calcAge(input.birthDateIso) : null;
+
+  // Cria aluno + matrícula.
+  const token = nanoid(32);
+  const [student] = await db
+    .insert(students)
+    .values({
+      fullName,
+      birthDate: input.birthDateIso || null,
+      email: input.email?.trim() || null,
+      phone,
+      grade: input.grade.trim(),
+      school: input.school?.trim() || null,
+      cpf: input.cpf?.trim() || null,
+      rg: input.rg?.trim() || null,
+      address: input.address?.trim() || null,
+      referralSource: input.referralSource?.trim() || null,
+      lgpdConsent: true,
+    })
+    .returning();
+
+  const [enrollment] = await db
+    .insert(enrollments)
+    .values({
+      studentId: student.id,
+      sessionToken: token,
+      status: "em_andamento",
+      currentStep: 10,
+      draftData: JSON.stringify({}),
+    })
+    .returning();
+
+  // Responsáveis (se informados).
+  if (
+    input.fatherName ||
+    input.fatherPhone ||
+    input.motherName ||
+    input.motherPhone
+  ) {
+    await db.insert(guardians).values({
+      studentId: student.id,
+      fatherName: input.fatherName?.trim() || null,
+      fatherPhone: input.fatherPhone?.trim() || null,
+      motherName: input.motherName?.trim() || null,
+      motherPhone: input.motherPhone?.trim() || null,
+    });
+  }
+
+  // Reserva de vaga ATÔMICA (mesma lógica do fluxo online).
+  const waitlistCodes: string[] = [];
+  const enrolledCodes: string[] = [];
+  for (const c of input.courses) {
+    const claimed = await db
+      .update(classes)
+      .set({ seatsTaken: sql`${classes.seatsTaken} + 1`, updatedAt: new Date() })
+      .where(
+        and(
+          eq(classes.code, c.classCode),
+          sql`${classes.seatsTaken} < ${classes.maxSeats}`
+        )
+      )
+      .returning({ code: classes.code });
+    if (claimed.length > 0) enrolledCodes.push(c.classCode);
+    else waitlistCodes.push(c.classCode);
+  }
+
+  const pricingSubjects = input.courses.map((c) => c.subject);
+  const pricing = calculatePricing({
+    modality: input.modality,
+    plan: input.plan,
+    paymentMethod: input.paymentMethod,
+    subjects: pricingSubjects,
+    waivedFee: isScholarship,
+    scholarship: isScholarship,
+  });
+
+  // Cursos + lista de espera.
+  await db.insert(enrollmentCourses).values(
+    input.courses.map((c) => ({
+      enrollmentId: enrollment.id,
+      subject: c.subject,
+      classCode: c.classCode,
+      onWaitlist: waitlistCodes.includes(c.classCode),
+    }))
+  );
+  for (const code of waitlistCodes) {
+    await db.insert(waitlist).values({
+      classCode: code,
+      studentId: student.id,
+      enrollmentId: enrollment.id,
+      fullName,
+      email: input.email?.trim() || null,
+      phone,
+    });
+  }
+
+  const editToken = nanoid(40);
+  const deadline = new Date();
+  deadline.setDate(deadline.getDate() + OBLIGATION_DEADLINE_DAYS);
+  const needsObligation =
+    input.modality === "desconto" ||
+    input.modality === "desconto_parcial" ||
+    input.modality === "apmf";
+
+  const enrollmentNumber = await nextEnrollmentNumber();
+  const principalName =
+    (input.principalGuardian === "mae"
+      ? input.motherName || input.fatherName
+      : input.fatherName || input.motherName) || fullName;
+  const accessSet: AccessSet = buildAccessSet({
+    enrollmentNumber,
+    studentName: fullName,
+    principalName,
+  });
+
+  let referralCode: string | null = null;
+  if (input.modality === "desconto") {
+    referralCode = generateReferralCode(fullName);
+    await db.insert(referrals).values({
+      referrerEnrollmentId: enrollment.id,
+      code: referralCode,
+    });
+  }
+
+  await db
+    .update(enrollments)
+    .set({
+      status: "concluida",
+      currentStep: 10,
+      enrollmentNumber,
+      modality: input.modality,
+      plan: input.plan,
+      paymentMethod: input.paymentMethod,
+      autoRenew: input.plan === "mensal" ? Boolean(input.autoRenew) : false,
+      courseInfoAck: true,
+      monthlyValue: String(pricing.monthlyValue),
+      planTotal: String(pricing.planTotal),
+      enrollmentFee: String(pricing.enrollmentFee),
+      declarationName: fullName,
+      declarationIp: `presencial${input.createdByName ? ` · ${input.createdByName}` : ""}`,
+      declarationAt: new Date(),
+      completedAt: new Date(),
+      lastActivityAt: new Date(),
+      emailVerified: true,
+      editToken,
+      obligationStatus: needsObligation ? "pendente" : "cumprida",
+      obligationDeadline: needsObligation ? deadline.toISOString().slice(0, 10) : null,
+      paymentStatus: input.payment?.status || null,
+      paymentMonth: input.payment?.month || null,
+      paymentForm: input.payment?.form || null,
+      paymentPaidOn: input.payment?.paidOn || null,
+    })
+    .where(eq(enrollments.id, enrollment.id));
+
+  await ensureEnrollmentAccesses(enrollment.id, accessSet);
+
+  // E-mail de confirmação (opcional — só se houver e-mail e não for desligado).
+  if (input.sendConfirmationEmail !== false && input.email?.trim()) {
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://rnm-matricula.jmdias2901.workers.dev";
+    const coursesText = input.courses
+      .map((c) => {
+        const info = getClassByCode(c.classCode);
+        const label = SUBJECT_LABELS[c.subject];
+        const wl = waitlistCodes.includes(c.classCode) ? " (lista de espera)" : "";
+        return `${label} — Turma ${c.classCode}${info ? ` · ${info.day} das ${info.schedule}` : ""}${wl}`;
+      })
+      .join("; ");
+    const html = confirmationEmailHtml({
+      studentName: fullName,
+      age,
+      coursesText,
+      modality: MODALITY_LABELS[input.modality],
+      plan: PLAN_LABELS[input.plan],
+      planDetail: pricing.calculationLabel,
+      paymentMethod: isScholarship
+        ? "Isento — bolsa integral (100%)"
+        : PAYMENT_LABELS[input.paymentMethod],
+      enrollmentFee: pricing.enrollmentFee,
+      planTotal: pricing.planTotal,
+      scholarship: isScholarship,
+      autoRenew: input.plan === "mensal" ? Boolean(input.autoRenew) : false,
+      referralCode,
+      editUrl: `${appUrl}/editar/${editToken}`,
+      invoice: null,
+      enrollmentNumber,
+      accesses: accessSet,
+    });
+    await sendEmail({
+      to: input.email.trim(),
+      subject: `✅ Matrícula confirmada — ${enrollmentNumber} · ${fullName} | ${COMPANY.name}`,
+      html,
+    }).catch(() => {});
+  }
+
+  return {
+    enrollmentId: enrollment.id,
+    studentId: student.id,
+    enrollmentNumber,
+    accesses: accessSet,
+    pricing,
+    referralCode,
+    waitlistCodes,
+  };
+}
+
 export async function updateContactByEditToken(
   editToken: string,
   data: { email?: string; phone?: string }

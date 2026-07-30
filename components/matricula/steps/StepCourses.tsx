@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import { coursesStepSchema } from "@/lib/validation";
 import {
+  CLASSES,
   getAvailableClasses,
+  isFundamentalGrade,
   SUBJECT_LABELS,
   type Subject,
 } from "@/lib/courses";
@@ -29,7 +31,10 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
   const [availability, setAvailability] = useState<Record<string, ClassAvail>>(
     {}
   );
+  const [showMedio, setShowMedio] = useState(false);
   const toast = useToast();
+
+  const isFundamental = isFundamentalGrade(draft.grade || "");
 
   useEffect(() => {
     fetch("/api/classes")
@@ -48,10 +53,19 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
       .catch(() => {});
   }, []);
 
-  const available = useMemo(
-    () => getAvailableClasses(draft.grade || ""),
-    [draft.grade]
-  );
+  const available = useMemo(() => {
+    const base = getAvailableClasses(draft.grade || "");
+    // Aluno do Fundamental pode optar por ver e escolher também turmas do
+    // Ensino Médio (ex.: um 9º ano avançado que quer a turma de redação do EM).
+    if (isFundamental && showMedio) {
+      const codes = new Set(base.map((c) => c.code));
+      const medio = CLASSES.filter(
+        (c) => c.level === "medio" && !codes.has(c.code)
+      );
+      return [...base, ...medio];
+    }
+    return base;
+  }, [draft.grade, isFundamental, showMedio]);
 
   const selected = draft.courses ?? [];
   const waitlistCodes = draft.waitlistCodes ?? [];
@@ -123,6 +137,26 @@ export function StepCourses({ draft, onChange, onNext, onBack }: Props) {
         <p className="mb-3 rounded-2xl border border-danger/25 bg-danger-soft px-4 py-3 text-sm text-danger">
           Volte e informe a série do aluno para ver as turmas disponíveis.
         </p>
+      )}
+
+      {isFundamental && (
+        <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-brand/25 bg-brand-soft/40 px-4 py-3.5">
+          <input
+            type="checkbox"
+            checked={showMedio}
+            onChange={(e) => setShowMedio(e.target.checked)}
+            className="mt-0.5 h-5 w-5 accent-[var(--brand)]"
+          />
+          <span className="text-sm">
+            <span className="font-bold text-ink">
+              Ver também turmas do Ensino Médio
+            </span>
+            <span className="mt-0.5 block text-muted">
+              Marque para exibir e poder selecionar as turmas do Ensino Médio
+              além das do Fundamental.
+            </span>
+          </span>
+        </label>
       )}
 
       <div className="space-y-7">
