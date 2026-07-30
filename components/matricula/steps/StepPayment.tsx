@@ -16,6 +16,10 @@ import {
   type PaymentMethod,
   type Plan,
 } from "@/lib/pricing";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+} from "@/lib/scholarship";
 import type { Subject } from "@/lib/courses";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
 import { useToast } from "@/components/ui/Toast";
@@ -45,16 +49,18 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   const [cardFee, setCardFee] = useState(3.5);
   const toast = useToast();
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
-  const isBolsa = draft.scholarshipValid === true;
-  const cashDiscountApplies = draft.modality === "desconto_parcial" && !isBolsa;
+  const bolsaKind = draftScholarshipKind(draft);
+  const isFullBolsa = isFullScholarship(bolsaKind);
+  const cashDiscountApplies =
+    draft.modality === "desconto_parcial" && !isFullBolsa;
   const needsInvoice = draft.needsInvoice === true;
 
   useEffect(() => {
-    if (!isBolsa) return;
+    if (!isFullBolsa) return;
     if (draft.paymentMethod === "isento" && draft.waivedFee) return;
     onChange({ paymentMethod: "isento", waivedFee: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao ativar bolsa
-  }, [isBolsa]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao ativar bolsa 100%
+  }, [isFullBolsa]);
 
   useEffect(() => {
     fetch("/api/settings/card-fee")
@@ -90,7 +96,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
   };
 
   const submit = () => {
-    if (isBolsa) {
+    if (isFullBolsa) {
       onChange({ paymentMethod: "isento", waivedFee: true, needsInvoice: false });
       setError(null);
       onNext();
@@ -139,12 +145,12 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
     onNext();
   };
 
-  if (isBolsa) {
+  if (isFullBolsa) {
     return (
       <div>
         <StepTitle
           title="Pagamento"
-          subtitle="Bolsa integral aplicada — não há valores a pagar."
+          subtitle="Bolsa 100% aplicada — não há valores a pagar."
         />
         <div className="rounded-2xl border border-success/30 bg-success-soft px-4 py-5 text-sm text-ink">
           <p className="font-display text-lg font-bold text-ink">
@@ -179,7 +185,7 @@ export function StepPayment({ draft, onChange, onNext, onBack }: Props) {
                   subjects,
                   cardFeePercent: cardFee,
                   waivedFee: draft.waivedFee,
-                  scholarship: false,
+                  scholarshipKind: bolsaKind,
                 })
               : null;
 

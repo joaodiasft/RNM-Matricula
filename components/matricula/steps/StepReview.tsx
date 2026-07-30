@@ -14,6 +14,11 @@ import {
   type PaymentMethod,
   type Plan,
 } from "@/lib/pricing";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+  SCHOLARSHIP_KIND_LABELS,
+} from "@/lib/scholarship";
 import { getClassByCode, SUBJECT_LABELS, type Subject } from "@/lib/courses";
 import { COMPANY } from "@/lib/company";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
@@ -71,15 +76,17 @@ export function StepReview({
 
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
   const reviewAge = draft.birthDateBr ? calcAgeFromBr(draft.birthDateBr) : null;
+  const bolsaKind = draftScholarshipKind(draft);
+  const isFullBolsa = isFullScholarship(bolsaKind);
   const pricing =
-    draft.modality && draft.plan && (draft.paymentMethod || draft.scholarshipValid)
+    draft.modality && draft.plan && (draft.paymentMethod || isFullBolsa)
       ? calculatePricing({
           modality: draft.modality as Modality,
           plan: draft.plan as Plan,
           paymentMethod: (draft.paymentMethod as PaymentMethod) || "isento",
           subjects,
           waivedFee: draft.waivedFee,
-          scholarship: draft.scholarshipValid === true,
+          scholarshipKind: bolsaKind,
         })
       : null;
 
@@ -479,7 +486,7 @@ export function StepReview({
               <SummaryTile
                 label="Pagamento"
                 value={PAYMENT_LABELS[draft.paymentMethod as PaymentMethod]}
-                onEdit={() => onEdit(draft.scholarshipValid ? 1 : 7)}
+                onEdit={() => onEdit(isFullBolsa ? 1 : 7)}
               />
             )}
             {draft.needsInvoice && (
@@ -518,9 +525,9 @@ export function StepReview({
                     Investimento
                   </p>
                   <p className="mt-1 text-xs text-muted">{pricing.calculationLabel}</p>
-                  {draft.scholarshipValid && (
+                  {bolsaKind && (
                     <p className="mt-1 text-xs font-semibold text-success">
-                      Condição especial aplicada
+                      {SCHOLARSHIP_KIND_LABELS[bolsaKind]} aplicada
                     </p>
                   )}
                   {pricing.cashDiscount > 0 && (
@@ -531,7 +538,7 @@ export function StepReview({
                   )}
                 </div>
                 <p className="data text-2xl font-extrabold text-brand">
-                  {draft.scholarshipValid
+                  {isFullBolsa
                     ? "R$ 0,00"
                     : formatBRL(pricing.planTotal)}
                 </p>

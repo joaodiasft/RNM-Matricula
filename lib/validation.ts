@@ -211,6 +211,7 @@ export const draftServerSchema = z
     referralCodeInput: str(40),
     scholarshipCode: str(40),
     scholarshipValid: z.boolean(),
+    scholarshipKind: z.enum(["full", "half", "redacao_100"]),
     fatherName: str(120),
     fatherPhone: str(20),
     motherName: str(120),
@@ -276,6 +277,8 @@ export type EnrollmentDraft = {
   referralCodeInput?: string;
   scholarshipCode?: string;
   scholarshipValid?: boolean;
+  /** full | half | redacao_100 — só quando scholarshipValid */
+  scholarshipKind?: "full" | "half" | "redacao_100";
   fatherName?: string;
   fatherPhone?: string;
   motherName?: string;

@@ -1,4 +1,8 @@
 import type { Subject } from "./courses";
+import {
+  isFullScholarship,
+  type ScholarshipKind,
+} from "./scholarship";
 
 export type Modality =
   | "desconto"
@@ -7,6 +11,8 @@ export type Modality =
   | "apmf";
 export type Plan = "mensal" | "trimestral" | "total";
 export type PaymentMethod = "dinheiro" | "cartao" | "pix" | "isento";
+
+export type { ScholarshipKind };
 
 /** Nome canônico do colégio elegível à Modalidade 4. */
 export const APMF_SCHOOL_NAME =
@@ -105,6 +111,33 @@ export function getMonthlyValue(modality: Modality, subjects: Subject[]): number
   return subjects.reduce((sum, s) => sum + MONTHLY[modality][s], 0);
 }
 
+/** Mensalidade de uma matéria já aplicando o tipo de bolsa (se houver). */
+export function getSubjectMonthlyWithScholarship(
+  modality: Modality,
+  subject: Subject,
+  kind?: ScholarshipKind | null
+): number {
+  if (isFullScholarship(kind)) return 0;
+  if (kind === "half") {
+    return Math.round(NORMAL_MONTHLY[subject] * 0.5 * 100) / 100;
+  }
+  if (kind === "redacao_100" && subject === "redacao") return 100;
+  return MONTHLY[modality][subject];
+}
+
+/** Soma mensal com bolsa parcial (half / redacao_100). */
+export function getMonthlyValueWithScholarship(
+  modality: Modality,
+  subjects: Subject[],
+  kind?: ScholarshipKind | null
+): number {
+  if (isFullScholarship(kind)) return 0;
+  return subjects.reduce(
+    (sum, s) => sum + getSubjectMonthlyWithScholarship(modality, s, kind),
+    0
+  );
+}
+
 export function getEnrollmentFee(courseCount: number): number {
   if (courseCount <= 0) return 0;
   if (courseCount === 1) return 100;
@@ -138,15 +171,21 @@ export function calculatePricing(input: {
   subjects: Subject[];
   cardFeePercent?: number;
   waivedFee?: boolean;
-  /** Código de bolsa válido — zera valores */
+  /**
+   * @deprecated Prefira `scholarshipKind`. `true` equivale a bolsa 100%.
+   */
   scholarship?: boolean;
+  /** Tipo de bolsa aplicada (null = sem bolsa). */
+  scholarshipKind?: ScholarshipKind | null;
 }): PricingBreakdown {
-  const monthlyValue = getMonthlyValue(input.modality, input.subjects);
-  const months = PLAN_MONTHS[input.plan];
-  const planSubtotal = monthlyValue * months;
+  const kind: ScholarshipKind | null =
+    input.scholarshipKind ??
+    (input.scholarship ? "full" : null);
 
-  // Bolsa integral: zera plano e taxa
-  if (input.scholarship || input.paymentMethod === "isento") {
+  const months = PLAN_MONTHS[input.plan];
+
+  // Bolsa 100% / isento: zera plano e taxa
+  if (isFullScholarship(kind) || input.paymentMethod === "isento") {
     return {
       monthlyValue: 0,
       months,
@@ -156,10 +195,17 @@ export function calculatePricing(input: {
       enrollmentFee: 0,
       feeWaived: true,
       grandTotal: 0,
-      calculationLabel: "Bolsa integral — sem cobrança de mensalidade ou taxa",
+      calculationLabel: "Bolsa 100% — sem cobrança de mensalidade ou taxa",
       cardFeeNote: undefined,
     };
   }
+
+  const monthlyValue = getMonthlyValueWithScholarship(
+    input.modality,
+    input.subjects,
+    kind
+  );
+  const planSubtotal = monthlyValue * months;
 
   let cashDiscount = 0;
   let planTotal = planSubtotal;
@@ -178,10 +224,16 @@ export function calculatePricing(input: {
     : getEnrollmentFee(input.subjects.length);
   const grandTotal = planTotal + enrollmentFee;
 
-  const calculationLabel =
+  let calculationLabel =
     months === 1
       ? `${formatBRL(monthlyValue)} / mês`
       : `${formatBRL(monthlyValue)} × ${months} meses = ${formatBRL(planSubtotal)}`;
+
+  if (kind === "half") {
+    calculationLabel = `Bolsa 50% (valor cheio) · ${calculationLabel}`;
+  } else if (kind === "redacao_100") {
+    calculationLabel = `Bolsa redação R$ 100 · ${calculationLabel}`;
+  }
 
   const cardFeeNote =
     input.paymentMethod === "cartao" && input.cardFeePercent != null

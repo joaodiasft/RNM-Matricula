@@ -15,6 +15,10 @@ import {
 import type { EnrollmentDraft } from "@/lib/validation";
 import { calcAgeFromBr } from "@/lib/validation";
 import { nextStep, prevStep, stepDisplayIndex, needsModalityDutyStep } from "@/lib/steps";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+} from "@/lib/scholarship";
 import { ProgressBar } from "./ProgressBar";
 import { FloatingSummary } from "./FloatingSummary";
 import { ResumeModal } from "./ResumeModal";
@@ -207,7 +211,7 @@ export function EnrollmentWizard() {
     if (!session) return;
     const step = session.currentStep;
     const plan = session.draft.plan;
-    const scholarship = session.draft.scholarshipValid === true;
+    const scholarship = isFullScholarship(draftScholarshipKind(session.draft));
     const modality = session.draft.modality;
     const opts = { age, plan, scholarship, modality };
 
@@ -229,6 +233,7 @@ export function EnrollmentWizard() {
     session?.currentStep,
     session?.draft.plan,
     session?.draft.scholarshipValid,
+    session?.draft.scholarshipKind,
     session?.draft.modality,
     age,
     goTo,
@@ -236,7 +241,7 @@ export function EnrollmentWizard() {
 
   const goNext = () => {
     if (!session) return;
-    const scholarship = session.draft.scholarshipValid === true;
+    const scholarship = isFullScholarship(draftScholarshipKind(session.draft));
     const n = nextStep(session.currentStep, {
       age,
       plan: session.draft.plan,
@@ -273,7 +278,7 @@ export function EnrollmentWizard() {
     const p = prevStep(session.currentStep, {
       age,
       plan: session.draft.plan,
-      scholarship: session.draft.scholarshipValid === true,
+      scholarship: isFullScholarship(draftScholarshipKind(session.draft)),
       modality: session.draft.modality,
     });
     if (p) goTo(p, -1);
@@ -392,7 +397,7 @@ export function EnrollmentWizard() {
   const progress = stepDisplayIndex(session.currentStep, {
     age,
     plan: session.draft.plan,
-    scholarship: session.draft.scholarshipValid === true,
+    scholarship: isFullScholarship(draftScholarshipKind(session.draft)),
     modality: session.draft.modality,
   });
   const step = session.currentStep;

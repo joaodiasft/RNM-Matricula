@@ -2,10 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { btnPrimaryClass, inputAdminClass } from "@/components/admin/ui";
+import {
+  SCHOLARSHIP_KIND_HINTS,
+  SCHOLARSHIP_KIND_LABELS,
+  SCHOLARSHIP_KINDS,
+  parseScholarshipKind,
+  type ScholarshipKind,
+} from "@/lib/scholarship";
 
 type CodeRow = {
   id: string;
   code: string;
+  kind?: string | null;
   label: string | null;
   usedAt: string | null;
   usedByEnrollmentId: string | null;
@@ -15,7 +23,8 @@ type CodeRow = {
 
 export default function BolsasAdminPage() {
   const [codes, setCodes] = useState<CodeRow[]>([]);
-  const [label, setLabel] = useState("Bolsa integral");
+  const [kind, setKind] = useState<ScholarshipKind>("full");
+  const [label, setLabel] = useState(SCHOLARSHIP_KIND_LABELS.full);
   const [count, setCount] = useState(1);
   const [custom, setCustom] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -35,6 +44,17 @@ export default function BolsasAdminPage() {
     void load();
   }, [load]);
 
+  const onKindChange = (next: ScholarshipKind) => {
+    setKind(next);
+    // Só troca o rótulo se ainda estiver no padrão do tipo anterior.
+    const wasDefault = SCHOLARSHIP_KINDS.some(
+      (k) => label === SCHOLARSHIP_KIND_LABELS[k]
+    );
+    if (wasDefault || !label.trim()) {
+      setLabel(SCHOLARSHIP_KIND_LABELS[next]);
+    }
+  };
+
   const create = async () => {
     setError(null);
     setMessage(null);
@@ -42,6 +62,7 @@ export default function BolsasAdminPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        kind,
         label,
         count: custom.trim() ? 1 : count,
         code: custom.trim() || undefined,
@@ -52,7 +73,9 @@ export default function BolsasAdminPage() {
       setError(data.error || "Falha ao criar");
       return;
     }
-    setMessage(`Criado(s): ${(data.created || []).join(", ")}`);
+    setMessage(
+      `Criado(s) [${SCHOLARSHIP_KIND_LABELS[kind]}]: ${(data.created || []).join(", ")}`
+    );
     setCustom("");
     await load();
   };
@@ -77,8 +100,9 @@ export default function BolsasAdminPage() {
     <main className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="font-display text-3xl font-bold text-ink">Códigos de bolsa</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Cada código é de uso único. Quando o aluno valida e conclui a matrícula,
-        o código fica marcado com o nome e o vínculo da matrícula.
+        Cada código é de uso único. Escolha o tipo ao gerar: 100%, 50% do valor
+        cheio, ou redação em R$ 100. Quando o aluno conclui a matrícula, o código
+        fica marcado com o nome e o vínculo.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
@@ -92,6 +116,33 @@ export default function BolsasAdminPage() {
 
       <section className="mt-6 rounded-2xl border border-line bg-white p-5 shadow-[var(--shadow-xs)]">
         <h2 className="font-display text-xl font-bold text-ink">Criar códigos</h2>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {SCHOLARSHIP_KINDS.map((k) => {
+            const selected = kind === k;
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => onKindChange(k)}
+                className={[
+                  "rounded-2xl border px-3.5 py-3.5 text-left transition",
+                  selected
+                    ? "border-brand bg-brand-soft/70 ring-2 ring-brand/20"
+                    : "border-line bg-bg-subtle hover:border-brand/35",
+                ].join(" ")}
+              >
+                <p className="text-sm font-bold text-ink">
+                  {SCHOLARSHIP_KIND_LABELS[k]}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  {SCHOLARSHIP_KIND_HINTS[k]}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
             <span className="mb-1 block font-semibold text-ink-soft">Rótulo</span>
@@ -128,7 +179,7 @@ export default function BolsasAdminPage() {
           </label>
         </div>
         <button type="button" onClick={() => void create()} className={`${btnPrimaryClass()} mt-4`}>
-          Gerar código(s)
+          Gerar {SCHOLARSHIP_KIND_LABELS[kind]}
         </button>
         {message && (
           <p className="mt-3 rounded-xl bg-success-soft px-3 py-2 text-sm font-medium text-success">
@@ -147,6 +198,7 @@ export default function BolsasAdminPage() {
           <thead className="border-b border-line bg-bg-subtle text-xs uppercase tracking-wide text-muted">
             <tr>
               <th className="px-4 py-3">Código</th>
+              <th className="px-4 py-3">Tipo</th>
               <th className="px-4 py-3">Situação</th>
               <th className="px-4 py-3">Usado por</th>
               <th className="px-4 py-3">Quando</th>
@@ -154,59 +206,67 @@ export default function BolsasAdminPage() {
             </tr>
           </thead>
           <tbody>
-            {codes.map((c) => (
-              <tr key={c.id} className="border-b border-line/70">
-                <td className="px-4 py-3 font-mono font-semibold text-ink">
-                  {c.code}
-                  {c.label && (
-                    <span className="mt-0.5 block font-sans text-xs font-normal text-muted">
-                      {c.label}
+            {codes.map((c) => {
+              const k = parseScholarshipKind(c.kind);
+              return (
+                <tr key={c.id} className="border-b border-line/70">
+                  <td className="px-4 py-3 font-mono font-semibold text-ink">
+                    {c.code}
+                    {c.label && (
+                      <span className="mt-0.5 block font-sans text-xs font-normal text-muted">
+                        {c.label}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-deep">
+                      {SCHOLARSHIP_KIND_LABELS[k]}
                     </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {c.usedAt ? (
-                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand">
-                      Usado
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
-                      Disponível
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {c.usedByStudentName || "—"}
-                  {c.usedByEnrollmentId && (
-                    <a
-                      href={`/admin/matriculas/${c.usedByEnrollmentId}`}
-                      className="mt-0.5 block text-xs font-semibold text-brand underline"
-                    >
-                      Ver matrícula
-                    </a>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-muted">
-                  {c.usedAt
-                    ? new Date(c.usedAt).toLocaleString("pt-BR")
-                    : "—"}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {!c.usedAt && (
-                    <button
-                      type="button"
-                      onClick={() => void remove(c.id)}
-                      className="text-xs font-semibold text-danger hover:underline"
-                    >
-                      Apagar
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.usedAt ? (
+                      <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand">
+                        Usado
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
+                        Disponível
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {c.usedByStudentName || "—"}
+                    {c.usedByEnrollmentId && (
+                      <a
+                        href={`/admin/matriculas/${c.usedByEnrollmentId}`}
+                        className="mt-0.5 block text-xs font-semibold text-brand underline"
+                      >
+                        Ver matrícula
+                      </a>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-muted">
+                    {c.usedAt
+                      ? new Date(c.usedAt).toLocaleString("pt-BR")
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {!c.usedAt && (
+                      <button
+                        type="button"
+                        onClick={() => void remove(c.id)}
+                        className="text-xs font-semibold text-danger hover:underline"
+                      >
+                        Apagar
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
             {codes.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted">
                   Nenhum código ainda.
                 </td>
               </tr>

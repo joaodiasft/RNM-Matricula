@@ -6,6 +6,7 @@ import {
   formatBRL,
   getApmfDiscount,
   getSubjectMonthly,
+  getSubjectMonthlyWithScholarship,
   isApmfSchool,
   MODALITY_LABELS,
   MODALITY_OBLIGATIONS,
@@ -13,6 +14,12 @@ import {
   NORMAL_MONTHLY,
   type Modality,
 } from "@/lib/pricing";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+  SCHOLARSHIP_KIND_LABELS,
+  scholarshipBannerText,
+} from "@/lib/scholarship";
 import { SUBJECT_LABELS, type Subject } from "@/lib/courses";
 import { NavButtons, StepTitle } from "../ui";
 import { useToast } from "@/components/ui/Toast";
@@ -39,7 +46,9 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
   const subjects = Array.from(
     new Set((draft.courses ?? []).map((c) => c.subject))
   ) as Subject[];
-  const isBolsa = draft.scholarshipValid === true;
+  const bolsaKind = draftScholarshipKind(draft);
+  const isFullBolsa = isFullScholarship(bolsaKind);
+  const hasBolsa = bolsaKind != null;
   const apmfEligible = isApmfSchool(draft.school);
   const modalities: Modality[] = apmfEligible
     ? [...BASE_MODALITIES, "apmf"]
@@ -96,12 +105,10 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
         </p>
       </div>
 
-      {isBolsa && (
+      {hasBolsa && bolsaKind && (
         <div className="mb-5 rounded-2xl border border-success/30 bg-success-soft px-4 py-3.5 text-sm text-ink">
-          <p className="font-bold">Condição especial ativa</p>
-          <p className="mt-1 text-ink-soft">
-            Mensalidade e taxa ficam isentas nesta matrícula.
-          </p>
+          <p className="font-bold">{SCHOLARSHIP_KIND_LABELS[bolsaKind]}</p>
+          <p className="mt-1 text-ink-soft">{scholarshipBannerText(bolsaKind)}</p>
         </div>
       )}
 
@@ -167,8 +174,20 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                     >
                       <span className="text-ink-soft">{SUBJECT_LABELS[s]}</span>
                       <span className="text-right font-bold tabular-nums text-ink">
-                        {isBolsa ? (
+                        {isFullBolsa ? (
                           "Isento"
+                        ) : bolsaKind ? (
+                          <span className="block">
+                            {bolsaKind === "half" && (
+                              <span className="mr-2 text-xs font-medium text-muted line-through">
+                                {formatBRL(NORMAL_MONTHLY[s])}
+                              </span>
+                            )}
+                            {formatBRL(
+                              getSubjectMonthlyWithScholarship(m, s, bolsaKind)
+                            )}
+                            /mês
+                          </span>
                         ) : m === "apmf" ? (
                           <span className="block">
                             <span className="mr-2 text-xs font-medium text-muted line-through">
@@ -187,7 +206,7 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                   ))}
                   <p className="pt-1 text-xs text-muted">
                     Taxa de matrícula:{" "}
-                    {draft.waivedFee || isBolsa ? (
+                    {draft.waivedFee || isFullBolsa ? (
                       <span className="font-semibold text-success">isenta</span>
                     ) : (
                       <>
@@ -197,14 +216,14 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
                       </>
                     )}
                   </p>
-                  {m === "desconto_parcial" && !isBolsa && (
+                  {m === "desconto_parcial" && !isFullBolsa && (
                     <p className="rounded-xl bg-white/80 px-3 py-2 text-xs font-medium text-ink-soft">
                       Nesta modalidade, pagamento em{" "}
                       <strong>dinheiro à vista</strong> ganha 5% de desconto
                       extra no valor do plano.
                     </p>
                   )}
-                  {m === "apmf" && !isBolsa && (
+                  {m === "apmf" && !isFullBolsa && (
                     <div className="rounded-xl bg-white/90 px-3 py-2.5 text-xs leading-relaxed text-ink-soft">
                       <p className="font-semibold text-ink">
                         Condições do desconto (Modalidade 4)
@@ -259,12 +278,12 @@ export function StepModality({ draft, onChange, onNext, onBack }: Props) {
           checked={draft.waivedFee === true}
           onChange={(e) => onChange({ waivedFee: e.target.checked })}
           className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
-          disabled={isBolsa}
+          disabled={isFullBolsa}
         />
         <span>
           Já sou aluno(a) e já me matriculei em todos os módulos, incluindo o de
           férias
-          {(draft.waivedFee || isBolsa) && (
+          {(draft.waivedFee || isFullBolsa) && (
             <span className="mt-1 block text-xs font-semibold text-success">
               Taxa de matrícula isenta.
             </span>

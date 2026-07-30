@@ -12,6 +12,11 @@ import {
   type Plan,
   type PaymentMethod,
 } from "@/lib/pricing";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+  SCHOLARSHIP_KIND_LABELS,
+} from "@/lib/scholarship";
 import { getClassByCode, SUBJECT_LABELS } from "@/lib/courses";
 
 export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
@@ -19,7 +24,9 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
 
   const courses = draft.courses ?? [];
   const hasContent = courses.length > 0 || Boolean(draft.modality);
-  const isBolsa = draft.scholarshipValid === true;
+  const bolsaKind = draftScholarshipKind(draft);
+  const isFullBolsa = isFullScholarship(bolsaKind);
+  const hasBolsa = bolsaKind != null;
 
   const pricing = useMemo(() => {
     const subjects = (draft.courses ?? []).map((c) => c.subject);
@@ -28,10 +35,11 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
       modality: draft.modality as Modality,
       plan: (draft.plan as Plan) || "mensal",
       paymentMethod:
-        (draft.paymentMethod as PaymentMethod) || (isBolsa ? "isento" : "pix"),
+        (draft.paymentMethod as PaymentMethod) ||
+        (isFullBolsa ? "isento" : "pix"),
       subjects,
       waivedFee: draft.waivedFee,
-      scholarship: isBolsa,
+      scholarshipKind: bolsaKind,
     });
   }, [
     draft.modality,
@@ -39,12 +47,13 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
     draft.paymentMethod,
     draft.courses,
     draft.waivedFee,
-    isBolsa,
+    bolsaKind,
+    isFullBolsa,
   ]);
 
   const provisional =
     Boolean(draft.modality) &&
-    !(draft.plan && (draft.paymentMethod || isBolsa));
+    !(draft.plan && (draft.paymentMethod || isFullBolsa));
   const filledBits = [
     draft.fullName,
     courses.length,
@@ -87,7 +96,7 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
             Resumo
           </span>
           <span className="block">
-            {isBolsa
+            {isFullBolsa
                       ? "Especial"
                       : pricing
                         ? formatBRL(pricing.planTotal)
@@ -147,14 +156,14 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <div className="rounded-2xl bg-white/10 px-3.5 py-3 ring-1 ring-white/10">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-white/55">
-                      {isBolsa
+                      {isFullBolsa
                         ? "Especial"
                         : draft.plan === "mensal" || !draft.plan
                           ? "Mensalidade"
                           : "Valor do plano"}
                     </p>
                     <p className="mt-0.5 font-display text-xl font-bold tabular-nums">
-                      {isBolsa
+                      {isFullBolsa
                         ? "Isento"
                         : formatBRL(
                             draft.plan && draft.plan !== "mensal"
@@ -168,7 +177,7 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
                       Taxa matrícula
                     </p>
                     <p className="mt-0.5 font-display text-xl font-bold tabular-nums">
-                      {pricing.feeWaived || isBolsa
+                      {pricing.feeWaived || isFullBolsa
                         ? "Isenta"
                         : formatBRL(pricing.enrollmentFee)}
                     </p>
@@ -178,9 +187,9 @@ export function FloatingSummary({ draft }: { draft: EnrollmentDraft }) {
             </div>
 
             <div className="space-y-5 px-5 py-5">
-              {isBolsa && (
+              {hasBolsa && bolsaKind && (
                 <p className="rounded-2xl border border-success/25 bg-success-soft px-3.5 py-3 text-sm font-medium text-ink">
-                  Condição especial aplicada nesta matrícula.
+                  {SCHOLARSHIP_KIND_LABELS[bolsaKind]} aplicada nesta matrícula.
                 </p>
               )}
 

@@ -11,6 +11,10 @@ import {
   type Modality,
   type Plan,
 } from "@/lib/pricing";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+} from "@/lib/scholarship";
 import type { Subject } from "@/lib/courses";
 import { NavButtons, StepTitle } from "../ui";
 import { useToast } from "@/components/ui/Toast";
@@ -29,7 +33,8 @@ export function StepPlan({ draft, onChange, onNext, onBack }: Props) {
   const toast = useToast();
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
   const modality = draft.modality as Modality | undefined;
-  const isBolsa = draft.scholarshipValid === true;
+  const bolsaKind = draftScholarshipKind(draft);
+  const isFullBolsa = isFullScholarship(bolsaKind);
 
   const submit = () => {
     if (!draft.plan) {
@@ -65,7 +70,7 @@ export function StepPlan({ draft, onChange, onNext, onBack }: Props) {
             paymentMethod: "pix",
             subjects,
             waivedFee: draft.waivedFee,
-            scholarship: isBolsa,
+            scholarshipKind: bolsaKind,
           });
           const months = PLAN_MONTHS[plan];
           const selected = draft.plan === plan;
@@ -105,9 +110,9 @@ export function StepPlan({ draft, onChange, onNext, onBack }: Props) {
               </div>
 
               <div className="mt-3 rounded-xl bg-bg-subtle px-3.5 py-3 text-sm">
-                {isBolsa ? (
+                {isFullBolsa ? (
                   <p className="font-semibold text-success">
-                    Sem cobrança neste plano (condição especial)
+                    Sem cobrança neste plano (Bolsa 100%)
                   </p>
                 ) : (
                   <>

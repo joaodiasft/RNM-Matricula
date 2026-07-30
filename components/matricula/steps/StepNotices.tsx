@@ -3,6 +3,10 @@
 import { useState, type ReactNode } from "react";
 import type { EnrollmentDraft } from "@/lib/validation";
 import { COMPANY } from "@/lib/company";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+} from "@/lib/scholarship";
 import { NavButtons, StepTitle } from "../ui";
 import { useToast } from "@/components/ui/Toast";
 
@@ -73,7 +77,7 @@ export function StepNotices({ draft, onChange, onNext, onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
   const showContractNotice = draft.contractSigned === true;
-  const isBolsa = draft.scholarshipValid === true;
+  const isBolsa = isFullScholarship(draftScholarshipKind(draft));
   const isApmf = draft.modality === "apmf";
 
   const requiredKeys: NoticeKey[] = [

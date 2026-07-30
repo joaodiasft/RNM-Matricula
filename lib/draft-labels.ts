@@ -27,6 +27,7 @@ export const DRAFT_FIELD_LABELS: Record<string, string> = {
   referralCodeInput: "Código de indicação usado",
   scholarshipCode: "Código de bolsa",
   scholarshipValid: "Bolsa válida",
+  scholarshipKind: "Tipo de bolsa",
   fatherName: "Nome do pai",
   fatherPhone: "Telefone do pai",
   motherName: "Nome da mãe",

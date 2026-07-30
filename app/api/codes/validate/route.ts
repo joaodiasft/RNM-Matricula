@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { referrals, scholarshipCodes } from "@/lib/db/schema";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { ensureAccessSchema } from "@/lib/access";
+import {
+  parseScholarshipKind,
+  SCHOLARSHIP_KIND_LABELS,
+  scholarshipBannerText,
+} from "@/lib/scholarship";
 
 /**
  * Valida um código no campo único do formulário.
@@ -27,6 +33,7 @@ export async function GET(req: Request) {
     );
   }
 
+  await ensureAccessSchema();
   const db = getDb();
 
   const [bolsa] = await db
@@ -38,14 +45,22 @@ export async function GET(req: Request) {
   if (bolsa) {
     if (bolsa.usedAt) {
       return NextResponse.json(
-        { valid: false, type: "scholarship", error: "Este código já foi utilizado" },
+        {
+          valid: false,
+          type: "scholarship",
+          error: "Este código já foi utilizado",
+        },
         { status: 409 }
       );
     }
+    const kind = parseScholarshipKind(bolsa.kind);
     return NextResponse.json({
       valid: true,
       type: "scholarship",
       code: bolsa.code,
+      kind,
+      kindLabel: SCHOLARSHIP_KIND_LABELS[kind],
+      message: scholarshipBannerText(kind),
     });
   }
 
@@ -58,7 +73,11 @@ export async function GET(req: Request) {
   if (ref) {
     if (ref.referredEnrollmentId) {
       return NextResponse.json(
-        { valid: false, type: "referral", error: "Este código já foi utilizado" },
+        {
+          valid: false,
+          type: "referral",
+          error: "Este código já foi utilizado",
+        },
         { status: 409 }
       );
     }

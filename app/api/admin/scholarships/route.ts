@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { scholarshipCodes } from "@/lib/db/schema";
 import { getAdminSession } from "@/lib/auth";
+import { ensureAccessSchema } from "@/lib/access";
+import {
+  isScholarshipKind,
+  SCHOLARSHIP_KIND_LABELS,
+  type ScholarshipKind,
+} from "@/lib/scholarship";
 
 function genCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -19,6 +25,7 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  await ensureAccessSchema();
   const db = getDb();
   const rows = await db
     .select()
@@ -38,8 +45,16 @@ export async function POST(req: Request) {
     code?: string;
     label?: string;
     count?: number;
+    kind?: string;
   };
 
+  const kind: ScholarshipKind = isScholarshipKind(body.kind)
+    ? body.kind
+    : "full";
+  const label =
+    body.label?.trim() || SCHOLARSHIP_KIND_LABELS[kind];
+
+  await ensureAccessSchema();
   const db = getDb();
   const count = Math.min(Math.max(Number(body.count) || 1, 1), 20);
   const created: string[] = [];
@@ -52,7 +67,8 @@ export async function POST(req: Request) {
     try {
       await db.insert(scholarshipCodes).values({
         code,
-        label: body.label || "Bolsa integral",
+        kind,
+        label,
         createdByAdminId: session.userId,
       });
       created.push(code);
@@ -60,14 +76,15 @@ export async function POST(req: Request) {
       const retry = genCode();
       await db.insert(scholarshipCodes).values({
         code: retry,
-        label: body.label || "Bolsa integral",
+        kind,
+        label,
         createdByAdminId: session.userId,
       });
       created.push(retry);
     }
   }
 
-  return NextResponse.json({ created });
+  return NextResponse.json({ created, kind });
 }
 
 export async function DELETE(req: Request) {
@@ -80,6 +97,7 @@ export async function DELETE(req: Request) {
   if (!id) {
     return NextResponse.json({ error: "id obrigatório" }, { status: 400 });
   }
+  await ensureAccessSchema();
   const db = getDb();
   const [row] = await db
     .select()

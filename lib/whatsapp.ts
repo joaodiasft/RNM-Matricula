@@ -9,6 +9,11 @@ import {
   type PaymentMethod,
   type Plan,
 } from "./pricing";
+import {
+  isFullScholarship,
+  SCHOLARSHIP_KIND_LABELS,
+  type ScholarshipKind,
+} from "./scholarship";
 
 export type WhatsAppPayload = {
   fullName: string;
@@ -21,6 +26,7 @@ export type WhatsAppPayload = {
   planTotal: number;
   enrollmentFee?: number;
   scholarship?: boolean;
+  scholarshipKind?: ScholarshipKind | null;
   invoice?: {
     name: string;
     cpf: string;
@@ -40,7 +46,9 @@ export function buildWhatsAppMessage(data: WhatsAppPayload): string {
     })
     .join("\n📚 Curso: ");
 
-  const isBolsa = data.scholarship === true || data.paymentMethod === "isento";
+  const kind = data.scholarshipKind ?? (data.scholarship ? "full" : null);
+  const fullBolsa =
+    isFullScholarship(kind) || data.paymentMethod === "isento";
 
   const lines = [
     `Olá! Acabei de concluir minha matrícula na ${COMPANY.name}. Segue meu resumo:`,
@@ -48,15 +56,17 @@ export function buildWhatsAppMessage(data: WhatsAppPayload): string {
     `👤 Aluno: ${data.fullName}`,
     `📚 Curso: ${coursesText}`,
     `💳 Modalidade: ${MODALITY_LABELS[data.modality]} · Plano: ${PLAN_LABELS[data.plan]}`,
-    isBolsa
-      ? `💵 Pagamento: Isento — bolsa integral (100%)`
-      : `💵 Forma de pagamento: ${PAYMENT_LABELS[data.paymentMethod]}`,
-    isBolsa
+    fullBolsa
+      ? `💵 Pagamento: Isento — bolsa 100%`
+      : kind
+        ? `💵 Forma de pagamento: ${PAYMENT_LABELS[data.paymentMethod]} · ${SCHOLARSHIP_KIND_LABELS[kind]}`
+        : `💵 Forma de pagamento: ${PAYMENT_LABELS[data.paymentMethod]}`,
+    fullBolsa
       ? `💰 Valor do plano: R$ 0,00`
       : `💰 Valor do plano: ${formatBRL(data.planTotal)}`,
   ];
 
-  if (isBolsa) {
+  if (fullBolsa) {
     lines.push(`🧾 Taxa de matrícula: isenta`);
   } else if (data.enrollmentFee != null) {
     lines.push(`🧾 Taxa de matrícula: ${formatBRL(data.enrollmentFee)}`);

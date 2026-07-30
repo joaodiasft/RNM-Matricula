@@ -24,6 +24,12 @@ import {
   type PaymentMethod,
   type Plan,
 } from "./pricing";
+import {
+  isFullScholarship,
+  parseScholarshipKind,
+  SCHOLARSHIP_KIND_LABELS,
+  type ScholarshipKind,
+} from "./scholarship";
 import type { Subject } from "./courses";
 import { getClassByCode, SUBJECT_LABELS } from "./courses";
 import {
@@ -401,6 +407,7 @@ export async function completeEnrollment(
   }
 ) {
   const db = getDb();
+  await ensureAccessSchema();
   const enrollment = await getEnrollmentByToken(token);
   if (!enrollment) throw new Error("NOT_FOUND");
   if (enrollment.status === "concluida") {
@@ -413,12 +420,10 @@ export async function completeEnrollment(
     ? (JSON.parse(enrollment.draftData) as EnrollmentDraft)
     : {};
 
-  // ── Bolsa 100% — NUNCA confie no cliente. ────────────────────────────────
-  // `scholarshipValid`, `waivedFee` e `paymentMethod: "isento"` chegam do
-  // navegador e zerariam toda a cobrança em calculatePricing(). Revalidamos o
-  // código de bolsa no banco: só isenta se existir um código real ainda não
-  // usado (ou já usado por ESTA matrícula, para reconclusões idempotentes).
+  // ── Bolsa — NUNCA confie no cliente. ────────────────────────────────────
+  // Revalidamos o código no banco e aplicamos o `kind` real (full/half/redacao_100).
   let scholarshipApproved = false;
+  let scholarshipKindFromDb: ScholarshipKind | null = null;
   const scholarshipCodeInput = draft.scholarshipCode?.trim().toUpperCase();
   if (scholarshipCodeInput) {
     const [bolsa] = await db
@@ -428,15 +433,17 @@ export async function completeEnrollment(
       .limit(1);
     if (bolsa && (!bolsa.usedAt || bolsa.usedByEnrollmentId === enrollment.id)) {
       scholarshipApproved = true;
+      scholarshipKindFromDb = parseScholarshipKind(bolsa.kind);
     }
   }
 
   draft.scholarshipValid = scholarshipApproved;
-  draft.waivedFee = scholarshipApproved;
-  if (scholarshipApproved) {
+  draft.scholarshipKind = scholarshipKindFromDb ?? undefined;
+  if (scholarshipApproved && isFullScholarship(scholarshipKindFromDb)) {
+    draft.waivedFee = true;
     draft.paymentMethod = "isento";
   } else if (draft.paymentMethod === "isento") {
-    // Tentativa de isenção sem bolsa válida — bloqueia a matrícula grátis.
+    // Isento só com bolsa 100% válida.
     throw new Error("BOLSA_INVALIDA");
   }
 
@@ -555,7 +562,7 @@ export async function completeEnrollment(
     paymentMethod: draft.paymentMethod as PaymentMethod,
     subjects: pricingSubjects,
     waivedFee: draft.waivedFee,
-    scholarship: draft.scholarshipValid === true,
+    scholarshipKind: scholarshipKindFromDb,
   });
 
   const editToken = nanoid(40);
@@ -730,12 +737,14 @@ export async function completeEnrollment(
     modality: MODALITY_LABELS[draft.modality as Modality],
     plan: PLAN_LABELS[draft.plan as Plan],
     planDetail: pricing.calculationLabel,
-    paymentMethod: draft.scholarshipValid
-      ? "Isento — bolsa integral (100%)"
-      : PAYMENT_LABELS[draft.paymentMethod as PaymentMethod],
+    paymentMethod: isFullScholarship(scholarshipKindFromDb)
+      ? "Isento — bolsa 100%"
+      : scholarshipKindFromDb
+        ? `${PAYMENT_LABELS[draft.paymentMethod as PaymentMethod]} · ${SCHOLARSHIP_KIND_LABELS[scholarshipKindFromDb]}`
+        : PAYMENT_LABELS[draft.paymentMethod as PaymentMethod],
     enrollmentFee: pricing.enrollmentFee,
     planTotal: pricing.planTotal,
-    scholarship: draft.scholarshipValid === true,
+    scholarship: isFullScholarship(scholarshipKindFromDb),
     autoRenew: draft.plan === "mensal" ? Boolean(draft.autoRenew) : false,
     referralCode,
     editUrl,
@@ -772,7 +781,8 @@ export async function completeEnrollment(
       paymentMethod: draft.paymentMethod as PaymentMethod,
       planTotal: pricing.planTotal,
       enrollmentFee: pricing.enrollmentFee,
-      scholarship: draft.scholarshipValid === true,
+      scholarship: isFullScholarship(scholarshipKindFromDb),
+      scholarshipKind: scholarshipKindFromDb ?? undefined,
       invoice: invoicePayload,
     },
   };

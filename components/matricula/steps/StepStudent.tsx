@@ -15,6 +15,12 @@ import {
   isConcludedGrade,
 } from "@/lib/courses";
 import { APMF_SCHOOL_NAME, isApmfSchool } from "@/lib/pricing";
+import {
+  isFullScholarship,
+  parseScholarshipKind,
+  scholarshipBannerText,
+  type ScholarshipKind,
+} from "@/lib/scholarship";
 import { COMPANY } from "@/lib/company";
 import { Field, inputClass, NavButtons, StepTitle } from "../ui";
 import { AgeBadge } from "../AgeBadge";
@@ -52,6 +58,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
         referralCodeInput: "",
         scholarshipCode: "",
         scholarshipValid: false,
+        scholarshipKind: undefined,
         paymentMethod: undefined,
       });
       return;
@@ -69,6 +76,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
           referralCodeInput: "",
           scholarshipCode: "",
           scholarshipValid: false,
+          scholarshipKind: undefined,
         });
         setErrors({
           codeInput: data.error || "Código inválido ou já utilizado",
@@ -77,11 +85,18 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
       }
 
       if (data.type === "scholarship") {
+        const kind = parseScholarshipKind(data.kind) as ScholarshipKind;
+        const full = isFullScholarship(kind);
         onChange({
           scholarshipCode: code,
           scholarshipValid: true,
-          waivedFee: true,
-          paymentMethod: "isento",
+          scholarshipKind: kind,
+          waivedFee: full ? true : draft.waivedFee,
+          paymentMethod: full
+            ? "isento"
+            : draft.paymentMethod === "isento"
+              ? undefined
+              : draft.paymentMethod,
           referralCodeInput: "",
         });
       } else {
@@ -89,6 +104,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
           referralCodeInput: code,
           scholarshipCode: "",
           scholarshipValid: false,
+          scholarshipKind: undefined,
           ...(draft.paymentMethod === "isento"
             ? { paymentMethod: undefined }
             : {}),
@@ -104,6 +120,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
         referralCodeInput: code,
         scholarshipCode: "",
         scholarshipValid: false,
+        scholarshipKind: undefined,
       });
     } finally {
       setCodeChecking(false);
@@ -417,6 +434,7 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
                   referralCodeInput: "",
                   scholarshipCode: "",
                   scholarshipValid: false,
+                  scholarshipKind: undefined,
                 });
                 setErrors((prev) => {
                   const next = { ...prev };
@@ -440,9 +458,14 @@ export function StepStudent({ draft, age, token, onChange, onNext }: Props) {
               {codeChecking ? "…" : "Aplicar"}
             </button>
           </div>
-          {draft.scholarshipValid && (
+          {draft.scholarshipValid && draft.scholarshipKind && (
             <p className="mt-2 text-xs font-medium text-success">
-              Bolsa integral 100% — mensalidade e taxa isentas.
+              {scholarshipBannerText(draft.scholarshipKind)}
+            </p>
+          )}
+          {draft.scholarshipValid && !draft.scholarshipKind && (
+            <p className="mt-2 text-xs font-medium text-success">
+              {scholarshipBannerText("full")}
             </p>
           )}
           {!draft.scholarshipValid &&

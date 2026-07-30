@@ -12,6 +12,10 @@ import {
   type Plan,
 } from "@/lib/pricing";
 import { getClassByCode, SUBJECT_LABELS, type Subject } from "@/lib/courses";
+import {
+  draftScholarshipKind,
+  isFullScholarship,
+} from "@/lib/scholarship";
 import { COMPANY } from "@/lib/company";
 import { SeloNotaMil } from "../SeloNotaMil";
 import { ClassGroupsPanel } from "../ClassGroupsPanel";
@@ -31,17 +35,18 @@ export function StepWhatsApp({
   referralCode,
 }: Props) {
   const subjects = (draft.courses ?? []).map((c) => c.subject) as Subject[];
+  const bolsaKind = draftScholarshipKind(draft);
   const isFree =
-    draft.scholarshipValid === true || draft.paymentMethod === "isento";
+    isFullScholarship(bolsaKind) || draft.paymentMethod === "isento";
   const pricing =
-    draft.modality && draft.plan && (draft.paymentMethod || draft.scholarshipValid)
+    draft.modality && draft.plan && (draft.paymentMethod || isFree)
       ? calculatePricing({
           modality: draft.modality as Modality,
           plan: draft.plan as Plan,
           paymentMethod: (draft.paymentMethod as PaymentMethod) || "isento",
           subjects,
           waivedFee: draft.waivedFee,
-          scholarship: draft.scholarshipValid === true,
+          scholarshipKind: bolsaKind,
         })
       : null;
 

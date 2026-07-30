@@ -160,6 +160,13 @@ export async function ensureAccessSchema() {
     await db.execute(
       sql`CREATE UNIQUE INDEX IF NOT EXISTS enrollment_accesses_enrollment_idx ON enrollment_accesses (enrollment_id)`
     );
+    // Tipos de bolsa (full / half / redacao_100). Códigos antigos → full.
+    await db.execute(
+      sql`ALTER TABLE scholarship_codes ADD COLUMN IF NOT EXISTS kind text DEFAULT 'full'`
+    );
+    await db.execute(
+      sql`UPDATE scholarship_codes SET kind = 'full' WHERE kind IS NULL OR kind = ''`
+    );
     accessSchemaReady = true;
   } catch (err) {
     // Corrida entre isolates concorrentes pode disparar "already exists".
