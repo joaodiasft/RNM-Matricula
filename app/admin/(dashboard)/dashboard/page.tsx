@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CLASSES, SUBJECT_LABELS } from "@/lib/courses";
 import {
   MODALITY_LABELS,
@@ -99,14 +99,6 @@ export default function AdminDashboardPage() {
     void load();
   }, [load]);
 
-  const exportHref = useMemo(() => {
-    const params = new URLSearchParams();
-    if (from) params.set("from", from);
-    if (to) params.set("to", to);
-    if (!from && !to) params.set("today", "1");
-    return `/api/admin/export?${params}`;
-  }, [from, to]);
-
   const clearFilters = () => {
     setStatus("");
     setCourse("");
@@ -132,11 +124,11 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <a href={exportHref} className={btnPrimaryClass()}>
-            Exportar CSV (concluídas)
+          <a href="/api/admin/export" className={btnPrimaryClass()}>
+            Exportar todas concluídas
           </a>
           <a href="/api/admin/export?today=1" className={btnGhostClass()}>
-            CSV de hoje
+            Exportar somente de hoje
           </a>
         </div>
       </div>
