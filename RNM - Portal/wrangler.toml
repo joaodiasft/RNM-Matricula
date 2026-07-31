@@ -1,0 +1,20 @@
+"$schema" = "./node_modules/wrangler/config-schema.json"
+name = "rnm-portal"
+main = ".open-next/worker.js"
+compatibility_date = "2025-03-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# Variáveis públicas (Supabase URL + chave publishable não são segredos).
+# O SERVICE_ROLE nunca entra aqui nem no client — só em scripts locais.
+[vars]
+NEXT_PUBLIC_SUPABASE_URL = "https://rxprlbasywpsetqcghdp.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_h4lktY6HMloy4FtZAyezRQ_gvCLJvT2"

@@ -6,48 +6,55 @@ import {
   btnPrimaryClass,
   inputAdminClass,
 } from "@/components/admin/ui";
-import type { StatusPresenca } from "@/lib/chamada/schema";
+import type { AttendanceStatus } from "@/lib/attendance";
 
-type Mes = { id: string; nome: string; ano: number };
-type Aula = { id: string; numero: number; data: string };
-type Modulo = { id: string; numero: number; aulas: Aula[] };
-type AlunoMes = {
-  id: string;
-  alunoId: string;
-  aluno: { id: string; nome: string; ativo: boolean };
-};
-type Presenca = {
-  alunoId: string;
-  aulaId: string;
-  status: StatusPresenca;
-  redacaoEntregue: boolean;
-};
-type RowState = {
-  alunoId: string;
-  nome: string;
-  status: StatusPresenca;
-  redacaoEntregue: boolean;
+type TurmaMeta = {
+  code: string;
+  subject: string;
+  subjectLabel: string;
+  label: string;
+  day: string;
+  schedule: string;
+  enrolled: number;
+  modules: {
+    index: number;
+    label: string;
+    dates: { label: string; iso: string }[];
+  }[];
 };
 
-const OPCOES: {
-  value: StatusPresenca;
+type StudentRow = {
+  studentId: string;
+  enrollmentId: string;
+  enrollmentNumber: string | null;
+  fullName: string;
+  phone: string | null;
+  grade: string | null;
+  status: AttendanceStatus;
+  assignmentDone: boolean;
+  saved: boolean;
+  frequency: { presentes: number; total: number } | null;
+};
+
+const STATUS_OPTS: {
+  value: AttendanceStatus;
   label: string;
   active: string;
 }[] = [
   {
-    value: "PRESENTE",
+    value: "presente",
     label: "Presente",
-    active: "bg-success text-white ring-success",
+    active: "bg-success text-white ring-1 ring-success/30",
   },
   {
-    value: "FALTA",
+    value: "falta",
     label: "Falta",
-    active: "bg-danger text-white ring-danger",
+    active: "bg-danger text-white ring-1 ring-danger/30",
   },
   {
-    value: "JUSTIFICADA",
-    label: "Justif.",
-    active: "bg-warning text-white ring-warning",
+    value: "justificada",
+    label: "Justificada",
+    active: "bg-warning text-ink ring-1 ring-warning/40",
   },
 ];
 
@@ -56,208 +63,175 @@ function iniciais(nome: string) {
   return ((p[0]?.[0] ?? "") + (p[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
-function corAvatar(nome: string) {
-  const cores = ["#F3C9D4", "#B7D8C4", "#C9D6F3", "#F3E2C9", "#E2C9F3", "#C9F3EE"];
-  let h = 0;
-  for (let i = 0; i < nome.length; i++) h = nome.charCodeAt(i) + ((h << 5) - h);
-  return cores[Math.abs(h) % cores.length];
-}
-
 export default function AdminChamadaPage() {
-  const [meses, setMeses] = useState<Mes[]>([]);
-  const [mesId, setMesId] = useState("");
-  const [modulos, setModulos] = useState<Modulo[]>([]);
-  const [moduloId, setModuloId] = useState("");
-  const [aulaId, setAulaId] = useState("");
-  const [rows, setRows] = useState<RowState[]>([]);
-  const [presencasMes, setPresencasMes] = useState<Presenca[]>([]);
+  const [turmas, setTurmas] = useState<TurmaMeta[]>([]);
+  const [classCode, setClassCode] = useState("");
+  const [moduleIndex, setModuleIndex] = useState(1);
+  const [lessonDate, setLessonDate] = useState("");
+  const [students, setStudents] = useState<StudentRow[]>([]);
   const [busca, setBusca] = useState("");
+  const [loadingMeta, setLoadingMeta] = useState(true);
+  const [loadingList, setLoadingList] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const turma = useMemo(
+    () => turmas.find((t) => t.code === classCode) || null,
+    [turmas, classCode]
+  );
+
+  const moduleOpts = turma?.modules ?? [];
+  const currentModule =
+    moduleOpts.find((m) => m.index === moduleIndex) || moduleOpts[0] || null;
+  const dateOpts = currentModule?.dates ?? [];
 
   useEffect(() => {
     void (async () => {
-      setLoading(true);
-      const res = await fetch("/api/admin/chamada/meses");
+      setLoadingMeta(true);
+      const res = await fetch("/api/admin/chamada");
       if (res.status === 401) {
         window.location.href = "/admin/login";
         return;
       }
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Não foi possível carregar os meses");
-        setLoading(false);
+        setError(data.error || "Não foi possível carregar as turmas");
+        setLoadingMeta(false);
         return;
       }
-      const list = Array.isArray(data) ? data : [];
-      setMeses(list);
-      if (list.length) setMesId(list[0].id);
-      setLoading(false);
+      const list = (data.turmas || []) as TurmaMeta[];
+      setTurmas(list);
+      const firstWithStudents = list.find((t) => t.enrolled > 0) || list[0];
+      if (firstWithStudents) {
+        setClassCode(firstWithStudents.code);
+        const m0 = firstWithStudents.modules[0];
+        if (m0) {
+          setModuleIndex(m0.index);
+          setLessonDate(m0.dates[0]?.iso || "");
+        }
+      }
+      setLoadingMeta(false);
     })();
   }, []);
 
-  const carregarPresencasMes = useCallback((id: string) => {
-    fetch(`/api/admin/chamada/presencas?mesId=${id}`)
-      .then((r) => r.json())
-      .then((p: Presenca[]) => setPresencasMes(Array.isArray(p) ? p : []));
-  }, []);
-
-  const loadMes = useCallback(
-    async (id: string) => {
-      setError(null);
-      const res = await fetch(`/api/admin/chamada/meses?id=${id}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Erro ao carregar mês");
-        return;
-      }
-      setModulos(data.modulos ?? []);
-      const firstMod = data.modulos?.[0];
-      setModuloId(firstMod?.id ?? "");
-      setAulaId(firstMod?.aulas?.[0]?.id ?? "");
-
-      const alunos: AlunoMes[] = (data.alunos ?? []).filter(
-        (am: AlunoMes) => am.aluno?.ativo
-      );
-      setRows(
-        alunos.map((am) => ({
-          alunoId: am.alunoId,
-          nome: am.aluno.nome,
-          status: "PRESENTE" as StatusPresenca,
-          redacaoEntregue: false,
-        }))
-      );
-      carregarPresencasMes(id);
-    },
-    [carregarPresencasMes]
-  );
-
-  useEffect(() => {
-    if (mesId) void loadMes(mesId);
-  }, [mesId, loadMes]);
-
-  useEffect(() => {
-    if (!aulaId || !rows.length) return;
-    void (async () => {
-      const res = await fetch(`/api/admin/chamada/presencas?aulaId=${aulaId}`);
-      const existing: Presenca[] = await res.json();
-      if (!Array.isArray(existing)) return;
-      setRows((prev) =>
-        prev.map((r) => {
-          const found = existing.find((p) => p.alunoId === r.alunoId);
-          if (!found) return { ...r, status: "PRESENTE", redacaoEntregue: false };
-          return {
-            ...r,
-            status: found.status,
-            redacaoEntregue: found.redacaoEntregue,
-          };
-        })
-      );
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao trocar aula
-  }, [aulaId]);
-
-  const aulasDoModulo = useMemo(
-    () => modulos.find((m) => m.id === moduloId)?.aulas ?? [],
-    [modulos, moduloId]
-  );
-
-  const freqPorAluno = useMemo(() => {
-    const aulaIds = new Set(aulasDoModulo.map((a) => a.id));
-    const mapa = new Map<string, { presentes: number; total: number }>();
-    for (const p of presencasMes) {
-      if (!aulaIds.has(p.aulaId)) continue;
-      const at = mapa.get(p.alunoId) ?? { presentes: 0, total: 0 };
-      at.total += 1;
-      if (p.status === "PRESENTE") at.presentes += 1;
-      mapa.set(p.alunoId, at);
+  const loadStudents = useCallback(async (code: string, date: string) => {
+    if (!code || !date) {
+      setStudents([]);
+      return;
     }
-    return mapa;
-  }, [presencasMes, aulasDoModulo]);
+    setLoadingList(true);
+    setError(null);
+    const res = await fetch(
+      `/api/admin/chamada?classCode=${encodeURIComponent(code)}&date=${encodeURIComponent(date)}`
+    );
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Erro ao carregar alunos");
+      setStudents([]);
+      setLoadingList(false);
+      return;
+    }
+    setStudents(data.students || []);
+    setLoadingList(false);
+  }, []);
+
+  useEffect(() => {
+    if (classCode && lessonDate) void loadStudents(classCode, lessonDate);
+  }, [classCode, lessonDate, loadStudents]);
+
+  // Ao trocar turma, reset módulo/data
+  useEffect(() => {
+    if (!turma) return;
+    const m0 = turma.modules[0];
+    setModuleIndex(m0?.index ?? 1);
+    setLessonDate(m0?.dates[0]?.iso || "");
+  }, [turma?.code]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const filtered = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return students;
+    return students.filter(
+      (s) =>
+        s.fullName.toLowerCase().includes(q) ||
+        (s.enrollmentNumber || "").toLowerCase().includes(q)
+    );
+  }, [students, busca]);
 
   const stats = useMemo(() => {
-    const presentes = rows.filter((r) => r.status === "PRESENTE").length;
-    const faltas = rows.filter((r) => r.status === "FALTA").length;
-    const justificadas = rows.filter((r) => r.status === "JUSTIFICADA").length;
-    const redacoes = rows.filter((r) => r.redacaoEntregue).length;
-    const total = rows.length || 1;
-    return {
-      presentes,
-      faltas,
-      justificadas,
-      redacoes,
-      total,
-      totalReal: rows.length,
-    };
-  }, [rows]);
+    const presentes = students.filter((s) => s.status === "presente").length;
+    const faltas = students.filter((s) => s.status === "falta").length;
+    const justificadas = students.filter(
+      (s) => s.status === "justificada"
+    ).length;
+    const assignments = students.filter((s) => s.assignmentDone).length;
+    return { presentes, faltas, justificadas, assignments, total: students.length };
+  }, [students]);
 
-  const rowsFiltrados = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    return q ? rows.filter((r) => r.nome.toLowerCase().includes(q)) : rows;
-  }, [rows, busca]);
+  const isRedacao = turma?.subject === "redacao";
 
-  function updateRow(alunoId: string, patch: Partial<RowState>) {
-    setRows((prev) =>
-      prev.map((r) => (r.alunoId === alunoId ? { ...r, ...patch } : r))
+  function patch(studentId: string, p: Partial<StudentRow>) {
+    setStudents((prev) =>
+      prev.map((s) => (s.studentId === studentId ? { ...s, ...p } : s))
     );
   }
 
-  function marcarTodos(status: StatusPresenca) {
-    setRows((prev) => prev.map((r) => ({ ...r, status })));
+  function marcarTodos(status: AttendanceStatus) {
+    setStudents((prev) => prev.map((s) => ({ ...s, status })));
   }
 
   async function salvar() {
-    if (!aulaId) {
-      setError("Selecione uma aula");
-      return;
-    }
+    if (!classCode || !lessonDate) return;
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const res = await fetch("/api/admin/chamada/presencas", {
+      const res = await fetch("/api/admin/chamada", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          aulaId,
-          registros: rows.map((r) => ({
-            alunoId: r.alunoId,
-            status: r.status,
-            redacaoEntregue: r.redacaoEntregue,
+          classCode,
+          lessonDate,
+          registros: students.map((s) => ({
+            studentId: s.studentId,
+            enrollmentId: s.enrollmentId,
+            status: s.status,
+            assignmentDone: s.assignmentDone,
           })),
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Falha");
-      setMessage(`Chamada salva (${data.count ?? rows.length} alunos).`);
-      carregarPresencasMes(mesId);
+      if (!res.ok) throw new Error(data.error || "Falha ao salvar");
+      setMessage(`Chamada salva — ${data.count ?? students.length} aluno(s).`);
+      await loadStudents(classCode, lessonDate);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao salvar chamada");
+      setError(e instanceof Error ? e.message : "Erro ao salvar");
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) {
+  if (loadingMeta) {
     return (
-      <p className="py-12 text-center text-sm text-muted">Carregando chamada…</p>
+      <p className="py-16 text-center text-sm text-muted">Carregando turmas…</p>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand">
-          Secretaria
-        </p>
-        <h1 className="font-display mt-1 text-3xl font-extrabold text-ink">
-          Chamada
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Marque presença, falta e redação por aula. Só a secretaria acessa.
-        </p>
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand">
+            Secretaria
+          </p>
+          <h1 className="font-display mt-1 text-3xl font-extrabold text-ink">
+            Chamada
+          </h1>
+          <p className="mt-1 max-w-xl text-sm text-muted">
+            Selecione a turma e a aula do calendário. Aparecem só alunos com
+            matrícula concluída na turma.
+          </p>
+        </div>
       </div>
 
       {error && (
@@ -274,104 +248,146 @@ export default function AdminChamadaPage() {
         </p>
       )}
 
-      <section className="mt-6 rounded-2xl border border-line bg-white p-4 shadow-[var(--shadow-xs)]">
-        <h2 className="text-sm font-bold text-ink">Seleção</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <label className="text-sm">
-            <span className="mb-1 block font-semibold text-ink-soft">Mês</span>
-            <select
-              className={inputAdminClass()}
-              value={mesId}
-              onChange={(e) => {
-                setMesId(e.target.value);
-                setModuloId("");
-                setAulaId("");
-              }}
-            >
-              {meses.length === 0 && <option value="">Nenhum mês</option>}
-              {meses.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nome}/{m.ano}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-semibold text-ink-soft">Módulo</span>
-            <select
-              className={inputAdminClass()}
-              value={moduloId}
-              onChange={(e) => {
-                const v = e.target.value;
-                setModuloId(v);
-                const mod = modulos.find((m) => m.id === v);
-                setAulaId(mod?.aulas?.[0]?.id ?? "");
-              }}
-            >
-              {modulos.length === 0 && <option value="">Nenhum módulo</option>}
-              {modulos.map((m) => (
-                <option key={m.id} value={m.id}>
-                  Módulo {m.numero}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-semibold text-ink-soft">Aula</span>
-            <select
-              className={inputAdminClass()}
-              value={aulaId}
-              onChange={(e) => setAulaId(e.target.value)}
-            >
-              {aulasDoModulo.length === 0 && <option value="">Nenhuma aula</option>}
-              {aulasDoModulo.map((a) => (
-                <option key={a.id} value={a.id}>
-                  Aula {a.numero} —{" "}
-                  {new Date(a.data).toLocaleDateString("pt-BR")}
-                </option>
-              ))}
-            </select>
-          </label>
+      {/* Turmas */}
+      <section className="mt-6">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
+          Turma
+        </h2>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {turmas.map((t) => {
+            const active = t.code === classCode;
+            return (
+              <button
+                key={t.code}
+                type="button"
+                onClick={() => setClassCode(t.code)}
+                className={[
+                  "rounded-2xl border px-4 py-3.5 text-left transition",
+                  active
+                    ? "border-brand bg-brand-soft/70 ring-2 ring-brand/20 shadow-[var(--shadow-xs)]"
+                    : "border-line bg-white hover:border-brand/35",
+                ].join(" ")}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="data text-sm font-bold text-brand">
+                    {t.code}
+                  </span>
+                  <span className="rounded-full bg-bg-subtle px-2 py-0.5 text-[10px] font-bold text-muted">
+                    {t.enrolled} aluno{t.enrolled === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-semibold text-ink">
+                  {t.subjectLabel}
+                </p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {t.day} · {t.schedule}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      {stats.totalReal > 0 && (
-        <section className="mt-4 rounded-2xl border border-line bg-white p-4 shadow-[var(--shadow-xs)]">
-          <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-bg-subtle">
-            <div
-              className="bg-success"
-              style={{ width: `${(stats.presentes / stats.total) * 100}%` }}
-            />
-            <div
-              className="bg-warning"
-              style={{ width: `${(stats.justificadas / stats.total) * 100}%` }}
-            />
-            <div
-              className="bg-danger"
-              style={{ width: `${(stats.faltas / stats.total) * 100}%` }}
-            />
+      {/* Módulo + data */}
+      {turma && (
+        <section className="mt-5 rounded-2xl border border-line bg-white p-4 shadow-[var(--shadow-xs)] sm:p-5">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">
+              <span className="mb-1 block font-semibold text-ink-soft">
+                Módulo
+              </span>
+              <select
+                className={inputAdminClass()}
+                value={currentModule?.index ?? ""}
+                onChange={(e) => {
+                  const idx = Number(e.target.value);
+                  setModuleIndex(idx);
+                  const mod = moduleOpts.find((m) => m.index === idx);
+                  setLessonDate(mod?.dates[0]?.iso || "");
+                }}
+              >
+                {moduleOpts.length === 0 && (
+                  <option value="">Sem calendário</option>
+                )}
+                {moduleOpts.map((m) => (
+                  <option key={m.index} value={m.index}>
+                    {m.label} ({m.dates.map((d) => d.label).join(", ")})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm">
+              <span className="mb-1 block font-semibold text-ink-soft">
+                Aula / data
+              </span>
+              <select
+                className={inputAdminClass()}
+                value={lessonDate}
+                onChange={(e) => setLessonDate(e.target.value)}
+              >
+                {dateOpts.length === 0 && <option value="">—</option>}
+                {dateOpts.map((d) => (
+                  <option key={d.iso} value={d.iso}>
+                    {d.label}/{d.iso.slice(0, 4)}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            <span>
-              <b className="text-success">{stats.presentes}</b> presentes
-            </span>
-            <span>
-              <b className="text-warning">{stats.justificadas}</b> justificadas
-            </span>
-            <span>
-              <b className="text-danger">{stats.faltas}</b> faltas
-            </span>
-            <span className="text-muted">
-              {stats.redacoes}/{stats.totalReal} redações
-            </span>
-          </div>
+          {turma && (
+            <p className="mt-3 text-xs text-muted">
+              {turma.label} · {turma.day} {turma.schedule}
+            </p>
+          )}
         </section>
       )}
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      {/* Stats */}
+      {students.length > 0 && (
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-success/20 bg-success-soft/50 px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
+              Presentes
+            </p>
+            <p className="font-display mt-0.5 text-2xl font-extrabold text-success">
+              {stats.presentes}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-danger/20 bg-danger-soft/40 px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
+              Faltas
+            </p>
+            <p className="font-display mt-0.5 text-2xl font-extrabold text-danger">
+              {stats.faltas}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-warning/25 bg-warning-soft/50 px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
+              Justificadas
+            </p>
+            <p className="font-display mt-0.5 text-2xl font-extrabold text-warning">
+              {stats.justificadas}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-line bg-white px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
+              {isRedacao ? "Redações" : "Atividades"}
+            </p>
+            <p className="font-display mt-0.5 text-2xl font-extrabold text-ink">
+              {stats.assignments}
+              <span className="text-base font-bold text-muted">
+                /{stats.total}
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <input
           className={`${inputAdminClass()} sm:max-w-xs`}
-          placeholder="Buscar aluno…"
+          placeholder="Buscar nome ou nº matrícula…"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
         />
@@ -379,89 +395,111 @@ export default function AdminChamadaPage() {
           <button
             type="button"
             className={btnGhostClass()}
-            onClick={() => marcarTodos("PRESENTE")}
+            onClick={() => marcarTodos("presente")}
+            disabled={!students.length}
           >
             Todos presentes
           </button>
           <button
             type="button"
             className={btnGhostClass()}
-            onClick={() => marcarTodos("FALTA")}
+            onClick={() => marcarTodos("falta")}
+            disabled={!students.length}
           >
             Todos falta
           </button>
         </div>
       </div>
 
-      <div className="mt-4 space-y-2">
-        {rowsFiltrados.map((row) => {
-          const f = freqPorAluno.get(row.alunoId);
-          const pct =
-            f && f.total ? Math.round((f.presentes / f.total) * 100) : null;
-          return (
-            <div
-              key={row.alunoId}
-              className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-3.5 shadow-[var(--shadow-xs)] sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-ink"
-                  style={{ backgroundColor: corAvatar(row.nome) }}
-                >
-                  {iniciais(row.nome)}
-                </div>
-                <div>
-                  <p className="font-semibold text-ink">{row.nome}</p>
-                  <p className="text-xs text-muted">
-                    {pct !== null
-                      ? `Frequência no módulo: ${pct}% (${f!.presentes}/${f!.total})`
-                      : "Sem chamadas anteriores neste módulo"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                {OPCOES.map(({ value, label, active }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => updateRow(row.alunoId, { status: value })}
-                    className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ring-1 ring-line transition ${
-                      row.status === value
-                        ? active
-                        : "bg-white text-ink-soft hover:bg-bg-subtle"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <label className="ml-1 flex cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[11px] font-semibold text-ink">
-                  <input
-                    type="checkbox"
-                    checked={row.redacaoEntregue}
-                    onChange={(e) =>
-                      updateRow(row.alunoId, {
-                        redacaoEntregue: e.target.checked,
-                      })
-                    }
-                    className="h-3.5 w-3.5 accent-[var(--brand)]"
-                  />
-                  Redação
-                </label>
-              </div>
-            </div>
-          );
-        })}
-
-        {!rows.length && !error && (
-          <p className="rounded-2xl border border-dashed border-line py-10 text-center text-sm text-muted">
-            Nenhum aluno ativo neste mês. Cadastre alunos no sistema de chamada
-            (RNM-Chamada) e vincule ao mês.
+      {/* Lista */}
+      <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-white shadow-[var(--shadow-xs)]">
+        {loadingList && (
+          <p className="px-4 py-10 text-center text-sm text-muted">
+            Carregando alunos…
           </p>
         )}
-        {rows.length > 0 && !rowsFiltrados.length && (
-          <p className="py-6 text-center text-sm text-muted">
-            Nenhum aluno encontrado.
+        {!loadingList && students.length === 0 && (
+          <p className="px-4 py-10 text-center text-sm text-muted">
+            Nenhum aluno concluído nesta turma. Quando houver matrícula
+            confirmada, a lista aparece aqui.
+          </p>
+        )}
+        {!loadingList && filtered.length > 0 && (
+          <ul className="divide-y divide-line/70">
+            {filtered.map((s) => {
+              const pct =
+                s.frequency && s.frequency.total
+                  ? Math.round(
+                      (s.frequency.presentes / s.frequency.total) * 100
+                    )
+                  : null;
+              return (
+                <li
+                  key={s.studentId}
+                  className="flex flex-col gap-3 px-4 py-3.5 transition hover:bg-brand-tint/40 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft font-display text-sm font-bold text-brand-deep">
+                      {iniciais(s.fullName)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-ink">
+                        {s.fullName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {s.enrollmentNumber ? (
+                          <span className="data font-semibold text-brand-deep">
+                            {s.enrollmentNumber}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                        {s.grade ? ` · ${s.grade}` : ""}
+                        {pct !== null
+                          ? ` · módulo ${pct}% (${s.frequency!.presentes}/${s.frequency!.total})`
+                          : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {STATUS_OPTS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => patch(s.studentId, { status: opt.value })}
+                        className={[
+                          "min-h-[36px] rounded-xl px-3 py-1.5 text-[11px] font-bold transition",
+                          s.status === opt.value
+                            ? opt.active
+                            : "bg-bg-subtle text-ink-soft ring-1 ring-line hover:bg-white",
+                        ].join(" ")}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                    <label className="ml-1 flex min-h-[36px] cursor-pointer items-center gap-2 rounded-xl border border-line bg-bg-subtle px-3 text-[11px] font-bold text-ink">
+                      <input
+                        type="checkbox"
+                        checked={s.assignmentDone}
+                        onChange={(e) =>
+                          patch(s.studentId, {
+                            assignmentDone: e.target.checked,
+                          })
+                        }
+                        className="h-4 w-4 accent-[var(--brand)]"
+                      />
+                      {isRedacao ? "Redação" : "Atividade"}
+                    </label>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {!loadingList && students.length > 0 && filtered.length === 0 && (
+          <p className="px-4 py-8 text-center text-sm text-muted">
+            Nenhum aluno encontrado na busca.
           </p>
         )}
       </div>
@@ -469,9 +507,9 @@ export default function AdminChamadaPage() {
       <div className="sticky bottom-4 z-10 mt-6">
         <button
           type="button"
-          className={`${btnPrimaryClass()} w-full py-3 text-base shadow-[var(--shadow-brand)]`}
+          className={`${btnPrimaryClass()} w-full py-3.5 text-base shadow-[var(--shadow-brand)]`}
           onClick={() => void salvar()}
-          disabled={saving || !aulaId || !rows.length}
+          disabled={saving || !students.length || !lessonDate}
         >
           {saving ? "Salvando…" : "Salvar chamada"}
         </button>

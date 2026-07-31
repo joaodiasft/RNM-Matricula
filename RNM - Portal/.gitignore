@@ -1,0 +1,25 @@
+# deps
+/node_modules
+/.pnp
+.pnp.js
+
+# next
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# cloudflare / opennext
+/.open-next/
+/.wrangler/
+.dev.vars
+
+# env
+.env
+.env*.local
+
+# misc
+*.tsbuildinfo
+.DS_Store
+*.pem
+npm-debug.log*
