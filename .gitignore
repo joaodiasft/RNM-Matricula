@@ -44,3 +44,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Nested sibling projects (not part of Matricula)
+/RNM - Portal/
+/RNM - Login/
+/RNM- Alunos/
+/RNM - Professores/
