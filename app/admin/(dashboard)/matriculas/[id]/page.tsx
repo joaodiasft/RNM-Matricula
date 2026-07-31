@@ -13,7 +13,7 @@ import {
 } from "@/lib/pricing";
 import { getClassByCode, SUBJECT_LABELS, CLASSES } from "@/lib/courses";
 import type { Subject } from "@/lib/courses";
-import { COMPANY } from "@/lib/company";
+import { buildAccessMessage } from "@/lib/access";
 import {
   ContactActions,
   FieldRow,
@@ -358,30 +358,11 @@ export default function EnrollmentDetailPage() {
   };
 
   const buildAccessWhatsApp = () =>
-    [
-      `📋 *${COMPANY.name}* — Dados de acesso`,
-      ``,
-      `👤 Aluno: ${student?.fullName ?? ""}`,
-      `🎫 Matrícula: ${enrollment?.enrollmentNumber ?? "—"}`,
-      ``,
-      `🔐 *Sistema (aluno)*`,
-      `Usuário: ${acc.sistemaLogin}`,
-      `Senha: ${acc.sistemaPassword}`,
-      ``,
-      `🔐 *Responsável*`,
-      `Usuário: ${acc.responsavelLogin}`,
-      `Senha: ${acc.responsavelPassword}`,
-      ``,
-      `🔐 *Sofia*`,
-      `Usuário: ${acc.sofiaLogin}`,
-      `Senha: ${acc.sofiaPassword}`,
-      ``,
-      `🔐 *Correção*`,
-      `Usuário: ${acc.correcaoLogin}`,
-      `Senha: ${acc.correcaoPassword}`,
-      ``,
-      `Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.`,
-    ].join("\n");
+    buildAccessMessage({
+      studentName: student?.fullName ?? "",
+      enrollmentNumber: enrollment?.enrollmentNumber ?? "—",
+      accesses: acc,
+    });
 
   const copyAccessWhatsApp = async () => {
     try {

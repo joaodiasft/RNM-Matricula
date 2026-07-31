@@ -1,4 +1,5 @@
 import { COMPANY } from "../company";
+import { PLATFORM_LINKS } from "../platforms";
 import { formatBRL } from "../pricing";
 
 export function escapeHtml(s: string) {
@@ -110,12 +111,14 @@ export function confirmationEmailHtml(data: {
     label: string,
     login: string,
     senha: string,
-    hint?: string
+    hint?: string,
+    link?: string
   ) =>
     `<tr>
       <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;vertical-align:top;">
         <strong style="color:#14213d;">${escapeHtml(label)}</strong>
         ${hint ? `<br/><span style="font-size:12px;color:#6b7385;">${escapeHtml(hint)}</span>` : ""}
+        ${link ? `<br/><a href="${escapeHtml(link)}" style="font-size:12px;color:#b80066;">${escapeHtml(link)}</a>` : ""}
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#35415c;">
         <span style="color:#6b7385;">usuário:</span> ${escapeHtml(login)}<br/>
@@ -128,10 +131,10 @@ export function confirmationEmailHtml(data: {
         <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#14213d;">🔐 Seus acessos</p>
         <p style="margin:0 0 12px;font-size:13px;color:#6b7385;">Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.</p>
         <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;">
-          ${accessRow("Sistema (aluno)", data.accesses.sistemaLogin, data.accesses.sistemaPassword, "Usuário = número de matrícula")}
+          ${accessRow("Sistema (aluno)", data.accesses.sistemaLogin, data.accesses.sistemaPassword, "Usuário = número de matrícula", PLATFORM_LINKS.sistema)}
           ${accessRow("Responsável", data.accesses.responsavelLogin, data.accesses.responsavelPassword)}
-          ${accessRow("Sofia", data.accesses.sofiaLogin, data.accesses.sofiaPassword)}
-          ${accessRow("Correção", data.accesses.correcaoLogin, data.accesses.correcaoPassword)}
+          ${accessRow("Sofia", data.accesses.sofiaLogin, data.accesses.sofiaPassword, undefined, PLATFORM_LINKS.sofia)}
+          ${accessRow("Correção", data.accesses.correcaoLogin, data.accesses.correcaoPassword, undefined, PLATFORM_LINKS.coredacao)}
         </table>
       </div>`
     : "";
@@ -181,11 +184,12 @@ export function accessEmailHtml(data: {
         <p style="margin:0;font-size:30px;letter-spacing:.14em;font-weight:800;color:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;">${escapeHtml(data.enrollmentNumber)}</p>
       </div>`
     : "";
-  const rowHtml = (label: string, login: string, senha: string, hint?: string) =>
+  const rowHtml = (label: string, login: string, senha: string, hint?: string, link?: string) =>
     `<tr>
       <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;vertical-align:top;">
         <strong style="color:#14213d;">${escapeHtml(label)}</strong>
         ${hint ? `<br/><span style="font-size:12px;color:#6b7385;">${escapeHtml(hint)}</span>` : ""}
+        ${link ? `<br/><a href="${escapeHtml(link)}" style="font-size:12px;color:#b80066;">${escapeHtml(link)}</a>` : ""}
       </td>
       <td style="padding:10px 12px;border-bottom:1px solid #e4e7ec;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#35415c;">
         <span style="color:#6b7385;">usuário:</span> ${escapeHtml(login)}<br/><span style="color:#6b7385;">senha:</span> <strong>${escapeHtml(senha)}</strong>
@@ -196,10 +200,10 @@ export function accessEmailHtml(data: {
     <p>Seguem seus dados de acesso na <strong>${escapeHtml(COMPANY.name)}</strong>:</p>
     ${numberBlock}
     <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid #e4e7ec;border-radius:12px;overflow:hidden;">
-      ${rowHtml("Sistema (aluno)", a.sistemaLogin, a.sistemaPassword, "Usuário = número de matrícula")}
+      ${rowHtml("Sistema (aluno)", a.sistemaLogin, a.sistemaPassword, "Usuário = número de matrícula", PLATFORM_LINKS.sistema)}
       ${rowHtml("Responsável", a.responsavelLogin, a.responsavelPassword)}
-      ${rowHtml("Sofia", a.sofiaLogin, a.sofiaPassword)}
-      ${rowHtml("Correção", a.correcaoLogin, a.correcaoPassword)}
+      ${rowHtml("Sofia", a.sofiaLogin, a.sofiaPassword, undefined, PLATFORM_LINKS.sofia)}
+      ${rowHtml("Correção", a.correcaoLogin, a.correcaoPassword, undefined, PLATFORM_LINKS.coredacao)}
     </table>
     <p style="margin-top:16px;font-size:13px;color:#6b7385;">Guarde estes dados. Recomendamos trocar as senhas no primeiro acesso.</p>
   `;

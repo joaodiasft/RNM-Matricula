@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { enrollmentAccesses } from "./db/schema";
 import { COMPANY } from "./company";
+import { PLATFORM_LINKS } from "./platforms";
 
 /**
  * Acessos gerados por matrícula.
@@ -72,6 +73,7 @@ export function buildAccessMessage(input: {
     `🎫 Matrícula: ${input.enrollmentNumber}`,
     ``,
     `🔐 *Sistema (aluno)*`,
+    `🔗 ${PLATFORM_LINKS.sistema}`,
     `Usuário: ${a.sistemaLogin}`,
     `Senha: ${a.sistemaPassword}`,
     ``,
@@ -80,10 +82,12 @@ export function buildAccessMessage(input: {
     `Senha: ${a.responsavelPassword}`,
     ``,
     `🔐 *Sofia*`,
+    `🔗 ${PLATFORM_LINKS.sofia}`,
     `Usuário: ${a.sofiaLogin}`,
     `Senha: ${a.sofiaPassword}`,
     ``,
     `🔐 *Correção*`,
+    `🔗 ${PLATFORM_LINKS.coredacao}`,
     `Usuário: ${a.correcaoLogin}`,
     `Senha: ${a.correcaoPassword}`,
     ``,

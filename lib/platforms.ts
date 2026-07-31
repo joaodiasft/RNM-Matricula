@@ -7,6 +7,7 @@
  */
 
 export const PLATFORM_LINKS = {
+  /** Portal unificado (aluno + professor) em redacaonotamil.site. */
   sistema: "https://redacaonotamil.site/login",
   sofia: "https://app.plataformasofia.com.br/",
   coredacao: "https://aluno.coredacao.com/",
