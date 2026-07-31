@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
-import { and, eq, lt } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { enrollmentCourses, enrollments, students } from "@/lib/db/schema";
+import { enrollments } from "@/lib/db/schema";
 import { abandonmentEmailHtml } from "@/lib/email/templates";
 import { sendEmail } from "@/lib/email/send";
 import { COMPANY } from "@/lib/company";
 import { calcAge } from "@/lib/validation";
 import { getClassByCode, SUBJECT_LABELS } from "@/lib/courses";
 import type { EnrollmentDraft } from "@/lib/validation";
+import { enrollmentCourses } from "@/lib/db/schema";
+import {
+  listLateStaleEnrollments,
+  purgeEarlyIncompleteEnrollments,
+} from "@/lib/enrollment-cleanup";
 
 function authorize(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -17,30 +22,23 @@ function authorize(req: Request) {
   return header === `Bearer ${secret}`;
 }
 
+/**
+ * Cron de limpeza / abandono:
+ * 1) Apaga rascunhos parados ANTES do passo 6 há +24h (última atividade).
+ * 2) Marca como abandonada (+ e-mail) quem já passou do passo 6 e parou +1h.
+ */
 export async function GET(req: Request) {
   if (!authorize(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
   try {
+    const purged = await purgeEarlyIncompleteEnrollments(
+      24 * 60 * 60 * 1000
+    );
+
+    const stale = await listLateStaleEnrollments(60 * 60 * 1000);
     const db = getDb();
-    const cutoff = new Date(Date.now() - 60 * 60 * 1000);
-
-    const stale = await db
-      .select({
-        enrollment: enrollments,
-        student: students,
-      })
-      .from(enrollments)
-      .leftJoin(students, eq(enrollments.studentId, students.id))
-      .where(
-        and(
-          eq(enrollments.status, "em_andamento"),
-          eq(enrollments.abandonedNotified, false),
-          lt(enrollments.lastActivityAt, cutoff)
-        )
-      );
-
     let notified = 0;
     const companyEmail = process.env.COMPANY_EMAIL || COMPANY.email;
 
@@ -113,7 +111,12 @@ export async function GET(req: Request) {
       notified++;
     }
 
-    return NextResponse.json({ ok: true, notified });
+    return NextResponse.json({
+      ok: true,
+      purged: purged.deleted,
+      purgedIds: purged.ids,
+      notified,
+    });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Cron falhou" }, { status: 500 });

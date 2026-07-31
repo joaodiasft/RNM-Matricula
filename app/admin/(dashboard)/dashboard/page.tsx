@@ -133,10 +133,10 @@ export default function AdminDashboardPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <a href={exportHref} className={btnPrimaryClass()}>
-            Exportar CSV
+            Exportar CSV (concluídas)
           </a>
           <a href="/api/admin/export?today=1" className={btnGhostClass()}>
-            Só de hoje
+            CSV de hoje
           </a>
         </div>
       </div>

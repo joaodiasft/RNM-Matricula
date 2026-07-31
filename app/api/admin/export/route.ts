@@ -54,12 +54,17 @@ export async function GET(req: Request) {
 
   const fileName = enrollmentId
     ? `matricula-${enrollmentId.slice(0, 8)}.${extension}`
-    : `matriculas-${from || (today ? "hoje" : "periodo")}-${to || "agora"}.${extension}`;
+    : today
+      ? `matriculas-concluidas-hoje.${extension}`
+      : from || to
+        ? `matriculas-concluidas-${from || "inicio"}-${to || "fim"}.${extension}`
+        : `matriculas-concluidas.${extension}`;
 
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Cache-Control": "no-store",
     },
   });
 }

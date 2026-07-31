@@ -15,7 +15,7 @@ const worker = {
     const minute = new Date(event.scheduledTime).getUTCMinutes();
     const hour = new Date(event.scheduledTime).getUTCHours();
 
-    // A cada 15 min → abandono
+    // A cada 15 min → limpeza (rascunhos < passo 6 / 24h) + abandono tardio
     if (minute % 15 === 0) {
       await fetch(`${base}/api/cron/abandonment`, { headers });
     }
