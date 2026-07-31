@@ -18,6 +18,16 @@ export const CORRECAO_EMAIL = COMPANY.email; // naredacaonota1000@gmail.com
 export const CORRECAO_PASSWORD = "EUSOU1000";
 export const RMIL_DOMAIN = "rmil.com";
 
+/** Senha do Portal do Aluno: RNM + 6 caracteres (ex.: RNMY6QQ4T). */
+export function generatePortalPassword(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "RNM";
+  for (let i = 0; i < 6; i++) {
+    out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return out;
+}
+
 export type AccessSet = {
   sistemaLogin: string;
   sistemaPassword: string;
@@ -34,7 +44,7 @@ export const ACCESS_SYSTEMS: {
   label: string;
   hint: string;
 }[] = [
-  { key: "sistema", label: "Sistema (aluno)", hint: "Usuário é o número de matrícula" },
+  { key: "sistema", label: "Sistema (aluno)", hint: "Usuário = matrícula · senha no formato RNM…" },
   { key: "responsavel", label: "Responsável", hint: "Usuário do responsável principal" },
   { key: "sofia", label: "Sofia", hint: "Plataforma Sofia" },
   { key: "correcao", label: "Correção", hint: "Acesso compartilhado de correção" },
@@ -105,7 +115,7 @@ export function buildAccessSet(input: {
   const principalSlug = slugName(input.principalName || input.studentName);
   return {
     sistemaLogin: input.enrollmentNumber,
-    sistemaPassword: DEFAULT_PASSWORD,
+    sistemaPassword: generatePortalPassword(),
     responsavelLogin: `${principalSlug}@${RMIL_DOMAIN}`,
     responsavelPassword: DEFAULT_PASSWORD,
     sofiaLogin: `${studentSlug}@${RMIL_DOMAIN}`,

@@ -138,7 +138,7 @@ export default function MensagemPage() {
     setIncSofia(true);
     setIncCoredacao(true);
     setSistemaLogin(d.accesses?.sistemaLogin || enrollmentNumber);
-    setSistemaPassword(d.accesses?.sistemaPassword || "123456");
+    setSistemaPassword(d.accesses?.sistemaPassword || "");
     setSofiaLogin(d.accesses?.sofiaLogin || "");
     setSofiaPassword(d.accesses?.sofiaPassword || "123456");
 
