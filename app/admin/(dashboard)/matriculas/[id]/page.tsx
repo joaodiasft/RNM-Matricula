@@ -805,6 +805,7 @@ export default function EnrollmentDetailPage() {
               >
                 <option value="em_andamento">Em andamento</option>
                 <option value="concluida">Concluída</option>
+                <option value="inativa">Inativa</option>
                 <option value="abandonada">Abandonada</option>
                 <option value="alerta_duplicidade">Duplicidade</option>
               </select>

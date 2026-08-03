@@ -171,6 +171,7 @@ export default function AdminDashboardPage() {
             <option value="">Todas as situações</option>
             <option value="concluida">Concluída</option>
             <option value="em_andamento">Em andamento</option>
+            <option value="inativa">Inativa</option>
             <option value="abandonada">Abandonada</option>
             <option value="alerta_duplicidade">Duplicidade</option>
           </select>

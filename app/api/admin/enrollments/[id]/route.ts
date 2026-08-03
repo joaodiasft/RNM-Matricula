@@ -52,6 +52,7 @@ const ALLOWED_STATUS = new Set([
   "em_andamento",
   "concluida",
   "abandonada",
+  "inativa",
   "alerta_duplicidade",
 ]);
 

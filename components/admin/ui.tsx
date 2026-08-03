@@ -7,6 +7,7 @@ export const STATUS_LABELS: Record<string, string> = {
   concluida: "Concluída",
   em_andamento: "Em andamento",
   abandonada: "Abandonada",
+  inativa: "Inativa",
   alerta_duplicidade: "Duplicidade",
 };
 
@@ -14,6 +15,7 @@ export const STATUS_STYLES: Record<string, string> = {
   concluida: "bg-success-soft text-success ring-1 ring-success/20",
   em_andamento: "bg-brand-soft text-brand-deep ring-1 ring-brand/25",
   abandonada: "bg-danger-soft text-danger ring-1 ring-danger/20",
+  inativa: "bg-line text-muted ring-1 ring-line-strong/40",
   alerta_duplicidade: "bg-warning-soft text-warning ring-1 ring-warning/25",
 };
 
