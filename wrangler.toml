@@ -32,3 +32,5 @@ RESEND_FROM = "Redação Nota Mil <onboarding@resend.dev>"
 DEFAULT_CARD_FEE_PERCENT = "3.5"
 ADMIN_EMAIL = "naredacaonota1000@gmail.com"
 NEXT_PUBLIC_APP_URL = "https://rnm-matricula.jmdias2901.workers.dev"
+# Portal do aluno lê cobranças via /api/portal/financeiro
+PORTAL_PUBLIC_URL = "https://redacaonotamil.site"

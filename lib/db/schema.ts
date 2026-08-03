@@ -229,3 +229,31 @@ export const dailyExports = pgTable("daily_exports", {
   rowCount: integer("row_count").default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
+
+/** Cobranças financeiras da secretaria (fonte de verdade do Portal do aluno). */
+export const financialCharges = pgTable("financial_charges", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  enrollmentId: uuid("enrollment_id")
+    .references(() => enrollments.id, { onDelete: "cascade" })
+    .notNull(),
+  type: text("type").notNull().default("MENSALIDADE"),
+  status: text("status").notNull().default("PENDENTE"),
+  description: text("description"),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  dueDate: date("due_date").notNull(),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const financialPayments = pgTable("financial_payments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  chargeId: uuid("charge_id")
+    .references(() => financialCharges.id, { onDelete: "cascade" })
+    .notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  method: text("method").notNull().default("PIX"),
+  paidAt: timestamp("paid_at", { withTimezone: true }).defaultNow(),
+  reference: text("reference"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});

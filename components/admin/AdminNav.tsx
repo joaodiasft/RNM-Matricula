@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/mensagem", label: "Mensagem" },
   { href: "/admin/turmas", label: "Turmas" },
   { href: "/admin/bolsas", label: "Bolsas" },
+  { href: "/admin/financeiro", label: "Financeiro" },
   { href: "/admin/operacoes", label: "Operações" },
   { href: "/admin/settings", label: "Configurações" },
 ];
